@@ -9,19 +9,33 @@ $app = new Illuminate\Foundation\Application(
 | Vercel Read-Only Filesystem Fix
 |--------------------------------------------------------------------------
 */
-if (isset($_SERVER['VERCEL'])) {
+if (isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL'])) {
     $app->useStoragePath('/tmp/storage');
     
-    // Ensure necessary directories exist in /tmp
-    if (!is_dir('/tmp/storage/framework/views')) {
-        mkdir('/tmp/storage/framework/views', 0755, true);
+    // Ensure storage and bootstrap/cache are mapped to /tmp
+    $dirs = [
+        '/tmp/storage/framework/views',
+        '/tmp/storage/framework/cache',
+        '/tmp/storage/framework/sessions',
+        '/tmp/storage/bootstrap/cache',
+        '/tmp/storage/logs'
+    ];
+    
+    foreach ($dirs as $dir) {
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
     }
-    if (!is_dir('/tmp/storage/framework/cache')) {
-        mkdir('/tmp/storage/framework/cache', 0755, true);
-    }
-    if (!is_dir('/tmp/storage/logs')) {
-        mkdir('/tmp/storage/logs', 0755, true);
-    }
+
+    // Override the bootstrap cache path
+    $app->instance('path.bootstrap', '/tmp/storage/bootstrap');
+
+    // Also set specific cache paths
+    $_ENV['APP_BOOTSTRAP_CACHE'] = '/tmp/storage/bootstrap/cache';
+    $_ENV['APP_CONFIG_CACHE'] = '/tmp/storage/bootstrap/cache/config.php';
+    $_ENV['APP_ROUTES_CACHE'] = '/tmp/storage/bootstrap/cache/routes.php';
+    $_ENV['APP_SERVICES_CACHE'] = '/tmp/storage/bootstrap/cache/services.php';
+    $_ENV['APP_PACKAGES_CACHE'] = '/tmp/storage/bootstrap/cache/packages.php';
 }
 
 
