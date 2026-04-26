@@ -154,9 +154,18 @@ const app = {
 
         try {
             const response = await fetch('/api/users');
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || `Server error: ${response.status}`);
+            }
             const data = await response.json();
             
             tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Tidak ada user ditemukan.</td></tr>';
+                return;
+            }
+
             data.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -164,15 +173,20 @@ const app = {
                     <td>${user.username}</td>
                     <td><span class="badge ${user.role.toLowerCase()}">${user.role}</span></td>
                     <td>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn-icon" title="Edit" onclick="app.showUserForm(${JSON.stringify(user).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
-                            <button class="btn-icon" title="Delete" style="color:var(--error)" onclick="app.deleteUser(${user.id})"><i class="fas fa-trash-alt"></i></button>
-                        </div>
+                        <button class="btn-icon" onclick="app.showUserForm(${JSON.stringify(user).replace(/"/g, '&quot;')})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" onclick="app.deleteUser(${user.id})" style="color:var(--error)">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
-        } catch (e) { console.error('Users error:', e); }
+        } catch (e) {
+            console.error('Load users error:', e);
+            tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--error)">Gagal memuat data: ${e.message}</td></tr>`;
+        }
     },
 
     showUserForm(user = null) {
