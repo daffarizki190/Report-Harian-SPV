@@ -11,16 +11,16 @@
 <body class="login-page">
     <div class="background-glow"></div>
     
-    <div id="login-overlay" class="overlay active">
+    <div id="login-overlay" class="overlay">
         <div class="glass-card login-card animate-fade-in">
             <div class="logo">
-                <i class="fas fa-file-invoice"></i>
-                <h1>SPV Report</h1>
+                <i class="fas fa-shield-alt"></i>
+                <h1>GANCIT SPV</h1>
             </div>
-            <p>Internal Reporting Portal for Gandaria City</p>
+            <p>Internal Reporting Portal</p>
             
             @if($errors->any())
-                <div class="error-msg" style="color: #ff4d4d; margin-bottom: 1rem; font-size: 0.9rem;">
+                <div class="error-msg" style="color: #ef4444; margin-bottom: 1rem; font-size: 0.85rem; background: #fef2f2; padding: 10px; border-radius: 8px; border: 1px solid #fee2e2;">
                     {{ $errors->first() }}
                 </div>
             @endif
@@ -35,7 +35,9 @@
                     <i class="fas fa-lock"></i>
                     <input type="password" name="password" placeholder="Password" required>
                 </div>
-                <button type="submit" class="btn-primary">Login <i class="fas fa-arrow-right"></i></button>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 8px;">
+                    Masuk <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+                </button>
             </form>
         </div>
     </div>

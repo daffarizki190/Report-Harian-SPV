@@ -481,8 +481,10 @@ const app = {
     resetUploadBtn() {
         const btn = document.getElementById('btn-submit-upload');
         if (btn) {
-            btn.querySelector('.btn-text').classList.remove('hidden');
-            btn.querySelector('.dots-wave').classList.add('hidden');
+            const btnText = btn.querySelector('.btn-text');
+            const wave = btn.querySelector('.dots-wave');
+            if (btnText) btnText.classList.remove('hidden');
+            if (wave) wave.classList.add('hidden');
             btn.disabled = false;
         }
     },

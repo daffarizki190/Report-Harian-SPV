@@ -34,6 +34,7 @@ class ReportController extends Controller
         // Include public URLs for the frontend
         $reports->each(function ($report) {
             if ($report->file_path) {
+                // Ensure we use the proper Supabase public URL structure if Storage::url() isn't perfect
                 $report->file_url = Storage::disk('supabase')->url($report->file_path);
             }
         });
