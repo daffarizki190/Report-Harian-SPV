@@ -153,7 +153,7 @@ const app = {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Memuat user...</td></tr>';
 
         try {
-            const response = await fetch('/api/users');
+            const response = await fetch('/v1/users');
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
                 throw new Error(errData.message || `Server error: ${response.status}`);
@@ -213,7 +213,7 @@ const app = {
             const data = Object.fromEntries(formData.entries());
 
             try {
-                const response = await fetch('/api/users', {
+                const response = await fetch('/v1/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -238,7 +238,7 @@ const app = {
         if (!confirm('Hapus user ini secara permanen?')) return;
 
         try {
-            const response = await fetch(`/api/users/${id}`, {
+            const response = await fetch(`/v1/users/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': window.Laravel.csrfToken
@@ -268,7 +268,7 @@ const app = {
         if (!totalEl || !todayEl) return;
 
         try {
-            const response = await fetch('/api/reports/stats');
+            const response = await fetch('/v1/reports/stats');
             const data = await response.json();
             totalEl.textContent = data.total || 0;
             todayEl.textContent = data.today || 0;
@@ -280,7 +280,7 @@ const app = {
         if (!tableBody) return;
 
         try {
-            const response = await fetch('/api/reports/logs');
+            const response = await fetch('/v1/reports/logs');
             const data = await response.json();
             
             tableBody.innerHTML = '';
@@ -309,7 +309,7 @@ const app = {
         tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center">Memuat laporan...</td></tr>';
 
         try {
-            const response = await fetch(`/api/reports?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
+            const response = await fetch(`/v1/reports?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
             const data = await response.json();
             this.reports = data;
 
@@ -377,7 +377,7 @@ const app = {
         this.showToast('Menyiapkan file ZIP...', 'info');
 
         try {
-            const response = await fetch(`/api/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
+            const response = await fetch(`/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
             const urls = await response.json();
 
             if (!response.ok) {
@@ -434,7 +434,7 @@ const app = {
         btn.disabled = true;
 
         try {
-            const response = await fetch('/api/reports', {
+            const response = await fetch('/v1/reports', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': window.Laravel.csrfToken,
@@ -489,7 +489,7 @@ const app = {
         if (!confirm(confirmMsg)) return;
 
         try {
-            const response = await fetch('/api/reports/purge', {
+            const response = await fetch('/v1/reports/purge', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

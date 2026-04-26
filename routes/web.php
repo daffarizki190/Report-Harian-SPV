@@ -14,7 +14,7 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::prefix('api')->group(function () {
+    Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
