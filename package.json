@@ -1,0 +1,23 @@
+{
+  "name": "primary",
+  "version": "1.0.0",
+  "description": "Sistem pengolahan data laporan harian pengawas Gandaria City dengan standar keamanan tinggi dan pengolahan data otomatis.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daffarizki190/Report-Harian-SPV.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daffarizki190/Report-Harian-SPV/issues"
+  },
+  "homepage": "https://github.com/daffarizki190/Report-Harian-SPV#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
