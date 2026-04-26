@@ -160,6 +160,7 @@ const app = {
             }
             const data = await response.json();
             
+            // Pastikan tabel benar-benar kosong sebelum render ulang
             tableBody.innerHTML = '';
             if (data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Tidak ada user ditemukan.</td></tr>';
@@ -313,6 +314,7 @@ const app = {
             const data = await response.json();
             this.reports = data;
 
+            // Bersihkan tabel sebelum render agar tidak ganda
             tableBody.innerHTML = '';
             if (this.reports.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center">Tidak ada laporan ditemukan.</td></tr>';
