@@ -248,11 +248,16 @@ const app = {
     },
 
     async loadStats() {
+        const totalEl = document.getElementById('stat-total');
+        const todayEl = document.getElementById('stat-today');
+        
+        if (!totalEl || !todayEl) return;
+
         try {
             const response = await fetch('/api/reports/stats');
             const data = await response.json();
-            document.getElementById('stat-total').textContent = data.total || 0;
-            document.getElementById('stat-today').textContent = data.today || 0;
+            totalEl.textContent = data.total || 0;
+            todayEl.textContent = data.today || 0;
         } catch (e) { console.error('Stats error:', e); }
     },
 

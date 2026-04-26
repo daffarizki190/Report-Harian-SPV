@@ -252,7 +252,8 @@
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div id="toast-container" class="toast-container"></div>
+                </div>
+            </section>
 
         <!-- Modal for Manual Content -->
         <div id="manual-modal" class="overlay hidden" style="background: rgba(0,0,0,0.8);">
@@ -341,6 +342,7 @@
                 <a href="#" id="btn-logout-mobile" onclick="document.getElementById('logout-form-mobile').submit();"><i class="fas fa-sign-out-alt"></i></a>
             </form>
         </div>
+        <div id="toast-container" class="toast-container"></div>
     </div>
 
     <!-- Scripts -->
