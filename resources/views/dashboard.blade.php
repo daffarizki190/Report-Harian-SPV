@@ -50,8 +50,8 @@
                 <div class="user-info">
                     <div class="avatar">{{ substr(Auth::user()->name ?? 'U', 0, 1) }}</div>
                     <div class="details">
-                        <p>{{ Auth::user()->name ?? 'User' }}</p>
-                        <small>{{ Auth::user()->role ?? 'Guest' }}</small>
+                        <p id="user-name">{{ Auth::user()->name ?? 'User' }}</p>
+                        <small id="user-role">{{ Auth::user()->role ?? 'Guest' }}</small>
                     </div>
                 </div>
                 <form action="{{ route('logout') }}" method="POST">
@@ -230,7 +230,11 @@
                         </div>
 
                         <button type="submit" class="btn-primary" id="btn-submit-upload" style="margin-top: 10px;">
-                            <i class="fas fa-save"></i> <span class="btn-text">Simpan Laporan</span>
+                            <i class="fas fa-save"></i> 
+                            <span class="btn-text">Simpan Laporan</span>
+                            <div class="dots-wave hidden">
+                                <span></span><span></span><span></span>
+                            </div>
                         </button>
                     </form>
                 </div>

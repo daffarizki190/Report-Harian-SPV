@@ -161,7 +161,7 @@ class ReportController extends Controller
             }
 
             $details = $deleteAll ? "Hapus seluruh data laporan ($count item)" : "Hapus laporan tgl $startDate s/d $endDate ($count item)";
-            $this->logActivity($user->name, 'Purge', $details);
+            $this->logActivity(auth()->user()->name, 'Purge', $details);
 
             DB::commit();
             return response()->json(['message' => "$count data berhasil dihapus.", 'count' => $count]);
@@ -221,9 +221,5 @@ class ReportController extends Controller
         ]);
     }
 
-    public function downloadZIP(Request $request)
-    {
-        // ZIP logic using JSZip on frontend or ZipArchive on backend
-        // For $0 cost, doing it in backend with ZipArchive is robust
     }
 }
