@@ -30,6 +30,7 @@ return [
             'url' => env('SUPABASE_URL'),
             'endpoint' => env('SUPABASE_ENDPOINT'),
             'use_path_style_endpoint' => true,
+            'version' => 'latest',
             'throw' => true,
         ],
 
