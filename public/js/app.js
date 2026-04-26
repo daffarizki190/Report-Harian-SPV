@@ -172,7 +172,7 @@ const app = {
                 tr.innerHTML = `
                     <td>${user.name}</td>
                     <td>${user.username}</td>
-                    <td><span class="badge ${user.role.toLowerCase()}">${user.role}</span></td>
+                    <td><span class="badge ${(user.role || '').toLowerCase()}">${user.role || 'User'}</span></td>
                     <td>
                         <button class="btn-icon" onclick="app.showUserForm(${JSON.stringify(user).replace(/"/g, '&quot;')})">
                             <i class="fas fa-edit"></i>
@@ -301,7 +301,7 @@ const app = {
                 const date = new Date(log.created_at).toLocaleString('id-ID');
                 tr.innerHTML = `
                     <td style="font-weight:600">${log.user_name}</td>
-                    <td><span class="badge ${log.action.toLowerCase()}">${log.action}</span></td>
+                    <td><span class="badge ${(log.action || '').toLowerCase()}">${log.action || 'Unknown'}</span></td>
                     <td>${log.details}</td>
                     <td style="font-size:0.85rem; color:var(--text-dim)">${date}</td>
                 `;
@@ -337,7 +337,7 @@ const app = {
                 tr.innerHTML = `
                     <td>${row.spv_name}</td>
                     <td>${row.report_date}</td>
-                    <td><span class="badge ${row.shift.toLowerCase()}">${row.shift}</span></td>
+                    <td><span class="badge ${(row.shift || '').toLowerCase()}">${row.shift || '-'}</span></td>
                     <td>${row.description || (row.manual_content ? 'Manual Input' : '-')}</td>
                     <td>
                         <div style="display:flex; gap:8px;">
