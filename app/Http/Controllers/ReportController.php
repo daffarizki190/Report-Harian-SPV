@@ -11,6 +11,43 @@ use Illuminate\Support\Facades\Auth;
 class ReportController extends Controller
 {
     /**
+     * Upload file directly to Supabase Storage using REST API (bypasses S3 signature issues).
+     */
+    private function uploadToSupabase(string $filePath, string $storagePath): string
+    {
+        $supabaseUrl = rtrim(env('SUPABASE_URL'), '/');
+        $bucket      = env('SUPABASE_BUCKET', 'daily-reports');
+        // Use service_role key for uploads (bypasses RLS and S3 auth entirely)
+        $serviceKey  = env('SUPABASE_SERVICE_ROLE_KEY', env('SUPABASE_ANON_KEY'));
+
+        $uploadUrl = "{$supabaseUrl}/storage/v1/object/{$bucket}/{$storagePath}";
+
+        $fileContents = file_get_contents($filePath);
+
+        $ch = curl_init($uploadUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => $fileContents,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $serviceKey,
+                'Content-Type: application/pdf',
+                'x-upsert: true',
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            throw new \Exception("Supabase upload failed (HTTP {$httpCode}): {$response}");
+        }
+
+        return $storagePath;
+    }
+
+    /**
      * Display a listing of reports with professional filtering.
      */
     public function index(Request $request)
@@ -31,11 +68,12 @@ class ReportController extends Controller
 
         $reports = $query->orderBy('report_date', 'desc')->get();
 
-        // Include public URLs for the frontend
-        $reports->each(function ($report) {
+        $supabaseUrl = rtrim(env('SUPABASE_URL'), '/');
+        $bucket      = env('SUPABASE_BUCKET', 'daily-reports');
+
+        $reports->each(function ($report) use ($supabaseUrl, $bucket) {
             if ($report->file_path) {
-                // Ensure we use the proper Supabase public URL structure if Storage::url() isn't perfect
-                $report->file_url = Storage::disk('supabase')->url($report->file_path);
+                $report->file_url = "{$supabaseUrl}/storage/v1/object/public/{$bucket}/{$report->file_path}";
             }
         });
 
@@ -72,58 +110,52 @@ class ReportController extends Controller
         }
 
         $request->validate([
-            'report_date' => 'required|date',
-            'shift' => 'required|string|in:Pagi,Siang,Malam',
-            'report_file' => 'nullable|mimes:pdf|max:10240',
-            'manual_content' => 'nullable|string',
-            'description' => 'nullable|string|max:255'
+            'report_date'   => 'required|date',
+            'shift'         => 'required|string|in:Pagi,Siang,Malam',
+            'report_file'   => 'nullable|mimes:pdf|max:10240',
+            'manual_content'=> 'nullable|string',
+            'description'   => 'nullable|string|max:255'
         ]);
 
         $spvName = auth()->user()->name ?? $request->spv_name ?? 'Guest';
 
         return DB::transaction(function () use ($request, $spvName) {
-            // Check for existing report (1 report per SPV per day)
             $existing = Report::where('spv_name', $spvName)
                               ->whereDate('report_date', $request->report_date)
                               ->first();
 
-            if ($existing) {
-                // Professional approach: Delete old file before overwriting
-                if ($existing->file_path) {
-                    Storage::disk('supabase')->delete($existing->file_path);
-                }
-            }
+            $filePath = $existing->file_path ?? null;
 
-            $filePath = null;
             if ($request->hasFile('report_file')) {
-                // Automated Naming Standard: SPV_Date_Shift.pdf
-                $filename = sprintf(
+                $storagePath = sprintf(
                     'REPORTS/%s/%s_%s_%s.pdf',
                     $request->report_date,
                     str_replace(' ', '_', $spvName),
                     $request->report_date,
                     $request->shift
                 );
-                
-                // Use putFileAs for better compatibility with S3 providers
-                $filePath = Storage::disk('supabase')->putFileAs('', $request->file('report_file'), $filename);
+
+                // Upload via REST API (no S3 signature required)
+                $filePath = $this->uploadToSupabase(
+                    $request->file('report_file')->getRealPath(),
+                    $storagePath
+                );
             }
 
             $report = Report::updateOrCreate(
                 [
-                    'spv_name' => $spvName,
+                    'spv_name'    => $spvName,
                     'report_date' => $request->report_date
                 ],
                 [
-                    'shift' => $request->shift,
-                    'description' => $request->description,
-                    'file_path' => $filePath,
+                    'shift'          => $request->shift,
+                    'description'    => $request->description,
+                    'file_path'      => $filePath,
                     'manual_content' => $request->manual_content,
-                    'updated_at' => now()
+                    'updated_at'     => now()
                 ]
             );
 
-            // Audit Log: Professional logging for cyber security tracking
             $this->logActivity($spvName, $existing ? 'Update' : 'Upload', "Laporan tgl {$request->report_date}");
 
             return response()->json(['message' => 'Laporan berhasil disimpan.', 'data' => $report]);
