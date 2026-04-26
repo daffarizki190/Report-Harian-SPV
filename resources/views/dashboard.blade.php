@@ -26,7 +26,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <i class="fas fa-building"></i>
-                <span>GANCIT SPV</span>
+                <span>REPORT SPV</span>
             </div>
             <nav>
                 <a href="#" class="nav-item active" data-view="dashboard">

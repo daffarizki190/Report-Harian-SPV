@@ -15,7 +15,7 @@
         <div class="glass-card login-card animate-fade-in">
             <div class="logo">
                 <i class="fas fa-shield-alt"></i>
-                <h1>GANCIT SPV</h1>
+                <h1>REPORT SPV</h1>
             </div>
             <p>Internal Reporting Portal</p>
             
