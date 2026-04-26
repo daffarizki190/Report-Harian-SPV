@@ -220,6 +220,4 @@ class ReportController extends Controller
             'updated_at' => now(),
         ]);
     }
-
-    }
 }
