@@ -105,7 +105,8 @@ class ReportController extends Controller
                     $request->shift
                 );
                 
-                $filePath = $request->file('report_file')->storeAs('', $filename, 'supabase');
+                // Use putFileAs for better compatibility with S3 providers
+                $filePath = Storage::disk('supabase')->putFileAs('', $request->file('report_file'), $filename);
             }
 
             $report = Report::updateOrCreate(

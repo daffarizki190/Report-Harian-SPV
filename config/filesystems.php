@@ -27,7 +27,7 @@ return [
             'secret' => env('SUPABASE_SECRET_ACCESS_KEY'),
             'region' => 'us-east-1',
             'bucket' => env('SUPABASE_BUCKET', 'daily-reports'),
-            'url' => env('SUPABASE_URL'),
+            'url' => env('SUPABASE_URL') . '/storage/v1/object/public/' . env('SUPABASE_BUCKET', 'daily-reports'),
             'endpoint' => env('SUPABASE_ENDPOINT'),
             'use_path_style_endpoint' => true,
             'version' => 'latest',
