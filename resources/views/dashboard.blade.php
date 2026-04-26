@@ -264,10 +264,8 @@
                 <h3 style="margin-bottom: 20px;"><i class="fas fa-file-alt"></i> Detail Laporan Manual</h3>
                 <div id="modal-content-body" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;">
                 </div>
-            </div>
         </div>
     </div>
-            </section>
             <!-- User Management View (Admin Only) -->
             @if(auth()->user()->role === 'Admin')
             <section id="view-users" class="view-section hidden">
