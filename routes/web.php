@@ -9,6 +9,19 @@ Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// TEMP DEBUG - remove after fixing env vars
+Route::get('/debug-env', function () {
+    $serviceKey = env('SUPABASE_SERVICE_ROLE_KEY');
+    $anonKey    = env('SUPABASE_ANON_KEY');
+    $url        = env('SUPABASE_URL');
+    return response()->json([
+        'SUPABASE_URL'              => $url ?: 'NOT SET',
+        'SUPABASE_SERVICE_ROLE_KEY' => $serviceKey ? ('SET (' . strlen($serviceKey) . ' chars) starts: ' . substr($serviceKey, 0, 10) . '...') : 'NOT SET / EMPTY',
+        'SUPABASE_ANON_KEY'         => $anonKey    ? ('SET (' . strlen($anonKey)    . ' chars) starts: ' . substr($anonKey,    0, 10) . '...') : 'NOT SET / EMPTY',
+        'fallback_used'             => $serviceKey ? 'service_role' : ($anonKey ? 'anon' : 'NONE - upload will fail'),
+    ]);
+});
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
