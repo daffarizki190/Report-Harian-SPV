@@ -210,6 +210,11 @@ const app = {
         // Bind form submit once
         form.onsubmit = async (e) => {
             e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
@@ -231,7 +236,13 @@ const app = {
                 } else {
                     this.showToast(result.message, 'error');
                 }
-            } catch (e) { console.error('Save user error:', e); }
+            } catch (e) { 
+                console.error('Save user error:', e); 
+                this.showToast('Gagal menyimpan user', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         };
     },
 
