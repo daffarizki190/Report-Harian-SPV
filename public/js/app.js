@@ -385,21 +385,31 @@ const app = {
     },
 
     handleExportExcel() {
-        if (!this.reports || this.reports.length === 0) return this.showToast('Tidak ada data untuk diekspor', 'error');
-        
-        const data = this.reports.map(r => ({
-            'Nama SPV': r.spv_name,
-            'Tanggal': r.report_date,
-            'Shift': r.shift,
-            'Keterangan': r.description || '',
-            'Isi Manual': r.manual_content || ''
-        }));
+        try {
+            if (!this.reports || this.reports.length === 0) {
+                return this.showToast('Tidak ada data untuk diekspor', 'error');
+            }
+            
+            this.showToast('Menyiapkan file Excel...', 'info');
 
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Reports");
-        XLSX.utils.writeFile(wb, `Laporan_SPV_GandariaCity_${new Date().toISOString().split('T')[0]}.xlsx`);
-        this.showToast('Excel berhasil diunduh', 'success');
+            const data = this.reports.map(r => ({
+                'Nama SPV': r.spv_name,
+                'Tanggal': r.report_date,
+                'Shift': r.shift,
+                'Keterangan': r.description || '',
+                'Isi Manual': r.manual_content || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Reports");
+            XLSX.utils.writeFile(wb, `Laporan_SPV_GandariaCity_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+            this.showToast('Excel berhasil diunduh', 'success');
+        } catch (error) {
+            console.error('Excel Export Error:', error);
+            this.showToast('Gagal mengekspor Excel: ' + error.message, 'error');
+        }
     },
 
     async handleBulkDownload() {

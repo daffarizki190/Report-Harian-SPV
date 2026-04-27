@@ -46,7 +46,7 @@ class ReportController extends Controller
 
     public function stats()
     {
-        if (Auth::user()->role !== 'Admin') {
+        if (!in_array(Auth::user()->role, ['Admin', 'Management'])) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
         return response()->json([
