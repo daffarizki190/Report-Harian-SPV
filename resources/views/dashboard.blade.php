@@ -175,7 +175,7 @@
 
                     @if(auth()->user()->role === 'Management')
                     <div style="margin-top: 40px; padding: 24px; border-top: 1px solid var(--border); background: #fff1f2; border-radius: var(--radius-md);">
-                        <h4 style="color: #be123c; margin-bottom: 12px;"><i class="fas fa-exclamation-triangle"></i> Zona Berbahaya</h4>
+                        <h4 style="color: #be123c; margin-bottom: 12px;"><i class="fas fa-exclamation-triangle"></i> Pemeliharaan Data</h4>
                         <p style="font-size: 0.85rem; color: #9f1239; margin-bottom: 20px;">Hapus data laporan secara permanen dari sistem.</p>
                         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                             <input type="date" id="purge-start" style="max-width: 200px;">
