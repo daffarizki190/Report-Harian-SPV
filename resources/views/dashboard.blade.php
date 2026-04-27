@@ -194,7 +194,7 @@
                     <h3 style="margin-bottom: 24px;">Buat Laporan Baru</h3>
                     
                     <div class="method-toggle">
-                        <button type="button" class="method-btn active" data-method="file">Upload PDF</button>
+                        <button type="button" class="method-btn active" data-method="file">Upload PDF/Img</button>
                         <button type="button" class="method-btn" data-method="manual">Input Manual</button>
                     </div>
 
@@ -202,8 +202,8 @@
                         <div id="method-file-container" class="method-content">
                             <div class="drop-zone" id="drop-zone">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Klik atau tarik file PDF ke sini</p>
-                                <input type="file" id="file-input" name="report_file" accept=".pdf" hidden>
+                                <p>Klik atau tarik file PDF/Gambar ke sini</p>
+                                <input type="file" id="file-input" name="report_file" accept=".pdf,image/*" hidden>
                             </div>
                         </div>
 

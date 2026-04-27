@@ -76,7 +76,7 @@ class ReportController extends Controller
         $request->validate([
             'report_date'   => 'required|date',
             'shift'         => 'required|string|in:Pagi,Siang,Malam',
-            'report_file'   => 'nullable|mimes:pdf|max:10240',
+            'report_file'   => 'nullable|mimes:pdf,jpg,jpeg,png|max:10240',
             'manual_content'=> 'nullable|string',
             'description'   => 'nullable|string|max:255'
         ]);
@@ -91,12 +91,14 @@ class ReportController extends Controller
             $filePath = $existing->file_path ?? null;
 
             if ($request->hasFile('report_file')) {
+                $extension = $request->file('report_file')->getClientOriginalExtension();
                 $storagePath = sprintf(
-                    'REPORTS/%s/%s_%s_%s.pdf',
+                    'REPORTS/%s/%s_%s_%s.%s',
                     $request->report_date,
                     str_replace(' ', '_', $spvName),
                     $request->report_date,
-                    $request->shift
+                    $request->shift,
+                    $extension
                 );
 
                 // Upload via SupabaseStorageService (mockable)

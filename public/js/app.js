@@ -404,9 +404,6 @@ const app = {
             
             this.showToast('Menyiapkan file Excel...', 'info');
 
-            // Ambil base URL Supabase dari .env (biasanya project id terlihat di URL fetch)
-            const supabaseBase = 'https://xtlrenpzmyrufgcqapwh.supabase.co/storage/v1/object/public/daily-reports/';
-
             const data = this.reports.map((r, index) => ({
                 'No': index + 1,
                 'Nama Supervisor': r.spv_name,
@@ -414,7 +411,7 @@ const app = {
                 'Shift': r.shift,
                 'Keterangan': r.description || '-',
                 'Laporan Manual': r.manual_content || '-',
-                'Link File PDF': r.file_path ? `${supabaseBase}${r.file_path}` : '-',
+                'Link Lampiran': r.file_url || '-',
                 'Waktu Input (WIB)': new Date(r.created_at).toLocaleString('id-ID')
             }));
 
@@ -430,9 +427,21 @@ const app = {
                 { wch: 10 }, // Shift
                 { wch: 30 }, // Keterangan
                 { wch: 50 }, // Isi Manual
-                { wch: 60 }, // Link PDF
+                { wch: 40 }, // Link Lampiran
                 { wch: 20 }  // Waktu Input
             ];
+
+            // Tambahkan Hyperlink ke kolom Link Lampiran (Kolom Index 6 / 'G')
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+                const cellRef = XLSX.utils.encode_cell({r: R, c: 6});
+                if (ws[cellRef] && ws[cellRef].v !== '-') {
+                    ws[cellRef].l = { 
+                        Target: ws[cellRef].v, 
+                        Tooltip: "Klik untuk membuka lampiran" 
+                    };
+                }
+            }
 
             XLSX.writeFile(wb, `Laporan_SPV_GandariaCity_${new Date().toISOString().split('T')[0]}.xlsx`);
             
