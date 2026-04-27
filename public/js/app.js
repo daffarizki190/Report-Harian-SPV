@@ -364,17 +364,25 @@ const app = {
 
             this.reports.forEach(row => {
                 const tr = document.createElement('tr');
-                // Encode manual_content dengan aman (handle null/undefined)
                 const safeContent = row.manual_content ? btoa(unescape(encodeURIComponent(row.manual_content))) : '';
+                const isImage = row.file_url && /\.(jpg|jpeg|png|gif|webp)$/i.test(row.file_url);
+                
                 tr.innerHTML = `
                     <td>${row.spv_name}</td>
                     <td>${row.report_date}</td>
                     <td><span class="badge ${(row.shift || '').toLowerCase()}">${row.shift || '-'}</span></td>
                     <td>${row.description || (row.manual_content ? 'Manual Input' : '-')}</td>
                     <td>
-                        <div style="display:flex; gap:8px;">
+                        <div style="display:flex; gap:8px; align-items: center;">
                             ${row.file_url ? `
-                                <button class="btn-icon" title="Lihat" onclick="window.open('${row.file_url}', '_blank')"><i class="fas fa-eye"></i></button>
+                                ${isImage ? `
+                                    <div class="img-preview-mini" onclick="window.open('${row.file_url}', '_blank')" title="Klik untuk memperbesar">
+                                        <img src="${row.file_url}" alt="preview">
+                                    </div>
+                                ` : ''}
+                                <button class="btn-icon" title="Lihat" onclick="window.open('${row.file_url}', '_blank')">
+                                    <i class="fas ${isImage ? 'fa-search-plus' : 'fa-eye'}"></i>
+                                </button>
                                 <a href="${row.file_url}" class="btn-icon" title="Unduh" download><i class="fas fa-download"></i></a>
                             ` : safeContent ? `
                                 <button class="btn-icon" title="Lihat Isi" onclick="app.viewManualContent('${safeContent}')"><i class="fas fa-file-alt"></i></button>
@@ -411,7 +419,7 @@ const app = {
                 'Shift': r.shift,
                 'Keterangan': r.description || '-',
                 'Laporan Manual': r.manual_content || '-',
-                'Link Lampiran': r.file_url || '-',
+                'Link Lampiran': r.file_url ? 'KLIK DISINI' : '-',
                 'Waktu Input (WIB)': new Date(r.created_at).toLocaleString('id-ID')
             }));
 
@@ -427,7 +435,7 @@ const app = {
                 { wch: 10 }, // Shift
                 { wch: 30 }, // Keterangan
                 { wch: 50 }, // Isi Manual
-                { wch: 40 }, // Link Lampiran
+                { wch: 20 }, // Link Lampiran
                 { wch: 20 }  // Waktu Input
             ];
 
@@ -435,11 +443,14 @@ const app = {
             const range = XLSX.utils.decode_range(ws['!ref']);
             for (let R = range.s.r + 1; R <= range.e.r; ++R) {
                 const cellRef = XLSX.utils.encode_cell({r: R, c: 6});
-                if (ws[cellRef] && ws[cellRef].v !== '-') {
+                const report = this.reports[R - 1]; 
+                if (ws[cellRef] && ws[cellRef].v === 'KLIK DISINI' && report && report.file_url) {
                     ws[cellRef].l = { 
-                        Target: ws[cellRef].v, 
+                        Target: report.file_url, 
                         Tooltip: "Klik untuk membuka lampiran" 
                     };
+                    // Tambahkan styling agar terlihat seperti link (opsional, xlsx dasar tidak mendukung style penuh)
+                    ws[cellRef].s = { font: { color: { rgb: "0000FF" }, underline: true } };
                 }
             }
 
