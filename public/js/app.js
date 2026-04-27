@@ -231,6 +231,10 @@ const app = {
                     body: JSON.stringify(data)
                 });
 
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    throw new Error('Server error saat menyimpan user');
+                }
                 const result = await response.json();
                 if (response.ok) {
                     this.showToast(result.message, 'success');
@@ -260,6 +264,10 @@ const app = {
                 }
             });
 
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Server error saat menghapus user');
+            }
             const result = await response.json();
             if (response.ok) {
                 this.showToast(result.message, 'success');
@@ -303,6 +311,10 @@ const app = {
 
         try {
             const response = await fetch('/v1/reports/logs');
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok || !contentType.includes('application/json')) {
+                throw new Error('Gagal memuat log');
+            }
             const data = await response.json();
             
             tableBody.innerHTML = '';
@@ -443,8 +455,12 @@ const app = {
             const response = await fetch(url);
             
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.message || 'Gagal membuat ZIP');
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const err = await response.json();
+                    throw new Error(err.message || 'Gagal membuat ZIP');
+                }
+                throw new Error('Server error saat membuat ZIP');
             }
 
             const blob = await response.blob();
@@ -489,6 +505,10 @@ const app = {
                 body: formData
             });
 
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Server error saat upload');
+            }
             const result = await response.json();
 
             if (response.ok) {
@@ -550,6 +570,10 @@ const app = {
                 })
             });
 
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Server error saat menghapus data');
+            }
             const result = await response.json();
             if (response.ok) {
                 this.showToast(result.message, 'success');
