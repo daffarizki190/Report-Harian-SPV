@@ -196,8 +196,10 @@ class ReportController extends Controller
 
         $urls = $reports->map(function($r) {
             return [
-                'name' => "{$r->spv_name}_{$r->report_date}_{$r->shift}.pdf",
-                'url' => Storage::disk('supabase')->url($r->file_path)
+                'url'         => $this->supabase->publicUrl($r->file_path),
+                'spv_name'    => $r->spv_name,
+                'report_date' => $r->report_date,
+                'shift'       => $r->shift
             ];
         });
 

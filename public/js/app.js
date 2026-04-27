@@ -417,41 +417,48 @@ const app = {
         const endDate = document.getElementById('filter-end-date')?.value || '';
         const shiftFilter = document.getElementById('filter-shift')?.value || '';
 
-        this.showToast('Menyiapkan file ZIP...', 'info');
+        if (this.reports.filter(r => r.file_url).length === 0) {
+            return this.showToast('Tidak ada file PDF untuk diunduh', 'error');
+        }
+
+        this.showToast('Sedang memproses file PDF...', 'info');
 
         try {
             const response = await fetch(`/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
-            const urls = await response.json();
+            const reportsWithFiles = await response.json();
 
-            if (!response.ok) {
-                return this.showToast(urls.message || 'Gagal menyiapkan ZIP', 'error');
-            }
+            if (!response.ok) throw new Error(reportsWithFiles.message || 'Gagal mengambil daftar file');
 
             const zip = new JSZip();
-            const folder = zip.folder("Reports_Gandaria_City");
+            const folder = zip.folder("Laporan_SPV_Gandaria_City");
+            let count = 0;
 
-            const promises = urls.map(async (file) => {
+            const promises = reportsWithFiles.map(async (report) => {
                 try {
-                    const fileResponse = await fetch(file.url);
+                    const fileResponse = await fetch(report.url);
+                    if (!fileResponse.ok) return;
+
                     const blob = await fileResponse.blob();
-                    folder.file(file.name, blob);
-                } catch (e) {
-                    console.error('Error fetching file for ZIP:', e);
-                }
+                    // Gunakan nama file yang lebih rapi: Nama_Tanggal_Shift.pdf
+                    const safeName = `${report.spv_name}_${report.report_date}_${report.shift}`.replace(/[^a-z0-9]/gi, '_') + '.pdf';
+                    folder.file(safeName, blob);
+                    count++;
+                } catch (e) { console.error('Skip file:', report.url); }
             });
 
             await Promise.all(promises);
 
-            zip.generateAsync({type:"blob"}).then((content) => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = `Batch_Laporan_${new Date().toISOString().split('T')[0]}.zip`;
-                link.click();
-                this.showToast('ZIP berhasil diunduh', 'success');
-            });
+            if (count === 0) return this.showToast('Gagal mengunduh file PDF (Mungkin masalah koneksi ke storage)', 'error');
+
+            const content = await zip.generateAsync({type:"blob"});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `Batch_Laporan_SPV_${new Date().toISOString().split('T')[0]}.zip`;
+            link.click();
+            this.showToast(`${count} file berhasil di-ZIP`, 'success');
         } catch (error) {
-            console.error('Bulk download error:', error);
-            this.showToast('Gagal mengunduh ZIP', 'error');
+            console.error('ZIP Error:', error);
+            this.showToast('Gagal memproses ZIP: ' + error.message, 'error');
         }
     },
 
