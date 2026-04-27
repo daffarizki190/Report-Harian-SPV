@@ -78,6 +78,10 @@ const app = {
             this.showToast('Data diperbarui', 'info');
         });
 
+        // Export & Download
+        document.getElementById('btn-export-excel')?.addEventListener('click', () => this.handleExportExcel());
+        document.getElementById('btn-bulk-zip')?.addEventListener('click', () => this.handleBulkDownload());
+
         // Upload Form
         const uploadForm = document.getElementById('upload-form');
         if (uploadForm) {
