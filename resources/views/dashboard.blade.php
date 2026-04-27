@@ -25,7 +25,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/gandaria_city_logo_minimalist_1777312787706.png" alt="Logo" class="sidebar-logo">
+                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="sidebar-logo">
                 <span>Gandaria City</span>
             </div>
             <nav>
