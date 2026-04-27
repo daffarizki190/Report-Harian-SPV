@@ -51,10 +51,6 @@ const app = {
             });
         });
 
-        // Export Buttons
-        document.getElementById('btn-export-excel')?.addEventListener('click', () => this.handleExportExcel());
-        document.getElementById('btn-bulk-zip')?.addEventListener('click', () => this.handleBulkDownload());
-
         // Tab / Method Toggles
         document.querySelectorAll('.method-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -431,16 +427,31 @@ const app = {
         }
     },
 
-    handleBulkDownload() {
+    async handleBulkDownload() {
         const startDate = document.getElementById('filter-start-date')?.value || '';
         const endDate = document.getElementById('filter-end-date')?.value || '';
         const shiftFilter = document.getElementById('filter-shift')?.value || '';
 
         this.showToast('Sedang membuat ZIP di server...', 'info');
         
-        // Panggil langsung via window.location untuk mendownload file dari server
-        const url = `/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`;
-        window.location.href = url;
+        try {
+            const url = `/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Gagal membuat ZIP');
+            }
+
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Batch_Laporan_SPV_${new Date().toISOString().split('T')[0]}.zip`;
+            link.click();
+            this.showToast('ZIP berhasil diunduh', 'success');
+        } catch (error) {
+            this.showToast(error.message, 'error');
+        }
     },
 
     async handleUpload(e) {
