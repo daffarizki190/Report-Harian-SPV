@@ -25,24 +25,24 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <i class="fas fa-building"></i>
-                <span>REPORT SPV</span>
+                <img src="/gandaria_city_logo_minimalist_1777312787706.png" alt="Logo" class="sidebar-logo">
+                <span>Gandaria City</span>
             </div>
             <nav>
                 <a href="#" class="nav-item active" data-view="dashboard">
-                    <i class="fas fa-chart-pie"></i> Dashboard
+                    <i class="fas fa-grid-2"></i> Dashboard
                 </a>
                 @if(auth()->user()->role === 'Supervisor')
                 <a href="#" class="nav-item" data-view="upload">
-                    <i class="fas fa-plus-circle"></i> Buat Laporan
+                    <i class="fas fa-file-plus"></i> Buat Laporan
                 </a>
                 @endif
                 <a href="#" class="nav-item" data-view="history">
-                    <i class="fas fa-list-ul"></i> Riwayat
+                    <i class="fas fa-clock-rotate-left"></i> Riwayat
                 </a>
                 @if(auth()->user()->role === 'Admin')
                 <a href="#" class="nav-item" data-view="users">
-                    <i class="fas fa-user-shield"></i> Pengguna
+                    <i class="fas fa-users-gear"></i> Pengguna
                 </a>
                 @endif
             </nav>
@@ -56,7 +56,7 @@
                 </div>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-icon" title="Logout"><i class="fas fa-power-off"></i></button>
+                    <button type="submit" class="btn-icon" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
                 </form>
             </div>
         </aside>
@@ -66,56 +66,65 @@
             <header class="top-bar">
                 <h2 id="view-title">Dashboard</h2>
                 <div class="actions">
-                    <div class="date-display" id="current-date">{{ date('l, d F Y') }}</div>
-                    <button class="btn-secondary" id="btn-refresh"><i class="fas fa-redo"></i></button>
+                    <div class="date-display" id="current-date">{{ date('d M Y') }}</div>
+                    <button class="btn-secondary" id="btn-refresh"><i class="fas fa-rotate"></i></button>
                 </div>
             </header>
 
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
-                @if(auth()->user()->role === 'Admin')
                 <div class="stats-grid animate-fade-in">
                     <div class="glass-card stat-card">
-                        <i class="fas fa-file-alt" style="color: #3b82f6;"></i>
+                        <div class="stat-header">
+                            <i class="fas fa-file-lines"></i>
+                        </div>
                         <div class="stat-content">
                             <h3>Total Laporan</h3>
                             <p id="stat-total">0</p>
                         </div>
                     </div>
                     <div class="glass-card stat-card">
-                        <i class="fas fa-calendar-check" style="color: #10b981;"></i>
+                        <div class="stat-header">
+                            <i class="fas fa-calendar-day" style="color: #10b981;"></i>
+                        </div>
                         <div class="stat-content">
                             <h3>Hari Ini</h3>
                             <p id="stat-today">0</p>
                         </div>
                     </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-user-clock" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Shift Aktif</h3>
+                            <p style="font-size: 1.2rem; margin-top: 10px;">{{ date('H:i') < '14:00' ? 'Pagi' : (date('H:i') < '22:00' ? 'Siang' : 'Malam') }}</p>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-shield-halved" style="color: #6366f1;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Sistem Status</h3>
+                            <p style="font-size: 1.2rem; margin-top: 10px; color: #10b981;">Online</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="glass-card animate-fade-in">
+                @if(auth()->user()->role === 'Admin')
+                <div class="glass-card animate-fade-in" style="margin-bottom: 24px;">
                     <div class="card-header">
-                        <h3><i class="fas fa-history"></i> Log Aktivitas</h3>
+                        <h3>Log Aktivitas Terkini</h3>
                     </div>
                     <div class="table-container">
                         <table id="logs-table">
                             <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Aksi</th>
-                                    <th>Detail</th>
-                                    <th>Waktu</th>
-                                </tr>
+                                <tr><th>User</th><th>Aksi</th><th>Waktu</th></tr>
                             </thead>
                             <tbody></tbody>
                         </table>
                     </div>
-                </div>
-                @else
-                <div class="glass-card animate-fade-in" style="text-align: center; padding: 60px 20px;">
-                    <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
-                        <i class="fas fa-check" style="font-size: 2rem; color: #10b981;"></i>
-                    </div>
-                    <h2 style="margin-bottom: 8px;">Selamat Datang, {{ explode(' ', Auth::user()->name)[0] }}</h2>
-                    <p style="color: var(--text-dim); font-size: 0.95rem;">Sistem Laporan Harian Pengawas Gandaria City.</p>
                 </div>
                 @endif
 

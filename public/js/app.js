@@ -308,12 +308,11 @@ const app = {
             tableBody.innerHTML = '';
             data.forEach(log => {
                 const tr = document.createElement('tr');
-                const date = new Date(log.created_at).toLocaleString('id-ID');
+                const date = new Date(log.created_at).toLocaleString('id-ID', {hour: '2-digit', minute:'2-digit'});
                 tr.innerHTML = `
-                    <td style="font-weight:600">${log.user_name}</td>
-                    <td><span class="badge ${(log.action || '').toLowerCase()}">${log.action || 'Unknown'}</span></td>
-                    <td>${log.details}</td>
-                    <td style="font-size:0.85rem; color:var(--text-dim)">${date}</td>
+                    <td style="font-weight:700; color:var(--primary)">${log.user_name}</td>
+                    <td><span class="badge ${(log.action || '').toLowerCase().replace(' ', '-')}">${log.action || 'Unknown'}</span></td>
+                    <td style="font-size:0.8rem; color:var(--text-dim)">${date}</td>
                 `;
                 tableBody.appendChild(tr);
             });
