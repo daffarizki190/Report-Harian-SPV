@@ -46,9 +46,6 @@ class ReportController extends Controller
 
     public function stats()
     {
-        if (!in_array(Auth::user()->role, ['Admin', 'Management'])) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
         return response()->json([
             'total' => Report::count(),
             'today' => Report::whereDate('report_date', now()->toDateString())->count(),
