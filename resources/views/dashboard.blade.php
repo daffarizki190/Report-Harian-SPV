@@ -73,6 +73,16 @@
 
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
+                @php
+                    $hour = (int)date('H');
+                    if ($hour >= 7 && $hour < 15) {
+                        $currentShift = 'Pagi';
+                    } elseif ($hour >= 15 && $hour < 23) {
+                        $currentShift = 'Siang';
+                    } else {
+                        $currentShift = 'Malam';
+                    }
+                @endphp
                 <div class="stats-grid animate-fade-in">
                     <div class="glass-card stat-card">
                         <div class="stat-header">
@@ -98,7 +108,7 @@
                         </div>
                         <div class="stat-content">
                             <h3>Shift Aktif</h3>
-                            <p style="font-size: 1.2rem; margin-top: 10px;">{{ date('H:i') < '14:00' ? 'Pagi' : (date('H:i') < '22:00' ? 'Siang' : 'Malam') }}</p>
+                            <p style="font-size: 1.2rem; margin-top: 10px;">{{ $currentShift }}</p>
                         </div>
                     </div>
                     <div class="glass-card stat-card">
@@ -212,9 +222,9 @@
                             <div class="form-group">
                                 <label>Shift</label>
                                 <select name="shift" required>
-                                    <option value="Pagi">Pagi</option>
-                                    <option value="Siang">Siang</option>
-                                    <option value="Malam">Malam</option>
+                                    <option value="Pagi" {{ $currentShift === 'Pagi' ? 'selected' : '' }}>Pagi (07:00 - 15:00)</option>
+                                    <option value="Siang" {{ $currentShift === 'Siang' ? 'selected' : '' }}>Siang (15:00 - 23:00)</option>
+                                    <option value="Malam" {{ $currentShift === 'Malam' ? 'selected' : '' }}>Malam (23:00 - 07:00)</option>
                                 </select>
                             </div>
                         </div>
