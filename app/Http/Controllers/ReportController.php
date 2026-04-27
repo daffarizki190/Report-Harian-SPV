@@ -175,35 +175,30 @@ class ReportController extends Controller
     public function downloadZIP(Request $request)
     {
         $query = Report::query();
-
-        if ($request->has('start_date') && $request->start_date) {
-            $query->whereDate('report_date', '>=', $request->start_date);
-        }
-
-        if ($request->has('end_date') && $request->end_date) {
-            $query->whereDate('report_date', '<=', $request->end_date);
-        }
-
-        if ($request->has('shift') && $request->shift) {
-            $query->where('shift', $request->shift);
-        }
+        if ($request->start_date) $query->whereDate('report_date', '>=', $request->start_date);
+        if ($request->end_date) $query->whereDate('report_date', '<=', $request->end_date);
+        if ($request->shift) $query->where('shift', $request->shift);
 
         $reports = $query->whereNotNull('file_path')->get();
-        
-        if ($reports->isEmpty()) {
-            return response()->json(['message' => 'Tidak ada file untuk diunduh pada filter ini.'], 404);
+        if ($reports->isEmpty()) return response()->json(['message' => 'Tidak ada file.'], 404);
+
+        $zipName = 'Batch_Laporan_' . now()->format('Y-m-d_His') . '.zip';
+        $zipPath = storage_path('app/' . $zipName);
+        $zip = new \ZipArchive;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+            foreach ($reports as $report) {
+                $fileContent = @file_get_contents($this->supabase->publicUrl($report->file_path));
+                if ($fileContent) {
+                    $safeName = "{$report->spv_name}_{$report->report_date}_{$report->shift}.pdf";
+                    $safeName = str_replace([' ', '/', '\\'], '_', $safeName);
+                    $zip->addFromString($safeName, $fileContent);
+                }
+            }
+            $zip->close();
         }
 
-        $urls = $reports->map(function($r) {
-            return [
-                'url'         => $this->supabase->publicUrl($r->file_path),
-                'spv_name'    => $r->spv_name,
-                'report_date' => $r->report_date,
-                'shift'       => $r->shift
-            ];
-        });
-
-        return response()->json($urls);
+        return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
     /**

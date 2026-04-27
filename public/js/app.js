@@ -392,6 +392,9 @@ const app = {
             
             this.showToast('Menyiapkan file Excel...', 'info');
 
+            // Ambil base URL Supabase dari .env (biasanya project id terlihat di URL fetch)
+            const supabaseBase = 'https://xtlrenpzmyrufgcqapwh.supabase.co/storage/v1/object/public/daily-reports/';
+
             const data = this.reports.map((r, index) => ({
                 'No': index + 1,
                 'Nama Supervisor': r.spv_name,
@@ -399,7 +402,7 @@ const app = {
                 'Shift': r.shift,
                 'Keterangan': r.description || '-',
                 'Laporan Manual': r.manual_content || '-',
-                'Link File PDF': r.file_path ? `https://daffarizki190.supabase.co/storage/v1/object/public/reports/${r.file_path}` : '-',
+                'Link File PDF': r.file_path ? `${supabaseBase}${r.file_path}` : '-',
                 'Waktu Input (WIB)': new Date(r.created_at).toLocaleString('id-ID')
             }));
 
@@ -415,7 +418,7 @@ const app = {
                 { wch: 10 }, // Shift
                 { wch: 30 }, // Keterangan
                 { wch: 50 }, // Isi Manual
-                { wch: 40 }, // Link PDF
+                { wch: 60 }, // Link PDF
                 { wch: 20 }  // Waktu Input
             ];
 
@@ -428,54 +431,16 @@ const app = {
         }
     },
 
-    async handleBulkDownload() {
+    handleBulkDownload() {
         const startDate = document.getElementById('filter-start-date')?.value || '';
         const endDate = document.getElementById('filter-end-date')?.value || '';
         const shiftFilter = document.getElementById('filter-shift')?.value || '';
 
-        if (this.reports.filter(r => r.file_url).length === 0) {
-            return this.showToast('Tidak ada file PDF untuk diunduh', 'error');
-        }
-
-        this.showToast('Sedang memproses file PDF...', 'info');
-
-        try {
-            const response = await fetch(`/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
-            const reportsWithFiles = await response.json();
-
-            if (!response.ok) throw new Error(reportsWithFiles.message || 'Gagal mengambil daftar file');
-
-            const zip = new JSZip();
-            const folder = zip.folder("Laporan_SPV_Gandaria_City");
-            let count = 0;
-
-            const promises = reportsWithFiles.map(async (report) => {
-                try {
-                    const fileResponse = await fetch(report.url);
-                    if (!fileResponse.ok) return;
-
-                    const blob = await fileResponse.blob();
-                    // Gunakan nama file yang lebih rapi: Nama_Tanggal_Shift.pdf
-                    const safeName = `${report.spv_name}_${report.report_date}_${report.shift}`.replace(/[^a-z0-9]/gi, '_') + '.pdf';
-                    folder.file(safeName, blob);
-                    count++;
-                } catch (e) { console.error('Skip file:', report.url); }
-            });
-
-            await Promise.all(promises);
-
-            if (count === 0) return this.showToast('Gagal mengunduh file PDF (Mungkin masalah koneksi ke storage)', 'error');
-
-            const content = await zip.generateAsync({type:"blob"});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
-            link.download = `Batch_Laporan_SPV_${new Date().toISOString().split('T')[0]}.zip`;
-            link.click();
-            this.showToast(`${count} file berhasil di-ZIP`, 'success');
-        } catch (error) {
-            console.error('ZIP Error:', error);
-            this.showToast('Gagal memproses ZIP: ' + error.message, 'error');
-        }
+        this.showToast('Sedang membuat ZIP di server...', 'info');
+        
+        // Panggil langsung via window.location untuk mendownload file dari server
+        const url = `/v1/reports/zip?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`;
+        window.location.href = url;
     },
 
     async handleUpload(e) {
