@@ -4,49 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Report;
+use App\Services\SupabaseStorageService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
-    /**
-     * Upload file directly to Supabase Storage using REST API (bypasses S3 signature issues).
-     */
-    private function uploadToSupabase(string $filePath, string $storagePath): string
-    {
-        $supabaseUrl = rtrim(env('SUPABASE_URL'), '/');
-        $bucket      = env('SUPABASE_BUCKET', 'daily-reports');
-        // Use service_role key for uploads (bypasses RLS and S3 auth entirely)
-        $serviceKey  = env('SUPABASE_SERVICE_ROLE_KEY', env('SUPABASE_ANON_KEY'));
-
-        $uploadUrl = "{$supabaseUrl}/storage/v1/object/{$bucket}/{$storagePath}";
-
-        $fileContents = file_get_contents($filePath);
-
-        $ch = curl_init($uploadUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST  => 'POST',
-            CURLOPT_POSTFIELDS     => $fileContents,
-            CURLOPT_HTTPHEADER     => [
-                'Authorization: Bearer ' . $serviceKey,
-                'Content-Type: application/pdf',
-                'x-upsert: true',
-            ],
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode < 200 || $httpCode >= 300) {
-            throw new \Exception("Supabase upload failed (HTTP {$httpCode}): {$response}");
-        }
-
-        return $storagePath;
-    }
-
+    public function __construct(
+        protected SupabaseStorageService $supabase
+    ) {}
     /**
      * Display a listing of reports with professional filtering.
      */
@@ -68,12 +35,9 @@ class ReportController extends Controller
 
         $reports = $query->orderBy('report_date', 'desc')->get();
 
-        $supabaseUrl = rtrim(env('SUPABASE_URL'), '/');
-        $bucket      = env('SUPABASE_BUCKET', 'daily-reports');
-
-        $reports->each(function ($report) use ($supabaseUrl, $bucket) {
+        $reports->each(function ($report) {
             if ($report->file_path) {
-                $report->file_url = "{$supabaseUrl}/storage/v1/object/public/{$bucket}/{$report->file_path}";
+                $report->file_url = $this->supabase->publicUrl($report->file_path);
             }
         });
 
@@ -87,7 +51,7 @@ class ReportController extends Controller
         }
         return response()->json([
             'total' => Report::count(),
-            'today' => Report::whereDate('report_date', now())->count(),
+            'today' => Report::whereDate('report_date', now()->toDateString())->count(),
         ]);
     }
 
@@ -135,8 +99,8 @@ class ReportController extends Controller
                     $request->shift
                 );
 
-                // Upload via REST API (no S3 signature required)
-                $filePath = $this->uploadToSupabase(
+                // Upload via SupabaseStorageService (mockable)
+                $filePath = $this->supabase->upload(
                     $request->file('report_file')->getRealPath(),
                     $storagePath
                 );

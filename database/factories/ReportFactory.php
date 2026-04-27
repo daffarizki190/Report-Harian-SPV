@@ -1,0 +1,57 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Report;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Report>
+ */
+class ReportFactory extends Factory
+{
+    protected $model = Report::class;
+
+    /**
+     * Definisi state default model laporan.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'spv_name'       => fake()->name(),
+            'report_date'    => fake()->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
+            'shift'          => fake()->randomElement(['Pagi', 'Siang', 'Malam']),
+            'description'    => fake()->optional()->sentence(),
+            'manual_content' => fake()->optional()->paragraph(),
+            'file_path'      => null,
+        ];
+    }
+
+    /**
+     * State: laporan dengan file PDF.
+     */
+    public function withFile(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'file_path' => sprintf(
+                'REPORTS/%s/%s_%s_%s.pdf',
+                $attributes['report_date'],
+                str_replace(' ', '_', $attributes['spv_name']),
+                $attributes['report_date'],
+                $attributes['shift']
+            ),
+        ]);
+    }
+
+    /**
+     * State: laporan untuk hari ini.
+     */
+    public function today(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'report_date' => now()->toDateString(),
+        ]);
+    }
+}

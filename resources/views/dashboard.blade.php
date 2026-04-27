@@ -50,8 +50,8 @@
                 <div class="user-info">
                     <div class="avatar">{{ substr(Auth::user()->name ?? 'U', 0, 1) }}</div>
                     <div class="details">
-                        <p>{{ Auth::user()->name ?? 'User' }}</p>
-                        <small>{{ Auth::user()->role ?? 'Guest' }}</small>
+                        <p id="user-name">{{ Auth::user()->name ?? 'User' }}</p>
+                        <small id="user-role">{{ Auth::user()->role ?? 'Guest' }}</small>
                     </div>
                 </div>
                 <form action="{{ route('logout') }}" method="POST">
@@ -162,6 +162,7 @@
                             <input type="date" id="purge-start" style="max-width: 200px;">
                             <input type="date" id="purge-end" style="max-width: 200px;">
                             <button id="btn-purge-range" class="btn-primary" style="background: #e11d48; width: auto;">Hapus Range</button>
+                            <button id="btn-purge-all" class="btn-secondary" style="color: #e11d48; border-color: #fecaca;">Hapus Seluruh Data</button>
                         </div>
                     </div>
                     @endif

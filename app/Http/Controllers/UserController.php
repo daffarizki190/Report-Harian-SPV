@@ -31,26 +31,34 @@ class UserController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name'     => 'required|string|max:255',
             'username' => 'required|string|unique:users,username,' . $request->id,
-            'role' => 'required|in:Admin,Supervisor,Management',
+            'role'     => 'required|in:Admin,Supervisor,Management',
+            'password' => $request->id ? 'nullable|string|min:6' : 'required|string|min:6',
         ]);
 
-        $user = User::updateOrCreate(
-            ['id' => $request->id],
-            [
-                'name' => $request->name,
-                'username' => $request->username,
-                'role' => $request->role,
-            ]
-        );
-
-        if ($request->password) {
-            $user->password = Hash::make($request->password);
+        if ($request->id) {
+            // ── Update user yang sudah ada ──
+            $user = User::findOrFail($request->id);
+            $user->name     = $request->name;
+            $user->username = $request->username;
+            $user->role     = $request->role;
+            if ($request->password) {
+                $user->password = Hash::make($request->password);
+            }
             $user->save();
+            $action = 'Update User';
+        } else {
+            // ── Buat user baru ──
+            $user = User::create([
+                'name'     => $request->name,
+                'username' => $request->username,
+                'role'     => $request->role,
+                'password' => Hash::make($request->password),
+            ]);
+            $action = 'Create User';
         }
 
-        $action = $request->id ? 'Update User' : 'Create User';
         $this->logActivity(Auth::user()->name, $action, "User: {$user->username} ({$user->role})");
 
         return response()->json(['message' => 'User berhasil disimpan.', 'user' => $user]);

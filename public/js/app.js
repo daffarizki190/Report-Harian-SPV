@@ -15,17 +15,20 @@ const app = {
 
     applyRolePermissions() {
         const user = window.Laravel?.user;
-        if (user) {
-            document.getElementById('user-name').textContent = user.name;
-            document.getElementById('user-role').textContent = user.role;
-            
-            const spvOnlyElements = document.querySelectorAll('.restricted-spv');
-            spvOnlyElements.forEach(el => {
-                if (user.role !== 'Supervisor' && user.role !== 'Admin') {
-                    el.style.display = 'none';
-                }
-            });
-        }
+        if (!user) return;
+
+        // Guard: elemen mungkin tidak ada tergantung layout
+        const nameEl = document.getElementById('user-name');
+        const roleEl = document.getElementById('user-role');
+        if (nameEl) nameEl.textContent = user.name;
+        if (roleEl) roleEl.textContent = user.role;
+
+        const spvOnlyElements = document.querySelectorAll('.restricted-spv');
+        spvOnlyElements.forEach(el => {
+            if (user.role !== 'Supervisor' && user.role !== 'Admin') {
+                el.style.display = 'none';
+            }
+        });
     },
 
     bindEvents() {
@@ -281,6 +284,13 @@ const app = {
 
         try {
             const response = await fetch('/v1/reports/stats');
+            const contentType = response.headers.get('content-type') || '';
+            
+            if (!response.ok || !contentType.includes('application/json')) {
+                console.error('Gagal memuat statistik:', response.status);
+                return;
+            }
+
             const data = await response.json();
             totalEl.textContent = data.total || 0;
             todayEl.textContent = data.today || 0;
@@ -322,10 +332,19 @@ const app = {
 
         try {
             const response = await fetch(`/v1/reports?start_date=${startDate}&end_date=${endDate}&shift=${shiftFilter}`);
+
+            // Guard: pastikan response adalah JSON sebelum parse
+            const contentType = response.headers.get('content-type') || '';
+            if (!response.ok || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Gagal memuat laporan:', response.status, text.substring(0, 200));
+                tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--error)">Gagal memuat data (${response.status}). Coba refresh.</td></tr>`;
+                return;
+            }
+
             const data = await response.json();
             this.reports = data;
 
-            // Bersihkan tabel sebelum render agar tidak ganda
             tableBody.innerHTML = '';
             if (this.reports.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center">Tidak ada laporan ditemukan.</td></tr>';
@@ -334,6 +353,8 @@ const app = {
 
             this.reports.forEach(row => {
                 const tr = document.createElement('tr');
+                // Encode manual_content dengan aman (handle null/undefined)
+                const safeContent = row.manual_content ? btoa(unescape(encodeURIComponent(row.manual_content))) : '';
                 tr.innerHTML = `
                     <td>${row.spv_name}</td>
                     <td>${row.report_date}</td>
@@ -342,11 +363,11 @@ const app = {
                     <td>
                         <div style="display:flex; gap:8px;">
                             ${row.file_url ? `
-                                <button class="btn-icon" title="View" onclick="window.open('${row.file_url}', '_blank')"><i class="fas fa-eye"></i></button>
-                                <a href="${row.file_url}" class="btn-icon" title="Download" download><i class="fas fa-download"></i></a>
-                            ` : `
-                                <button class="btn-icon" title="View Manual" onclick="app.viewManualContent('${btoa(row.manual_content)}')"><i class="fas fa-file-alt"></i></button>
-                            `}
+                                <button class="btn-icon" title="Lihat" onclick="window.open('${row.file_url}', '_blank')"><i class="fas fa-eye"></i></button>
+                                <a href="${row.file_url}" class="btn-icon" title="Unduh" download><i class="fas fa-download"></i></a>
+                            ` : safeContent ? `
+                                <button class="btn-icon" title="Lihat Isi" onclick="app.viewManualContent('${safeContent}')"><i class="fas fa-file-alt"></i></button>
+                            ` : '<span style="color:var(--text-dim);font-size:0.8rem">-</span>'}
                         </div>
                     </td>
                 `;
@@ -354,7 +375,7 @@ const app = {
             });
         } catch (error) {
             console.error('Error loading reports:', error);
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--error)">Gagal memuat data.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--error)">Gagal memuat data. Periksa koneksi dan coba refresh.</td></tr>';
         }
     },
 
