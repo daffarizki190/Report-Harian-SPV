@@ -174,31 +174,55 @@ class ReportController extends Controller
      */
     public function downloadZIP(Request $request)
     {
-        $query = Report::query();
-        if ($request->start_date) $query->whereDate('report_date', '>=', $request->start_date);
-        if ($request->end_date) $query->whereDate('report_date', '<=', $request->end_date);
-        if ($request->shift) $query->where('shift', $request->shift);
+        try {
+            $query = Report::query();
+            if ($request->start_date) $query->whereDate('report_date', '>=', $request->start_date);
+            if ($request->end_date) $query->whereDate('report_date', '<=', $request->end_date);
+            if ($request->shift) $query->where('shift', $request->shift);
 
-        $reports = $query->whereNotNull('file_path')->get();
-        if ($reports->isEmpty()) return response()->json(['message' => 'Tidak ada file.'], 404);
+            $reports = $query->whereNotNull('file_path')->get();
+            if ($reports->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada file laporan (PDF) ditemukan untuk kriteria ini.'], 404);
+            }
 
-        $zipName = 'Batch_Laporan_' . now()->format('Y-m-d_His') . '.zip';
-        $zipPath = storage_path('app/' . $zipName);
-        $zip = new \ZipArchive;
+            $zipName = 'Batch_Laporan_' . now()->format('Y-m-d_His') . '.zip';
+            $zipPath = storage_path('app/' . $zipName);
+            
+            // Pastikan folder storage/app ada
+            if (!file_exists(storage_path('app'))) {
+                mkdir(storage_path('app'), 0775, true);
+            }
 
-        if ($zip->open($zipPath, \ZipArchive::CREATE) === TRUE) {
+            $zip = new \ZipArchive;
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
+                return response()->json(['message' => 'Gagal menginisialisasi file ZIP di server.'], 500);
+            }
+
+            $addedFiles = 0;
             foreach ($reports as $report) {
-                $fileContent = @file_get_contents($this->supabase->publicUrl($report->file_path));
+                $url = $this->supabase->publicUrl($report->file_path);
+                $fileContent = @file_get_contents($url);
+                
                 if ($fileContent) {
                     $safeName = "{$report->spv_name}_{$report->report_date}_{$report->shift}.pdf";
-                    $safeName = str_replace([' ', '/', '\\'], '_', $safeName);
+                    // Bersihkan nama file dari karakter terlarang
+                    $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $safeName);
                     $zip->addFromString($safeName, $fileContent);
+                    $addedFiles++;
                 }
             }
+            
             $zip->close();
-        }
 
-        return response()->download($zipPath)->deleteFileAfterSend(true);
+            if ($addedFiles === 0) {
+                if (file_exists($zipPath)) @unlink($zipPath);
+                return response()->json(['message' => 'Gagal mengunduh konten file dari storage Supabase.'], 500);
+            }
+
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
