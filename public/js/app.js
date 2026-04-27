@@ -392,17 +392,33 @@ const app = {
             
             this.showToast('Menyiapkan file Excel...', 'info');
 
-            const data = this.reports.map(r => ({
-                'Nama SPV': r.spv_name,
-                'Tanggal': r.report_date,
+            const data = this.reports.map((r, index) => ({
+                'No': index + 1,
+                'Nama Supervisor': r.spv_name,
+                'Tanggal Laporan': r.report_date,
                 'Shift': r.shift,
-                'Keterangan': r.description || '',
-                'Isi Manual': r.manual_content || ''
+                'Keterangan': r.description || '-',
+                'Laporan Manual': r.manual_content || '-',
+                'Link File PDF': r.file_path ? `https://daffarizki190.supabase.co/storage/v1/object/public/reports/${r.file_path}` : '-',
+                'Waktu Input (WIB)': new Date(r.created_at).toLocaleString('id-ID')
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Reports");
+            XLSX.utils.book_append_sheet(wb, ws, "Laporan Daily SPV");
+
+            // Atur lebar kolom agar rapi
+            ws['!cols'] = [
+                { wch: 5 },  // No
+                { wch: 25 }, // Nama
+                { wch: 15 }, // Tanggal
+                { wch: 10 }, // Shift
+                { wch: 30 }, // Keterangan
+                { wch: 50 }, // Isi Manual
+                { wch: 40 }, // Link PDF
+                { wch: 20 }  // Waktu Input
+            ];
+
             XLSX.writeFile(wb, `Laporan_SPV_GandariaCity_${new Date().toISOString().split('T')[0]}.xlsx`);
             
             this.showToast('Excel berhasil diunduh', 'success');
