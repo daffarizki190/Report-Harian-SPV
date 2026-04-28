@@ -30,9 +30,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+        Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
         Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
         Route::get('/reports/logs', [ReportController::class, 'logs'])->name('reports.logs');
         Route::post('/reports/purge', [ReportController::class, 'purge'])->name('reports.purge');
+        Route::get('/reports/purge', function () {
+            return redirect()->route('dashboard');
+        });
         Route::get('/reports/zip', [ReportController::class, 'downloadZIP'])->name('reports.zip');
 
         // User Management (Admin Only)

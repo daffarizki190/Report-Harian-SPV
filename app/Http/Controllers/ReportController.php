@@ -14,12 +14,19 @@ class ReportController extends Controller
     public function __construct(
         protected SupabaseStorageService $supabase
     ) {}
+
     /**
      * Display a listing of reports with professional filtering.
      */
     public function index(Request $request)
     {
         $query = Report::query();
+        $user = Auth::user();
+
+        // Supervisor hanya bisa melihat laporan mereka sendiri
+        if ($user->role === 'Supervisor') {
+            $query->where('user_id', $user->id);
+        }
 
         if ($request->has('start_date') && $request->start_date) {
             $query->whereDate('report_date', '>=', $request->start_date);
@@ -46,9 +53,18 @@ class ReportController extends Controller
 
     public function stats()
     {
+        $user = Auth::user();
+        $query = Report::query();
+        $todayQuery = Report::whereDate('report_date', now()->toDateString());
+
+        if ($user->role === 'Supervisor') {
+            $query->where('user_id', $user->id);
+            $todayQuery->where('user_id', $user->id);
+        }
+
         return response()->json([
-            'total' => Report::count(),
-            'today' => Report::whereDate('report_date', now()->toDateString())->count(),
+            'total' => $query->count(),
+            'today' => $todayQuery->count(),
         ]);
     }
 
@@ -63,6 +79,7 @@ class ReportController extends Controller
 
     /**
      * Store or Update a report (Single Version of Truth).
+     * Handles: file upload, manual text, AND digital form data.
      */
     public function store(Request $request)
     {
@@ -71,11 +88,11 @@ class ReportController extends Controller
         }
 
         $request->validate([
-            'report_date'   => 'required|date',
-            'shift'         => 'required|string|in:Pagi,Siang,Malam',
-            'report_file'   => 'nullable|mimes:pdf,jpg,jpeg,png|max:10240',
-            'manual_content'=> 'nullable|string',
-            'description'   => 'nullable|string|max:255'
+            'report_date'    => 'required|date',
+            'shift'          => 'required|string|in:Pagi,Siang,Malam',
+            'report_file'    => 'nullable|mimes:pdf,jpg,jpeg,png|max:10240',
+            'manual_content' => 'nullable|string',
+            'description'    => 'nullable|string|max:255',
         ]);
 
         $spvName = auth()->user()->name ?? $request->spv_name ?? 'Guest';
@@ -98,7 +115,6 @@ class ReportController extends Controller
                     $extension
                 );
 
-                // Upload via SupabaseStorageService (mockable)
                 $filePath = $this->supabase->upload(
                     $request->file('report_file')->getRealPath(),
                     $storagePath
@@ -107,10 +123,11 @@ class ReportController extends Controller
 
             $report = Report::updateOrCreate(
                 [
-                    'spv_name'    => $spvName,
+                    'user_id'     => Auth::id(),
                     'report_date' => $request->report_date
                 ],
                 [
+                    'spv_name'       => $spvName,
                     'shift'          => $request->shift,
                     'description'    => $request->description,
                     'file_path'      => $filePath,
@@ -126,17 +143,92 @@ class ReportController extends Controller
     }
 
     /**
+     * Store structured digital form data (Daily Report Pengawas).
+     */
+    public function storeForm(Request $request)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role, ['Supervisor', 'Management', 'Admin'])) {
+            return response()->json(['message' => 'Anda tidak memiliki akses untuk fitur ini.'], 403);
+        }
+
+        $request->validate([
+            'report_id'   => 'nullable|integer|exists:reports,id',
+            'report_date' => 'required|date',
+            'shift'       => 'required|string|in:Pagi,Siang,Malam',
+            'form_data'   => 'required|string', 
+        ]);
+
+        // Decode & re-encode untuk memastikan valid JSON
+        $formDataDecoded = json_decode($request->form_data, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['message' => 'Data form tidak valid.'], 422);
+        }
+
+        // Ambil nama pengawas dari form (bisa diedit management) atau dari auth (SPV)
+        $spvName = $formDataDecoded['metadata']['spv_name'] ?? $user->name;
+
+        return DB::transaction(function () use ($request, $spvName, $formDataDecoded, $user) {
+            // Cari existing report
+            $report = null;
+            if ($request->report_id) {
+                $report = Report::find($request->report_id);
+            } else {
+                $report = Report::where('spv_name', $spvName)
+                                ->whereDate('report_date', $request->report_date)
+                                ->first();
+            }
+
+            // Ambil ringkasan untuk kolom description
+            $spesiifikasi = $formDataDecoded['spesifikasi'] ?? [];
+            $description  = count($spesiifikasi) > 0
+                ? count($spesiifikasi) . ' temuan/kejadian dicatat'
+                : 'Form Digital — Kondisi Normal';
+
+            if ($report) {
+                // Update existing
+                $report->update([
+                    'shift'       => $request->shift,
+                    'description' => $description,
+                    'form_data'   => $formDataDecoded,
+                    'updated_at'  => now()
+                ]);
+                $action = 'Update Form';
+            } else {
+                // Create new (hanya SPV yang biasanya buat baru)
+                $report = Report::create([
+                    'user_id'     => $user->id,
+                    'spv_name'    => $spvName,
+                    'report_date' => $request->report_date,
+                    'shift'       => $request->shift,
+                    'description' => $description,
+                    'form_data'   => $formDataDecoded
+                ]);
+                $action = 'Form Digital';
+            }
+
+            $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");
+
+            return response()->json([
+                'message' => 'Laporan Digital berhasil disimpan.',
+                'data'    => $report
+            ]);
+        });
+    }
+
+    /**
      * Purge reports based on date range (Management feature).
      */
     public function purge(Request $request)
     {
-        if (Auth::user()->role !== 'Management') {
-            return response()->json(['message' => 'Hanya Management yang dapat menghapus data.'], 403);
+        $user = Auth::user();
+        if (!in_array($user->role, ['Management', 'Admin'])) {
+            return response()->json(['message' => 'Hanya Management atau Admin yang dapat menghapus data.'], 403);
         }
 
         $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $deleteAll = $request->input('all', false);
+        $endDate   = $request->input('end_date');
+        $deleteAll = filter_var($request->input('all'), FILTER_VALIDATE_BOOLEAN);
 
         DB::beginTransaction();
         try {
@@ -144,20 +236,23 @@ class ReportController extends Controller
 
             if (!$deleteAll) {
                 if ($startDate) $query->whereDate('report_date', '>=', $startDate);
-                if ($endDate) $query->whereDate('report_date', '<=', $endDate);
+                if ($endDate)   $query->whereDate('report_date', '<=', $endDate);
             }
 
             $reportsToDelete = $query->get();
-            $count = $reportsToDelete->count();
+            $count           = $reportsToDelete->count();
 
             foreach ($reportsToDelete as $report) {
                 if ($report->file_path) {
-                    Storage::disk('supabase')->delete($report->file_path);
+                    $this->supabase->delete($report->file_path);
                 }
                 $report->delete();
             }
 
-            $details = $deleteAll ? "Hapus seluruh data laporan ($count item)" : "Hapus laporan tgl $startDate s/d $endDate ($count item)";
+            $details = $deleteAll
+                ? "Hapus seluruh data laporan ($count item)"
+                : "Hapus laporan tgl $startDate s/d $endDate ($count item)";
+
             $this->logActivity(auth()->user()->name, 'Purge', $details);
 
             DB::commit();
@@ -176,8 +271,8 @@ class ReportController extends Controller
         try {
             $query = Report::query();
             if ($request->start_date) $query->whereDate('report_date', '>=', $request->start_date);
-            if ($request->end_date) $query->whereDate('report_date', '<=', $request->end_date);
-            if ($request->shift) $query->where('shift', $request->shift);
+            if ($request->end_date)   $query->whereDate('report_date', '<=', $request->end_date);
+            if ($request->shift)      $query->where('shift', $request->shift);
 
             $reports = $query->whereNotNull('file_path')->get();
             if ($reports->isEmpty()) {
@@ -186,8 +281,7 @@ class ReportController extends Controller
 
             $zipName = 'Batch_Laporan_' . now()->format('Y-m-d_His') . '.zip';
             $zipPath = storage_path('app/' . $zipName);
-            
-            // Pastikan folder storage/app ada
+
             if (!file_exists(storage_path('app'))) {
                 mkdir(storage_path('app'), 0775, true);
             }
@@ -199,18 +293,17 @@ class ReportController extends Controller
 
             $addedFiles = 0;
             foreach ($reports as $report) {
-                $url = $this->supabase->publicUrl($report->file_path);
+                $url         = $this->supabase->publicUrl($report->file_path);
                 $fileContent = @file_get_contents($url);
-                
+
                 if ($fileContent) {
                     $safeName = "{$report->spv_name}_{$report->report_date}_{$report->shift}.pdf";
-                    // Bersihkan nama file dari karakter terlarang
                     $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $safeName);
                     $zip->addFromString($safeName, $fileContent);
                     $addedFiles++;
                 }
             }
-            
+
             $zip->close();
 
             if ($addedFiles === 0) {
@@ -230,9 +323,9 @@ class ReportController extends Controller
     private function logActivity($userName, $action, $details)
     {
         DB::table('activity_logs')->insert([
-            'user_name' => $userName,
-            'action' => $action,
-            'details' => $details,
+            'user_name'  => $userName,
+            'action'     => $action,
+            'details'    => $details,
             'ip_address' => request()->ip(),
             'created_at' => now(),
             'updated_at' => now(),

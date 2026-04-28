@@ -58,4 +58,28 @@ class SupabaseStorageService
     {
         return "{$this->supabaseUrl}/storage/v1/object/public/{$this->bucket}/{$storagePath}";
     }
+
+    /**
+     * Menghapus file dari Supabase Storage.
+     */
+    public function delete(string $storagePath): bool
+    {
+        $deleteUrl = "{$this->supabaseUrl}/storage/v1/object/{$this->bucket}/{$storagePath}";
+
+        $ch = curl_init($deleteUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST  => 'DELETE',
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $this->serviceKey,
+            ],
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 200 OK atau 404 (sudah tidak ada) dianggap berhasil
+        return ($httpCode >= 200 && $httpCode < 300) || $httpCode === 404;
+    }
 }
