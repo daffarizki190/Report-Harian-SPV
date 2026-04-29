@@ -129,17 +129,6 @@
                     </div>
                 </div>
 
-                @if(auth()->user()->role === 'Admin')
-                <div class="glass-card animate-fade-in" style="margin-bottom: 24px; padding: 20px;">
-                    <div class="card-header" style="margin-bottom: 16px;">
-                        <h3 style="font-size: 0.95rem;"><i class="fas fa-history" style="margin-right: 8px; color: var(--accent);"></i> Log Aktivitas Terkini</h3>
-                    </div>
-                    <div id="logs-feed" class="activity-feed">
-                        <!-- Diisi via JS -->
-                        <div style="text-align:center; padding: 20px; color: var(--text-dim);">Memuat aktivitas...</div>
-                    </div>
-                </div>
-                @endif
 
                 <div class="glass-card animate-fade-in" style="margin-top: 24px;">
                     <div class="card-header" style="margin-bottom: 24px;">
@@ -187,6 +176,18 @@
                     </div>
                     @endif
                 </div>
+
+                @if(auth()->user()->role === 'Admin')
+                <div class="glass-card animate-fade-in" style="margin-top: 24px; padding: 20px;">
+                    <div class="card-header" style="margin-bottom: 16px;">
+                        <h3 style="font-size: 0.95rem;"><i class="fas fa-history" style="margin-right: 8px; color: var(--accent);"></i> Log Aktivitas Terkini</h3>
+                    </div>
+                    <div id="logs-feed" class="activity-feed">
+                        <!-- Diisi via JS -->
+                        <div style="text-align:center; padding: 20px; color: var(--text-dim);">Memuat aktivitas...</div>
+                    </div>
+                </div>
+                @endif
             </section>
 
             <!-- Upload/Input View -->
