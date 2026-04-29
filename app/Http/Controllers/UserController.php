@@ -32,8 +32,8 @@ class UserController extends Controller
 
         $request->validate([
             'name'     => 'required|string|max:255',
-            'username' => 'required|string|unique:users,username,' . $request->id,
-            'role'     => 'required|in:Admin,Supervisor,Management',
+            'username' => 'required|string|unique:users,username' . ($request->id ? ',' . $request->id : ''),
+            'role'     => 'required|in:Admin,Supervisor,CAR PARK MANAGER,Leader,Inhouse',
             'password' => $request->id ? 'nullable|string|min:6' : 'required|string|min:6',
         ]);
 

@@ -20,27 +20,41 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Report::query();
+        $query = Report::query()
+            ->leftJoin('users', 'reports.user_id', '=', 'users.id')
+            ->select(
+                'reports.*', 
+                DB::raw("COALESCE(users.name, reports.spv_name) as user_name"),
+                'users.role as user_role'
+            );
+
         $user = Auth::user();
 
-        // Supervisor hanya bisa melihat laporan mereka sendiri
-        if ($user->role === 'Supervisor') {
-            $query->where('user_id', $user->id);
+        // Supervisor & Leader hanya bisa melihat laporan mereka sendiri
+        // Atau laporan lama (user_id NULL) yang namanya cocok dengan mereka
+        if (in_array($user->role, ['Supervisor', 'Leader', 'SPV'])) {
+            $query->where(function($q) use ($user) {
+                $q->where('reports.user_id', $user->id)
+                  ->orWhere(function($sq) use ($user) {
+                      $sq->whereNull('reports.user_id')
+                         ->where('reports.spv_name', $user->name);
+                  });
+            });
         }
 
         if ($request->has('start_date') && $request->start_date) {
-            $query->whereDate('report_date', '>=', $request->start_date);
+            $query->whereDate('reports.report_date', '>=', $request->start_date);
         }
 
         if ($request->has('end_date') && $request->end_date) {
-            $query->whereDate('report_date', '<=', $request->end_date);
+            $query->whereDate('reports.report_date', '<=', $request->end_date);
         }
 
         if ($request->has('shift') && $request->shift) {
-            $query->where('shift', $request->shift);
+            $query->where('reports.shift', $request->shift);
         }
 
-        $reports = $query->orderBy('report_date', 'desc')->get();
+        $reports = $query->orderBy('reports.report_date', 'desc')->get();
 
         $reports->each(function ($report) {
             if ($report->file_path) {
@@ -57,7 +71,7 @@ class ReportController extends Controller
         $query = Report::query();
         $todayQuery = Report::whereDate('report_date', now()->toDateString());
 
-        if ($user->role === 'Supervisor') {
+        if (in_array($user->role, ['Supervisor', 'Leader'])) {
             $query->where('user_id', $user->id);
             $todayQuery->where('user_id', $user->id);
         }
@@ -65,6 +79,52 @@ class ReportController extends Controller
         return response()->json([
             'total' => $query->count(),
             'today' => $todayQuery->count(),
+        ]);
+    }
+
+    public function systemInfo()
+    {
+        if (!in_array(Auth::user()->role, ['Admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $totalReports = \App\Models\Report::count();
+        $totalUsers = \App\Models\User::count();
+        
+        // Stats for signatures
+        $reports = \App\Models\Report::all();
+        $completed = 0;
+        $pending = 0;
+        foreach ($reports as $r) {
+            $data = is_string($r.form_data) ? json_decode($r.form_data, true) : $r.form_data;
+            if (isset($data['signatures']['mgr-2'])) {
+                $completed++;
+            } else {
+                $pending++;
+            }
+        }
+
+        return response()->json([
+            'server' => [
+                'php_version' => PHP_VERSION,
+                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Vercel/Production',
+                'environment' => config('app.env'),
+                'timezone' => config('app.timezone'),
+            ],
+            'database' => [
+                'driver' => config('database.default'),
+                'total_reports' => $totalReports,
+                'total_users' => $totalUsers,
+                'completion_rate' => $totalReports > 0 ? round(($completed / $totalReports) * 100, 2) : 0,
+                'stats' => [
+                    'completed' => $completed,
+                    'pending' => $pending
+                ]
+            ],
+            'storage' => [
+                'status' => env('SUPABASE_URL') ? 'Connected' : 'Disconnected',
+                'provider' => 'Supabase Cloud'
+            ]
         ]);
     }
 
@@ -83,8 +143,8 @@ class ReportController extends Controller
      */
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'Supervisor') {
-            return response()->json(['message' => 'Hanya Supervisor yang dapat mengirim laporan.'], 403);
+        if (!in_array(Auth::user()->role, ['Supervisor', 'Leader'])) {
+            return response()->json(['message' => 'Hanya Supervisor atau Leader yang dapat mengirim laporan.'], 403);
         }
 
         $request->validate([
@@ -148,7 +208,7 @@ class ReportController extends Controller
     public function storeForm(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['Supervisor', 'Management', 'Admin'])) {
+        if (!in_array($user->role, ['Supervisor', 'CAR PARK MANAGER', 'Admin', 'Inhouse'])) {
             return response()->json(['message' => 'Anda tidak memiliki akses untuk fitur ini.'], 403);
         }
 
@@ -222,8 +282,8 @@ class ReportController extends Controller
     public function purge(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['Management', 'Admin'])) {
-            return response()->json(['message' => 'Hanya Management atau Admin yang dapat menghapus data.'], 403);
+        if (!in_array($user->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse'])) {
+            return response()->json(['message' => 'Hanya CAR PARK MANAGER, Admin, atau Inhouse yang dapat menghapus data.'], 403);
         }
 
         $startDate = $request->input('start_date');

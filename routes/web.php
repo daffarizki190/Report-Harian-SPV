@@ -22,7 +22,7 @@ Route::get('/debug-env', function () {
     ]);
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'prevent-back'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
         Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
         Route::get('/reports/logs', [ReportController::class, 'logs'])->name('reports.logs');
+        Route::get('/system/info', [ReportController::class, 'systemInfo'])->name('system.info');
         Route::post('/reports/purge', [ReportController::class, 'purge'])->name('reports.purge');
         Route::get('/reports/purge', function () {
             return redirect()->route('dashboard');

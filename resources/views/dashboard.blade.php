@@ -31,20 +31,23 @@
             </div>
             <nav>
                 <a href="#" class="nav-item active" data-view="dashboard">
-                    <i class="fas fa-th-large"></i> Dashboard
+                    <i class="fas fa-tasks"></i> Daftar Persetujuan
                 </a>
-                @if(auth()->user()->role === 'Supervisor')
+
+                <a href="#" class="nav-item" data-view="history">
+                    <i class="fas fa-file-invoice"></i> Daftar Laporan
+                </a>
+
+                @if(in_array(auth()->user()->role, ['Supervisor', 'Leader']))
                 <a href="#" class="nav-item" data-view="upload">
                     <i class="fas fa-plus-circle"></i> Buat Laporan
                 </a>
                 @endif
 
-                @if(auth()->user()->role !== 'Supervisor')
-                <a href="#" class="nav-item" data-view="history">
-                    <i class="fas fa-history"></i> Riwayat
-                </a>
-                @endif
                 @if(auth()->user()->role === 'Admin')
+                <a href="#" class="nav-item" data-view="monitoring">
+                    <i class="fas fa-server"></i> Monitoring
+                </a>
                 <a href="#" class="nav-item" data-view="users">
                     <i class="fas fa-users-cog"></i> Pengguna
                 </a>
@@ -68,7 +71,7 @@
         <!-- Main Content -->
         <main class="content">
             <header class="top-bar">
-                <h2 id="view-title">Dashboard</h2>
+                <h2 id="view-title">Daftar Persetujuan</h2>
                 <div class="actions">
                     <div class="date-display" id="current-date">{{ date('d M Y') }}</div>
                     <button class="btn-secondary" id="btn-refresh"><i class="fas fa-sync-alt"></i></button>
@@ -127,17 +130,13 @@
                 </div>
 
                 @if(auth()->user()->role === 'Admin')
-                <div class="glass-card animate-fade-in" style="margin-bottom: 24px;">
-                    <div class="card-header">
-                        <h3>Log Aktivitas Terkini</h3>
+                <div class="glass-card animate-fade-in" style="margin-bottom: 24px; padding: 20px;">
+                    <div class="card-header" style="margin-bottom: 16px;">
+                        <h3 style="font-size: 0.95rem;"><i class="fas fa-history" style="margin-right: 8px; color: var(--accent);"></i> Log Aktivitas Terkini</h3>
                     </div>
-                    <div class="table-container">
-                        <table id="logs-table">
-                            <thead>
-                                <tr><th>User</th><th>Aksi</th><th>Waktu</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div id="logs-feed" class="activity-feed">
+                        <!-- Diisi via JS -->
+                        <div style="text-align:center; padding: 20px; color: var(--text-dim);">Memuat aktivitas...</div>
                     </div>
                 </div>
                 @endif
@@ -162,22 +161,12 @@
                         </select>
                     </div>
 
-                    <div class="table-container">
-                        <table id="reports-table">
-                            <thead>
-                                <tr>
-                                    <th>SPV</th>
-                                    <th>Tanggal</th>
-                                    <th>Shift</th>
-                                    <th>Keterangan</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <div id="reports-grid" class="reports-grid">
+                        <!-- Diisi via JS dalam bentuk Card -->
+                        <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-dim);">Memuat laporan terbaru...</div>
                     </div>
 
-                    @if(in_array(auth()->user()->role, ['Management', 'Admin']))
+                    @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
                     <div class="animate-slide-up delay-2" style="margin-top: 40px; padding: 24px; border-top: 1px solid var(--border); background: #fff1f2; border-radius: var(--radius-md);">
                         <h4 style="color: #be123c; margin-bottom: 12px;"><i class="fas fa-exclamation-triangle"></i> Pemeliharaan Data</h4>
                         <p style="font-size: 0.85rem; color: #9f1239; margin-bottom: 20px;">Hapus data laporan secara permanen dari sistem.</p>
@@ -385,8 +374,9 @@
                                         <tr>
                                             <th style="width:40px">NO</th>
                                             <th>NAMA PERLENGKAPAN</th>
-                                            <th style="width:90px; text-align:center">JUMLAH</th>
-                                            <th style="text-align:center; width:200px">KONDISI</th>
+                                            <th style="width:80px; text-align:center">JUMLAH</th>
+                                            <th style="width:80px; text-align:center; color:var(--success)">BAIK</th>
+                                            <th style="width:80px; text-align:center; color:var(--error)">RUSAK</th>
                                             <th>KETERANGAN</th>
                                         </tr>
                                     </thead>
@@ -396,8 +386,8 @@
                                             ['Handy Talkie', 3],
                                             ['Traffic Lamp', 5],
                                             ['Jas Hujan', 1],
-                                            ['Traffic Cone CP', 100],
-                                            ['Sticke Cone CP', 200],
+                                            ['Traffic Cone CP', 200],
+                                            ['Sticke Cone CP', 100],
                                             ['Senter', 1],
                                         ];
                                         @endphp
@@ -408,19 +398,15 @@
                                             <td style="text-align:center; padding:8px 12px;">
                                                 <input type="number" class="perlen-jumlah" min="0"
                                                     value="{{ $item[1] }}"
-                                                    style="width:70px; text-align:center; padding:6px 8px;">
+                                                    style="width:65px; text-align:center; padding:6px 8px;">
                                             </td>
-                                            <td style="text-align:center; padding:8px 16px;">
-                                                <div class="kondisi-toggle">
-                                                    <label class="kondisi-label baik">
-                                                        <input type="radio" name="kondisi_{{ $idx }}" class="perlen-kondisi" value="Baik">
-                                                        <span>Baik</span>
-                                                    </label>
-                                                    <label class="kondisi-label tidak-baik">
-                                                        <input type="radio" name="kondisi_{{ $idx }}" class="perlen-kondisi" value="Tidak Baik">
-                                                        <span>Tidak Baik</span>
-                                                    </label>
-                                                </div>
+                                            <td style="text-align:center; padding:8px 12px;">
+                                                <input type="number" class="perlen-baik" min="0" value="{{ $item[1] }}"
+                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;">
+                                            </td>
+                                            <td style="text-align:center; padding:8px 12px;">
+                                                <input type="number" class="perlen-rusak" min="0" value="0"
+                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;">
                                             </td>
                                             <td style="padding:8px 16px;">
                                                 <input type="text" class="perlen-ket"
@@ -499,35 +485,25 @@
                                 <div class="df-signature-block">
                                     <p>Dibuat oleh,</p>
                                     <div class="sig-pad-wrapper">
-                                        @if(auth()->user()->role === 'Supervisor')
-                                            <canvas id="sig-spv" class="sig-canvas"></canvas>
+                                        <canvas id="sig-spv" class="sig-canvas {{ !in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'sig-readonly' : '' }}"></canvas>
+                                        @if(in_array(auth()->user()->role, ['Supervisor', 'Leader']))
                                             <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('spv')">Hapus</button>
-                                        @else
-                                            <div class="sig-placeholder" id="sig-spv-placeholder">
-                                                <i class="fas fa-signature"></i>
-                                                <span>Belum TTD</span>
-                                            </div>
                                         @endif
                                     </div>
-                                    <p class="df-sig-name">{{ Auth::user()->name ?? '-' }}</p>
-                                    <p class="df-sig-role">Supervisor / Leader</p>
+                                    <p class="df-sig-name" id="df-sig-name-spv">{{ Auth::user()->name ?? '-' }}</p>
+                                    <p class="df-sig-role">Supervisor/Leader</p>
                                 </div>
 
                                 {{-- Management (Mengetahui 1) --}}
                                 <div class="df-signature-block">
                                     <p>Mengetahui,</p>
                                     <div class="sig-pad-wrapper">
-                                        @if(auth()->user()->role === 'Management' || auth()->user()->role === 'Admin')
-                                            <canvas id="sig-mgr-1" class="sig-canvas"></canvas>
+                                        <canvas id="sig-mgr-1" class="sig-canvas {{ !in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']) ? 'sig-readonly' : '' }}"></canvas>
+                                        @if(in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']))
                                             <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('mgr-1')">Hapus</button>
-                                        @else
-                                            <div class="sig-placeholder" id="sig-mgr-1-placeholder">
-                                                <i class="fas fa-signature"></i>
-                                                <span>Belum TTD</span>
-                                            </div>
                                         @endif
                                     </div>
-                                    <p class="df-sig-name">&nbsp;</p>
+                                    <p class="df-sig-name" id="df-sig-name-mgr-1">....................</p>
                                     <p class="df-sig-role">CarPark Manager</p>
                                 </div>
 
@@ -535,18 +511,13 @@
                                 <div class="df-signature-block">
                                     <p>Mengetahui,</p>
                                     <div class="sig-pad-wrapper">
-                                        @if(auth()->user()->role === 'Management' || auth()->user()->role === 'Admin')
-                                            <canvas id="sig-mgr-2" class="sig-canvas"></canvas>
-                                            <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('mgr-2')">Hapus</button>
-                                        @else
-                                            <div class="sig-placeholder" id="sig-mgr-2-placeholder">
-                                                <i class="fas fa-signature"></i>
-                                                <span>Belum TTD</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <p class="df-sig-name">&nbsp;</p>
-                                    <p class="df-sig-role">Inhouse Parking</p>
+                                       <canvas id="sig-mgr-2" class="sig-canvas {{ !in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']) ? 'sig-readonly' : '' }}"></canvas>
+                                       @if(in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']))
+                                           <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('mgr-2')">Hapus</button>
+                                       @endif
+                                   </div>
+                                   <p class="df-sig-name" id="df-sig-name-mgr-2">....................</p>
+                                   <p class="df-sig-role">Inhouse Parking</p>
                                 </div>
                             </div>
                         </div>
@@ -568,9 +539,14 @@
             <!-- Riwayat View -->
             <section id="view-history" class="view-section hidden">
                 <div class="glass-card animate-fade-in">
-                    <div class="card-header" style="margin-bottom: 24px;">
-                        <h3>Riwayat Laporan</h3>
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3>Daftar Laporan (Final)</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="document.getElementById('export-modal').classList.remove('hidden')" class="btn-primary" style="width: auto; background: #059669; border: none;"><i class="fas fa-file-excel"></i> Export Excel</button>
+                            <button onclick="app.loadReports()" class="btn-refresh"><i class="fas fa-sync-alt"></i></button>
+                        </div>
                     </div>
+
                     <div class="table-container">
                         <table id="reports-history-table">
                             <thead>
@@ -590,6 +566,79 @@
 
             <!-- User Management -->
             @if(auth()->user()->role === 'Admin')
+            <section id="view-monitoring" class="view-section hidden">
+                <div class="glass-card animate-fade-in">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h3 style="margin:0;"><i class="fas fa-desktop"></i> Monitoring Sistem</h3>
+                        <button onclick="app.loadMonitoringData()" class="btn-primary" style="width: auto; padding: 8px 16px;"><i class="fas fa-sync-alt"></i> Refresh Monitor</button>
+                    </div>
+                    
+                    <!-- Tech Stack Details -->
+                    <div class="stats-grid" style="margin-bottom: 24px;">
+                        <div class="glass-card stat-card" style="border-top: 4px solid var(--accent);">
+                            <div class="stat-header"><i class="fab fa-php"></i> Server Engine</div>
+                            <div class="stat-content">
+                                <h4 id="mon-php-version">Memuat...</h4>
+                                <p id="mon-server-software">Environment: -</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card" style="border-top: 4px solid var(--success);">
+                            <div class="stat-header"><i class="fas fa-database"></i> Database Stats</div>
+                            <div class="stat-content">
+                                <h4 id="mon-db-reports">0 Laporan</h4>
+                                <p id="mon-db-users">0 Pengguna Terdaftar</p>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card" style="border-top: 4px solid var(--accent-gold);">
+                            <div class="stat-header"><i class="fas fa-percentage"></i> Completion Rate</div>
+                            <div class="stat-content">
+                                <h4 id="mon-completion-rate">0%</h4>
+                                <div class="progress-bar-bg" style="height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 8px; overflow: hidden;">
+                                    <div id="mon-progress-fill" style="height: 100%; background: var(--accent-gold); width: 0%; transition: width 1s ease-in-out;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Technical Info -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                        <div class="glass-card" style="padding: 20px; background: rgba(0,0,0,0.02);">
+                            <h5 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-info-circle"></i> Info Sistem</h5>
+                            <div style="font-size: 0.85rem; line-height: 1.8;">
+                                <div style="display: flex; justify-content: space-between;"><span>Timezone:</span> <span id="mon-timezone">-</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Storage Provider:</span> <span id="mon-storage">Supabase Cloud</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Database Driver:</span> <span id="mon-db-driver">-</span></div>
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 20px; background: rgba(0,0,0,0.02);">
+                            <h5 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-chart-pie"></i> Distribusi Laporan</h5>
+                            <div style="font-size: 0.85rem; line-height: 1.8;">
+                                <div style="display: flex; justify-content: space-between;"><span>Sudah Final:</span> <span id="mon-reports-done" style="color:var(--success); font-weight:700;">0</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Pending Approval:</span> <span id="mon-reports-pending" style="color:var(--error); font-weight:700;">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h4 style="margin:0;"><i class="fas fa-list-ul"></i> Audit Log Aktivitas</h4>
+                    </div>
+                    <div class="table-container">
+                        <table id="monitoring-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Aksi</th>
+                                    <th>Detail</th>
+                                    <th>IP Address</th>
+                                    <th>Waktu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monitoring-logs-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section id="view-users" class="view-section hidden">
                 <div class="glass-card animate-fade-in">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -610,12 +659,14 @@
         </main>
 
         <div class="mobile-nav">
-            <a href="#" class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i></a>
-            @if(auth()->user()->role === 'Supervisor')
-            <a href="#" class="nav-item" data-view="upload"><i class="fas fa-plus"></i></a>
+            <a href="#" class="nav-item active" data-view="dashboard" title="Persetujuan"><i class="fas fa-tasks"></i></a>
+            <a href="#" class="nav-item" data-view="history" title="Laporan"><i class="fas fa-file-invoice"></i></a>
+            
+            @if(auth()->user()->role === 'Admin')
+            <a href="#" class="nav-item" data-view="monitoring" title="Monitoring"><i class="fas fa-server"></i></a>
             @endif
-            @if(auth()->user()->role !== 'Supervisor')
-            <a href="#" class="nav-item" data-view="history"><i class="fas fa-history"></i></a>
+            @if(in_array(auth()->user()->role, ['Supervisor', 'Leader']))
+            <a href="#" class="nav-item" data-view="upload"><i class="fas fa-plus"></i></a>
             @endif
             <form action="{{ route('logout') }}" method="POST" id="logout-form-mobile">
                 @csrf
@@ -652,11 +703,13 @@
                 </div>
                 <div class="form-group">
                     <label>Role</label>
-                    <select name="role" id="user-role-input" required>
-                        <option value="Admin">Admin</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Management">Management</option>
-                    </select>
+                        <select name="role" id="user-role-select" class="form-control" required>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Leader">Leader</option>
+                            <option value="CAR PARK MANAGER">CAR PARK MANAGER</option>
+                            <option value="Inhouse">Inhouse</option>
+                            <option value="Admin">Admin</option>
+                        </select>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -671,14 +724,39 @@
     </div>
     @endif
 
+    <!-- Export Period Modal -->
+    <div id="export-modal" class="overlay hidden">
+        <div class="glass-card animate-slide-up" style="max-width: 400px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;"><i class="fas fa-file-excel" style="color:#059669;"></i> Export Periode</h3>
+                <button type="button" class="btn-icon" onclick="document.getElementById('export-modal').classList.add('hidden')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Tanggal Mulai</label>
+                <input type="date" id="export-start-date" class="form-control" value="{{ date('Y-m-01') }}">
+            </div>
+            <div class="form-group">
+                <label>Tanggal Selesai</label>
+                <input type="date" id="export-end-date" class="form-control" value="{{ date('Y-m-d') }}">
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button onclick="app.processExport()" class="btn-primary" style="flex:1; background:#059669; border:none;">Download Excel</button>
+                <button onclick="document.getElementById('export-modal').classList.add('hidden')" class="btn-secondary" style="flex:1;">Batal</button>
+            </div>
+        </div>
+    </div>
+
     <!-- PDF Print Preview Modal -->
     <div id="print-modal" class="overlay hidden">
         <div style="background:white; width:90%; max-width:820px; max-height:90vh; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.25);">
             <div style="padding:16px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
                 <h3 style="font-size:1rem; font-weight:800; color:#0f172a;">Preview Laporan Harian</h3>
                 <div style="display:flex; gap:8px;">
-                    <button id="btn-do-print" class="btn-primary" style="padding:8px 20px; width:auto;">
-                        <i class="fas fa-print"></i> Cetak / Simpan PDF
+                    <button onclick="app.downloadPDF()" class="btn-primary" style="padding:8px 20px; width:auto; background: #dc2626;">
+                        <i class="fas fa-file-pdf"></i> Simpan PDF
+                    </button>
+                    <button id="btn-do-print" class="btn-primary" style="padding:8px 20px; width:auto; background: var(--primary);">
+                        <i class="fas fa-print"></i> Cetak
                     </button>
                     <button class="btn-secondary" onclick="document.getElementById('print-modal').classList.add('hidden')" style="padding:8px 16px;">
                         <i class="fas fa-times"></i>
@@ -712,8 +790,8 @@
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="{{ asset('js/app.js') }}"></script>
     <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
-
