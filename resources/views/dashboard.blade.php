@@ -17,11 +17,25 @@
                 role: '{{ Auth::user()->role ?? "Guest" }}'
             }
         };
+
+        // Early detection of Direct PDF Mode to prevent flickering
+        if (new URLSearchParams(window.location.search).get('auto_pdf') === '1') {
+            document.documentElement.classList.add('mode-auto-pdf');
+        }
     </script>
 </head>
 <body>
     <div class="background-glow"></div>
     
+    {{-- PDF Loading Screen for Direct Link --}}
+    @if(request()->get('auto_pdf') == '1')
+    <div id="pdf-loading-screen">
+        <div class="pdf-spinner"></div>
+        <h2 style="color: var(--primary); font-weight: 800; margin-bottom: 8px;">Generating Report...</h2>
+        <p style="color: var(--text-dim); font-size: 0.9rem;">Please wait a moment while we prepare your PDF.</p>
+    </div>
+    @endif
+
     <div id="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -454,7 +468,7 @@
                                     <tbody id="spesifikasi-tbody">
                                         <tr class="spesifikasi-row">
                                             <td><input type="text" class="spec-jenis" placeholder="Jenis laporan..." style="width:100%; border:none; background:transparent;"></td>
-                                            <td><input type="time" class="spec-waktu" style="width:100%; border:none; background:transparent; padding:4px 0;"></td>
+                                            <td><input type="text" class="spec-waktu" placeholder="Waktu..." style="width:100%; border:none; background:transparent; padding:4px 0;"></td>
                                             <td><input type="text" class="spec-detail" placeholder="Detail kejadian..." style="width:100%; border:none; background:transparent;"></td>
                                             <td><input type="text" class="spec-tindakan" placeholder="Tindakan dilakukan..." style="width:100%; border:none; background:transparent;"></td>
                                             <td style="text-align:center; padding:8px;">
@@ -792,7 +806,7 @@
     <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}?v={{ time() }}"></script>
     <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

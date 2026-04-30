@@ -9,7 +9,7 @@ const app = {
         this.applyRolePermissions();
         await this.refreshData();
         this.handleUrlParams();
-        
+
         // Auto-refresh data every 30 seconds
         this.refreshInterval = setInterval(() => {
             if (document.visibilityState === 'visible' && !document.querySelector('.overlay:not(.hidden)')) {
@@ -19,21 +19,58 @@ const app = {
         }, 30000);
     },
 
-    handleUrlParams() {
+    async handleUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const reportId = params.get('report_id');
         const autoPdf = params.get('auto_pdf');
 
         if (reportId) {
             console.log('Auto-opening report:', reportId);
-            this.previewReport(reportId);
+            
             if (autoPdf === '1') {
-                setTimeout(() => {
-                    console.log('Auto-downloading PDF...');
-                    this.downloadPDF();
-                }, 3000);
+                document.documentElement.classList.add('mode-auto-pdf');
+            }
+
+            // Check if report exists in local state
+            let report = this.reports.find(r => r.id == reportId);
+            
+            if (!report) {
+                console.warn('Report not found in current view, trying to load all...');
+                await this.loadReports(true); 
+                report = this.reports.find(r => r.id == reportId);
+            }
+
+            if (report) {
+                if (report.file_url) {
+                    // It's a static file (e.g. uploaded PDF), just open it
+                    window.open(report.file_url, '_blank');
+                    this.finishAutoPdf();
+                } else {
+                    // It's a digital form, we need to generate PDF
+                    this.viewDigitalForm(reportId);
+                    if (autoPdf === '1') {
+                        this.showToast('Menyiapkan pratinjau PDF...', 'info');
+                        
+                        // Open tab immediately to avoid popup blocker
+                        const pdfTab = window.open('about:blank', '_blank');
+                        
+                        setTimeout(() => {
+                            this.downloadPDF(true, pdfTab); 
+                            this.finishAutoPdf();
+                        }, 1500);
+                    }
+                }
+            } else {
+                this.finishAutoPdf();
+                this.showToast('Laporan tidak ditemukan. Pastikan Anda memiliki akses.', 'error');
             }
         }
+    },
+
+    finishAutoPdf() {
+        document.documentElement.classList.remove('mode-auto-pdf');
+        const loader = document.getElementById('pdf-loading-screen');
+        if (loader) loader.classList.add('hidden');
     },
 
     applyRolePermissions() {
@@ -62,7 +99,7 @@ const app = {
                 if (!view) return;
                 e.preventDefault();
                 this.switchView(view);
-                
+
                 if (view === 'upload' && window.formDigital) {
                     window.formDigital.resetForm();
                 }
@@ -84,13 +121,13 @@ const app = {
 
                 const digitalWrapper = document.getElementById('digital-form-wrapper');
                 const uploadMetaFields = document.getElementById('upload-meta-fields');
-                const uploadDescField  = document.getElementById('upload-desc-field');
-                const submitUploadBtn  = document.getElementById('btn-submit-upload');
+                const uploadDescField = document.getElementById('upload-desc-field');
+                const submitUploadBtn = document.getElementById('btn-submit-upload');
 
                 if (digitalWrapper) digitalWrapper.classList.toggle('hidden', !isForm);
                 if (uploadMetaFields) uploadMetaFields.classList.toggle('hidden', isForm);
-                if (uploadDescField)  uploadDescField.classList.toggle('hidden', isForm);
-                if (submitUploadBtn)  submitUploadBtn.classList.toggle('hidden', isForm);
+                if (uploadDescField) uploadDescField.classList.toggle('hidden', isForm);
+                if (submitUploadBtn) submitUploadBtn.classList.toggle('hidden', isForm);
 
                 document.querySelectorAll('.method-content').forEach(c => {
                     c.classList.add('hidden');
@@ -175,12 +212,12 @@ const app = {
         // Update title
         const titleEl = document.getElementById('view-title');
         if (titleEl) {
-            const titles = { 
-                dashboard: 'Daftar Persetujuan', 
-                upload: 'Buat Laporan', 
-                history: 'Daftar Laporan', 
-                users: 'Manajemen Pengguna', 
-                monitoring: 'Monitoring Sistem' 
+            const titles = {
+                dashboard: 'Daftar Persetujuan',
+                upload: 'Buat Laporan',
+                history: 'Daftar Laporan',
+                users: 'Manajemen Pengguna',
+                monitoring: 'Monitoring Sistem'
             };
             titleEl.textContent = titles[viewId] || 'App';
         }
@@ -200,34 +237,34 @@ const app = {
         try {
             const res = await fetch('/v1/system/info');
             const data = await res.json();
-            
+
             const phpEl = document.getElementById('mon-php-version');
             if (phpEl) phpEl.textContent = 'PHP ' + data.server.php_version;
-            
+
             const softEl = document.getElementById('mon-server-software');
             if (softEl) softEl.textContent = 'Software: ' + data.server.server_software;
-            
+
             const repEl = document.getElementById('mon-db-reports');
             if (repEl) repEl.textContent = data.database.total_reports + ' Laporan';
-            
+
             const usrEl = document.getElementById('mon-db-users');
             if (usrEl) usrEl.textContent = data.database.total_users + ' Pengguna';
-            
+
             const rateEl = document.getElementById('mon-completion-rate');
             if (rateEl) rateEl.textContent = data.database.completion_rate + '%';
-            
+
             const progressEl = document.getElementById('mon-progress-fill');
             if (progressEl) progressEl.style.width = data.database.completion_rate + '%';
-            
+
             const tzEl = document.getElementById('mon-timezone');
             if (tzEl) tzEl.textContent = data.server.timezone;
-            
+
             const drvEl = document.getElementById('mon-db-driver');
             if (drvEl) drvEl.textContent = data.database.driver;
-            
+
             const doneEl = document.getElementById('mon-reports-done');
             if (doneEl) doneEl.textContent = data.database.stats.completed;
-            
+
             const pendEl = document.getElementById('mon-reports-pending');
             if (pendEl) pendEl.textContent = data.database.stats.pending;
         } catch (e) { console.error('Failed to load system info', e); }
@@ -242,7 +279,7 @@ const app = {
             const response = await fetch('/v1/reports/logs');
             const logs = await response.json();
             body.innerHTML = '';
-            
+
             logs.forEach(log => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -360,7 +397,7 @@ const app = {
             data.slice(0, 10).forEach(log => {
                 const item = document.createElement('div');
                 item.className = 'log-item';
-                const date = new Date(log.created_at).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'});
+                const date = new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
                 let icon = 'dot-circle', iconColor = 'var(--accent)';
                 const action = log.action.toLowerCase();
                 if (action.includes('upload') || action.includes('create')) { icon = 'plus-circle'; iconColor = 'var(--success)'; }
@@ -379,14 +416,14 @@ const app = {
         } catch (e) { }
     },
 
-    async loadReports() {
+    async loadReports(ignoreFilters = false) {
         const grid = document.getElementById('reports-grid');
         const historyBody = document.querySelector('#reports-history-table tbody');
         if (!grid && !historyBody) return;
 
-        const startDate = document.getElementById('filter-start-date')?.value || '';
-        const endDate = document.getElementById('filter-end-date')?.value || '';
-        const shiftFilter = document.getElementById('filter-shift')?.value || '';
+        const startDate = !ignoreFilters ? (document.getElementById('filter-start-date')?.value || '') : '';
+        const endDate = !ignoreFilters ? (document.getElementById('filter-end-date')?.value || '') : '';
+        const shiftFilter = !ignoreFilters ? (document.getElementById('filter-shift')?.value || '') : '';
 
         try {
             const url = new URL(`${window.Laravel.baseUrl}/v1/reports`);
@@ -401,7 +438,7 @@ const app = {
             // Pre-process data: ensure form_data is an object
             data.forEach(r => {
                 if (typeof r.form_data === 'string') {
-                    try { r.form_data = JSON.parse(r.form_data); } catch(e) { r.form_data = {}; }
+                    try { r.form_data = JSON.parse(r.form_data); } catch (e) { r.form_data = {}; }
                 }
             });
 
@@ -412,7 +449,7 @@ const app = {
                     const sigs = r.form_data?.signatures || {};
                     return !sigs['mgr-2'];
                 });
-                
+
                 if (pendingReports.length === 0) {
                     grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-dim);">Semua laporan sudah lengkap.</div>';
                 }
@@ -421,7 +458,7 @@ const app = {
                     const card = document.createElement('div');
                     card.className = 'report-card animate-slide-up';
                     const d = new Date(report.report_date);
-                    const dateStr = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+                    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
                     card.innerHTML = `
                         <div class="rc-header">
                             <div class="rc-user">
@@ -456,7 +493,7 @@ const app = {
 
             if (historyBody) {
                 historyBody.innerHTML = '';
-                
+
                 // History ONLY shows reports that ARE signed by Inhouse (mgr-2)
                 const completedReports = data.filter(r => {
                     const sigs = r.form_data?.signatures || {};
@@ -472,7 +509,7 @@ const app = {
                     tr.innerHTML = `
                         <td style="font-weight:700;">${r.user_name}</td>
                         <td>${r.report_date}</td>
-                        <td><span class="badge ${(r.shift||'').toLowerCase()}">${r.shift}</span></td>
+                        <td><span class="badge ${(r.shift || '').toLowerCase()}">${r.shift}</span></td>
                         <td>${r.description || '-'}</td>
                         <td>
                             <div style="display:flex; gap:8px;">
@@ -490,7 +527,7 @@ const app = {
     processExport() {
         const start = document.getElementById('export-start-date').value;
         const end = document.getElementById('export-end-date').value;
-        
+
         if (!start || !end) return this.showToast('Pilih periode tanggal', 'error');
 
         const filteredReports = this.reports.filter(r => {
@@ -509,9 +546,8 @@ const app = {
         const detailedData = [];
         filteredReports.forEach(r => {
             const items = r.form_data?.items || [];
-            const baseUrl = window.location.origin;
-            // Add auto_pdf=1 to the link
-            const reportLink = `${baseUrl}?report_id=${r.id}&auto_pdf=1`;
+            const baseUrl = window.Laravel.baseUrl.replace(/\/$/, "");
+            const reportLink = `${baseUrl}/dashboard?report_id=${r.id}&auto_pdf=1`;
 
             if (items.length > 0) {
                 items.forEach((item, index) => {
@@ -524,7 +560,7 @@ const app = {
                         'URAIAN KEGIATAN': item.activity || '',
                         'PERSONIL': item.personnel || '',
                         'KETERANGAN': item.note || '',
-                        'LINK DETAIL': index === 0 ? reportLink : '',
+                        'LINK DETAIL': index === 0 ? { f: `HYPERLINK("${reportLink}","KLIK DISINI")` } : '',
                         'Status': index === 0 ? 'FINAL' : ''
                     });
                 });
@@ -538,7 +574,7 @@ const app = {
                     'URAIAN KEGIATAN': r.description || '-',
                     'PERSONIL': '-',
                     'KETERANGAN': '-',
-                    'LINK DETAIL': reportLink,
+                    'LINK DETAIL': { f: `HYPERLINK("${reportLink}","KLIK DISINI")` },
                     'Status': 'FINAL'
                 });
             }
@@ -546,7 +582,7 @@ const app = {
 
         const worksheet = XLSX.utils.json_to_sheet(detailedData);
         const wscols = [
-            {wch: 5}, {wch: 12}, {wch: 8}, {wch: 20}, {wch: 20}, {wch: 40}, {wch: 15}, {wch: 20}, {wch: 35}, {wch: 10}
+            { wch: 5 }, { wch: 12 }, { wch: 8 }, { wch: 20 }, { wch: 20 }, { wch: 40 }, { wch: 15 }, { wch: 20 }, { wch: 35 }, { wch: 10 }
         ];
         worksheet['!cols'] = wscols;
 
@@ -561,26 +597,45 @@ const app = {
         document.getElementById('export-modal').classList.remove('hidden');
     },
 
-    downloadPDF() {
+    downloadPDF(openInNewTab = false, targetTab = null) {
         const element = document.getElementById('print-content');
-        if (!element || !element.innerHTML) return this.showToast('Gagal memproses PDF', 'error');
+        if (!element || !element.innerHTML) {
+            if (targetTab) targetTab.close();
+            return this.showToast('Gagal memproses PDF', 'error');
+        }
 
         this.showToast('Menyiapkan PDF...', 'info');
 
         const opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     `Laporan_SPV_${new Date().toISOString().split('T')[0]}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin: [10, 10, 10, 10],
+            filename: `Laporan_SPV_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(element).save()
-            .then(() => this.showToast('PDF berhasil diunduh', 'success'))
-            .catch(err => {
+        const worker = html2pdf().set(opt).from(element);
+        
+        if (openInNewTab) {
+            worker.output('bloburl').then((url) => {
+                if (targetTab) {
+                    targetTab.location.href = url;
+                } else {
+                    window.open(url, '_blank');
+                }
+                this.showToast('PDF berhasil dibuka di tab baru', 'success');
+            }).catch(err => {
+                if (targetTab) targetTab.close();
                 console.error(err);
-                this.showToast('Gagal mengunduh PDF', 'error');
             });
+        } else {
+            worker.save()
+                .then(() => this.showToast('PDF berhasil diunduh', 'success'))
+                .catch(err => {
+                    console.error(err);
+                    this.showToast('Gagal mengunduh PDF', 'error');
+                });
+        }
     },
 
     previewReport(id) {
@@ -589,7 +644,7 @@ const app = {
 
         // Ensure form_data is an object
         if (typeof report.form_data === 'string' && report.form_data.trim() !== '') {
-            try { report.form_data = JSON.parse(report.form_data); } catch(e) { console.error('Parse error', e); }
+            try { report.form_data = JSON.parse(report.form_data); } catch (e) { console.error('Parse error', e); }
         }
 
         if (report.file_url) window.open(report.file_url, '_blank');
@@ -608,7 +663,7 @@ const app = {
 
         // Ensure form_data is an object
         if (typeof report.form_data === 'string' && report.form_data.trim() !== '') {
-            try { report.form_data = JSON.parse(report.form_data); } catch(e) { console.error('Parse error', e); }
+            try { report.form_data = JSON.parse(report.form_data); } catch (e) { console.error('Parse error', e); }
         }
 
         if (!report.form_data) return this.showToast('Laporan digital tidak ditemukan', 'error');
@@ -619,12 +674,12 @@ const app = {
 
         document.getElementById('df-report-id').value = id;
         document.getElementById('df-tanggal').value = report.report_date;
-        document.getElementById('df-nama').value = report.spv_name;
+        document.getElementById('df-nama').value = report.spv_name || report.user_name || '';
         document.getElementById('df-shift').value = report.shift;
         document.getElementById('df-briefing').value = report.form_data.briefing || '';
         document.getElementById('df-training').value = report.form_data.training || '';
 
-        const mp_jabatan = ['Car Park Manager','IT','Administrasi','Supervisor','Leader','Staff'];
+        const mp_jabatan = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         mp_jabatan.forEach(j => {
             const inp = document.querySelector(`.mp-input[data-jabatan="${j}"]`);
             const inpMid = document.querySelector(`.mp-input-middle[data-jabatan="${j}"]`);
@@ -632,11 +687,101 @@ const app = {
             if (inpMid) inpMid.value = report.form_data.manpower?.[j + '_middle'] || '';
         });
 
+        const plotingTbody = document.getElementById('ploting-tbody');
+        if (plotingTbody && report.form_data.ploting) {
+            plotingTbody.innerHTML = '';
+            report.form_data.ploting.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.className = 'ploting-row';
+                tr.innerHTML = `
+                    <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
+                    <td><input type="text" class="ploting-area" value="${p.area || ''}" placeholder="Nama Area" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+                    <td><input type="text" class="ploting-petugas" value="${p.petugas || ''}" placeholder="Nama Petugas" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+                `;
+                plotingTbody.appendChild(tr);
+            });
+            if (report.form_data.ploting.length === 0) window.formDigital.addPlotingRow();
+        }
+
+        const perlenTbody = document.querySelector('#tbl-perlengkapan tbody');
+        if (perlenTbody && report.form_data.perlengkapan) {
+            perlenTbody.innerHTML = '';
+            report.form_data.perlengkapan.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
+                    <td style="font-weight:600;">${p.nama || ''}</td>
+                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-jumlah" min="0" value="${p.jumlah || 0}" style="width:65px; text-align:center; padding:6px 8px;"></td>
+                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-baik" min="0" value="${p.baik || 0}" style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;"></td>
+                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-rusak" min="0" value="${p.rusak || 0}" style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;"></td>
+                    <td style="padding:8px 16px;"><input type="text" class="perlen-ket" placeholder="Keterangan..." value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.88rem;"></td>
+                `;
+                perlenTbody.appendChild(tr);
+            });
+        }
+
+        const specTbody = document.getElementById('spesifikasi-tbody');
+        if (specTbody && report.form_data.spesifikasi) {
+            specTbody.innerHTML = '';
+            report.form_data.spesifikasi.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = 'spesifikasi-row';
+                tr.innerHTML = `
+                    <td><input type="text" class="spec-jenis" value="${s.jenis || ''}" placeholder="Jenis laporan..." style="width:100%; border:none; background:transparent;"></td>
+                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" placeholder="Waktu..." style="width:100%; border:none; background:transparent; padding:4px 0;"></td>
+                    <td><input type="text" class="spec-detail" value="${s.detail || ''}" placeholder="Detail kejadian..." style="width:100%; border:none; background:transparent;"></td>
+                    <td><input type="text" class="spec-tindakan" value="${s.tindakan || ''}" placeholder="Tindakan dilakukan..." style="width:100%; border:none; background:transparent;"></td>
+                    <td style="text-align:center; padding:8px;">
+                        <select class="spec-status" style="width:100%; padding:5px; border-radius:6px; border:1px solid var(--border-dark); font-size:0.82rem;">
+                            <option value="">-</option>
+                            <option value="On Progres" ${s.status === 'On Progres' ? 'selected' : ''}>On Progres</option>
+                            <option value="Done" ${s.status === 'Done' ? 'selected' : ''}>Done</option>
+                        </select>
+                    </td>
+                    <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris">×</button></td>
+                `;
+                specTbody.appendChild(tr);
+            });
+            if (report.form_data.spesifikasi.length === 0) window.formDigital.addSpesifikasiRow();
+        }
+
         if (window.formDigital) {
             window.formDigital.loadExistingSignatures(report.form_data.signatures || {}, report.form_data.signer_names || {});
             window.formDigital.calcTotal();
         }
-        this.showToast('Laporan dimuat untuk diedit', 'info');
+
+        const isReadOnlyRole = ['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(window.Laravel?.user?.role);
+        if (isReadOnlyRole) {
+            document.querySelectorAll('#form-digital input, #form-digital select, #form-digital textarea').forEach(el => {
+                if (el.type !== 'hidden') {
+                    el.readOnly = true;
+                    el.style.pointerEvents = 'none'; // Mencegah interaksi klik/ubah tanpa menghilangkan tampilan
+                    
+                    if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') {
+                        el.disabled = true;
+                    }
+                    el.classList.add('input-readonly');
+                }
+            });
+            document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
+                el.style.display = 'none';
+            });
+        } else {
+            // Restore editable state for Supervisor/Leader if they somehow open multiple reports
+            document.querySelectorAll('#form-digital input, #form-digital select, #form-digital textarea').forEach(el => {
+                if (el.type !== 'hidden' && el.id !== 'df-nama') {
+                    el.readOnly = false;
+                    el.disabled = false;
+                    el.style.pointerEvents = 'auto';
+                    el.classList.remove('input-readonly');
+                }
+            });
+            document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
+                el.style.display = 'inline-block';
+            });
+        }
+
+        this.showToast('Laporan dimuat untuk ditandatangani', 'info');
     },
 
     async deleteReport(id) {
@@ -753,7 +898,7 @@ const formDigital = {
                 pad.canvas.style.opacity = '1';
                 delete wrapper.dataset.signerName;
             }
-            
+
             // Reset display name
             const nameDisp = document.getElementById(`df-sig-name-${key}`);
             if (nameDisp) {
@@ -776,7 +921,7 @@ const formDigital = {
                 wrapper.style.position = 'relative';
                 wrapper.appendChild(img);
                 canvas.style.opacity = '0';
-                
+
                 // Store signer name in dataset and display it
                 if (names[key]) {
                     wrapper.dataset.signerName = names[key];
@@ -797,7 +942,7 @@ const formDigital = {
         this.addPlotingRow(); this.addSpesifikasiRow();
         this.calcTotal();
         Object.keys(this.sigPads || {}).forEach(k => this.clearSig(k));
-        
+
         // Reset name inputs
         ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
             const inp = document.getElementById(`df-sig-name-${k}`);
@@ -845,18 +990,18 @@ const formDigital = {
             mp[i.dataset.jabatan + '_middle'] = val;
             mp.TOTAL_MIDDLE += val;
         });
-        
+
         const plot = [];
         document.querySelectorAll('#ploting-tbody tr').forEach((tr, i) => {
             const area = tr.querySelector('.ploting-area').value;
             const petugas = tr.querySelector('.ploting-petugas').value;
-            if (area || petugas) plot.push({ no: i+1, area, petugas });
+            if (area || petugas) plot.push({ no: i + 1, area, petugas });
         });
 
         const perlen = [];
         document.querySelectorAll('#tbl-perlengkapan tbody tr').forEach((tr, i) => {
             perlen.push({
-                no: i+1,
+                no: i + 1,
                 nama: tr.querySelector('td:nth-child(2)').textContent.trim(),
                 jumlah: tr.querySelector('.perlen-jumlah').value,
                 baik: tr.querySelector('.perlen-baik').value,
@@ -877,7 +1022,7 @@ const formDigital = {
             const pad = this.sigPads[k];
             const wrapper = pad.canvas.closest('.sig-pad-wrapper');
             const existing = wrapper.querySelector('.existing-sig');
-            
+
             // Get data-signer attribute if it exists (from loading existing)
             const existingSignerName = wrapper.dataset.signerName;
 
@@ -938,7 +1083,7 @@ const formDigital = {
         const tgl = report.report_date || document.getElementById('df-tanggal').value;
 
         let mpRows = '', plotRows = '', perRows = '', specRows = '';
-        const mp_j = ['Car Park Manager','IT','Administrasi','Supervisor','Leader','Staff'];
+        const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         mp_j.forEach(j => {
             mpRows += `<tr><td style="padding:4px 8px; border:1px solid #000;">${j}</td><td style="text-align:center; border:1px solid #000;">${data.manpower?.[j] || '-'}</td><td style="text-align:center; border:1px solid #000;">${data.manpower?.[j + '_middle'] || '-'}</td></tr>`;
         });
