@@ -149,6 +149,12 @@ const app = {
         document.getElementById('filter-start-date')?.addEventListener('change', () => this.loadReports());
         document.getElementById('filter-end-date')?.addEventListener('change', () => this.loadReports());
         document.getElementById('filter-shift')?.addEventListener('change', () => this.loadReports());
+        
+        let searchTimeout;
+        document.getElementById('filter-search')?.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => this.loadReports(), 500);
+        });
         document.getElementById('btn-refresh')?.addEventListener('click', () => {
             this.refreshData();
             this.showToast('Data diperbarui', 'info');
@@ -439,12 +445,14 @@ const app = {
         const startDate = !ignoreFilters ? (document.getElementById('filter-start-date')?.value || '') : '';
         const endDate = !ignoreFilters ? (document.getElementById('filter-end-date')?.value || '') : '';
         const shiftFilter = !ignoreFilters ? (document.getElementById('filter-shift')?.value || '') : '';
+        const searchFilter = !ignoreFilters ? (document.getElementById('filter-search')?.value || '') : '';
 
         try {
             const url = new URL(`${window.Laravel.baseUrl}/v1/reports`);
             if (startDate) url.searchParams.append('start_date', startDate);
             if (endDate) url.searchParams.append('end_date', endDate);
             if (shiftFilter) url.searchParams.append('shift', shiftFilter);
+            if (searchFilter) url.searchParams.append('search', searchFilter);
 
             const response = await fetch(url);
             const data = await response.json();

@@ -143,9 +143,19 @@
                         </div>
                     </div>
 
-                    <div class="filters" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <input type="date" id="filter-start-date" placeholder="Mulai">
-                        <input type="date" id="filter-end-date" placeholder="Selesai">
+                    <div class="filters" style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;">
+                        <div style="position: relative; flex: 1; min-width: 250px;">
+                            <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 0.9rem;"></i>
+                            <input type="text" id="filter-search" placeholder="Cari nama pengawas atau kejadian..." style="width: 100%; padding-left: 40px; border-radius: 12px; border: 1px solid var(--border-dark); font-size: 0.9rem; height: 42px;">
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-dark); height: 42px;">
+                            <i class="fas fa-calendar-alt" style="color: var(--text-dim); font-size: 0.85rem;"></i>
+                            <input type="date" id="filter-start-date" style="border: none; font-size: 0.85rem; color: var(--text-main); font-weight: 600;">
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-dark); height: 42px;">
+                            <i class="fas fa-calendar-alt" style="color: var(--text-dim); font-size: 0.85rem;"></i>
+                            <input type="date" id="filter-end-date" style="border: none; font-size: 0.85rem; color: var(--text-main); font-weight: 600;">
+                        </div>
                         <select id="filter-shift">
                             <option value="">Semua Shift</option>
                             <option value="Pagi">Pagi</option>

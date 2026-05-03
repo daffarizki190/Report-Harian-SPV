@@ -77,6 +77,7 @@ class ReportController extends Controller
                 \App\Filters\StartDate::class,
                 \App\Filters\EndDate::class,
                 \App\Filters\Shift::class,
+                \App\Filters\Search::class,
             ])
             ->thenReturn()
             ->orderBy('reports.report_date', 'desc')
