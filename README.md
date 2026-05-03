@@ -26,4 +26,9 @@ Sistem pengolahan data laporan harian pengawas Gandaria City dengan standar **Se
 Dashboard Admin dilengkapi dengan **System Monitoring** untuk visibilitas real-time terhadap technical stack, performa database, dan audit trails pengembang.
 
 ---
+## 👨‍💻 Developed By
+**Daffa Rizki** ([@daffarizki190](https://github.com/daffarizki190))  
+*Software Engineer & Gandaria City Tech Lead.*
+
+---
 *Standard Operasional Gandaria City - Asset Management System.*

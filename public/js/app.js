@@ -10,13 +10,23 @@ const app = {
         await this.refreshData();
         this.handleUrlParams();
 
-        // Auto-refresh data every 30 seconds
+        // Real-time: Listen for new reports via Reverb
+        if (window.Echo) {
+            window.Echo.channel('reports')
+                .listen('ReportSubmitted', (e) => {
+                    console.log('Real-time: New report submitted!', e);
+                    this.showToast(`Laporan baru: ${e.spv_name} (${e.shift})`, 'success');
+                    this.refreshData(); 
+                });
+        }
+
+        // Fallback: Auto-refresh data every 2 minutes
         this.refreshInterval = setInterval(() => {
             if (document.visibilityState === 'visible' && !document.querySelector('.overlay:not(.hidden)')) {
                 console.log('Background refreshing data...');
                 this.refreshData();
             }
-        }, 30000);
+        }, 120000);
     },
 
     async handleUrlParams() {

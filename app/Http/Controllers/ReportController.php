@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+use App\Events\ReportSubmitted;
+
 class ReportController extends Controller
 {
     public function __construct(
@@ -238,6 +240,9 @@ class ReportController extends Controller
 
             $this->logActivity($spvName, $existing ? 'Update' : 'Upload', "Laporan tgl {$request->report_date}");
 
+            // Real-time: Trigger Reverb broadcast
+            ReportSubmitted::dispatch($report);
+
             return response()->json(['message' => 'Laporan berhasil disimpan.', 'data' => $report]);
         });
     }
@@ -308,6 +313,9 @@ class ReportController extends Controller
             }
 
             $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");
+
+            // Real-time: Trigger Reverb broadcast
+            ReportSubmitted::dispatch($report);
 
             return response()->json([
                 'message' => 'Laporan Digital berhasil disimpan.',
