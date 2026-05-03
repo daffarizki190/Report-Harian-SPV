@@ -484,7 +484,7 @@ const app = {
                         <div class="rc-footer">
                             <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
                             ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'SPV', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit"><i class="fas fa-signature"></i> TTD</button>` : ''}
-                            ${['Admin', 'CAR PARK MANAGER', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${report.id}')" class="rc-btn delete"><i class="fas fa-trash"></i></button>` : ''}
+                            ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${report.id}')" class="rc-btn delete"><i class="fas fa-trash"></i></button>` : ''}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -514,7 +514,7 @@ const app = {
                         <td>
                             <div style="display:flex; gap:8px;">
                                 <button onclick="app.previewReport('${r.id}')" class="btn-secondary" style="padding:6px 12px;"><i class="fas fa-eye"></i></button>
-                                ${['Admin', 'CAR PARK MANAGER', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${r.id}')" class="btn-secondary" style="padding:6px 12px; color:var(--error);"><i class="fas fa-trash"></i></button>` : ''}
+                                ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${r.id}')" class="btn-secondary" style="padding:6px 12px; color:var(--error);"><i class="fas fa-trash"></i></button>` : ''}
                             </div>
                         </td>
                     `;
@@ -700,7 +700,9 @@ const app = {
                 `;
                 plotingTbody.appendChild(tr);
             });
-            if (report.form_data.ploting.length === 0) window.formDigital.addPlotingRow();
+            if (report.form_data.ploting.length === 0) {
+                PLOTTING_AREAS.forEach(area => window.formDigital.addPlotingRow(area));
+            }
         }
 
         const perlenTbody = document.querySelector('#tbl-perlengkapan tbody');
@@ -851,13 +853,179 @@ const app = {
     }
 };
 
+const PLOTTING_AREAS = [
+    'Mobile Basement', 'Mobile MSCP', 'Control Room Officer 1', 'Control Room Officer 2',
+    'PK Motor', 'Area Motor B2', 'Area Motor B1', 'Area B2', 'Area B2', 'Area B1', 'Area B1',
+    'Area LG', 'Area LG', 'Area MSCP'
+];
+
 const formDigital = {
     init() {
         this.bindManpowerAutoSum();
         this.bindFormSubmit();
         this.bindPrintPreview();
         this.initSignaturePads();
+        this.bindSigPhotoUpload();
         window.addEventListener('resize', () => this.resizeSignaturePads());
+    },
+
+    bindSigPhotoUpload() {
+        const input = document.getElementById('sig-photo-input');
+        if (!input) return;
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const key = input.dataset.targetKey;
+            if (file && key) {
+                this.importSignatureFromPhoto(key, file);
+                input.value = ''; // Reset for next use
+            }
+        });
+    },
+
+    triggerSigPhotoUpload(key) {
+        const input = document.getElementById('sig-photo-input');
+        if (input) {
+            input.dataset.targetKey = key;
+            input.click();
+        }
+    },
+
+    async importSignatureFromPhoto(key, file) {
+        const pad = this.sigPads?.[key];
+        if (!pad) return;
+
+        const wrapper = pad.canvas.closest('.sig-pad-wrapper');
+        const processingOverlay = document.createElement('div');
+        processingOverlay.className = 'sig-processing';
+        processingOverlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Memproses foto...</span>';
+        wrapper.appendChild(processingOverlay);
+
+        try {
+            const img = await this.loadImage(file);
+            const processedDataUrl = await this.processSignatureImage(img);
+            
+            // Clear pad and load the processed signature
+            pad.clear();
+            
+            // Use SignaturePad's fromDataURL but we might need to scale it
+            // Better to draw it on the canvas directly then tell pad it changed
+            const canvas = pad.canvas;
+            const ctx = canvas.getContext('2d');
+            const resultImg = new Image();
+            resultImg.onload = () => {
+                // Calculate scaling to fit the pad while maintaining aspect ratio
+                const ratio = Math.min(canvas.width / resultImg.width, canvas.height / resultImg.height) * 0.8;
+                const nw = resultImg.width * ratio;
+                const nh = resultImg.height * ratio;
+                const nx = (canvas.width - nw) / 2;
+                const ny = (canvas.height - nh) / 2;
+                
+                // Clear and draw
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(resultImg, nx, ny, nw, nh);
+                
+                // If it's an existing signature view, we should handle it
+                wrapper.querySelector('.existing-sig')?.remove();
+                canvas.style.opacity = '1';
+                
+                // Update pad state
+                // SignaturePad doesn't have a simple way to "capture" what's on canvas
+                // but we can just use pad.fromDataURL(processedDataUrl) for simplicity
+                // though manual drawing is often cleaner for positioning.
+                // Actually, pad.fromDataURL is safer for its internal state.
+                pad.fromDataURL(processedDataUrl, {
+                    width: nw / (window.devicePixelRatio || 1),
+                    height: nh / (window.devicePixelRatio || 1),
+                    x: nx / (window.devicePixelRatio || 1),
+                    y: ny / (window.devicePixelRatio || 1)
+                });
+                
+                processingOverlay.remove();
+                app.showToast('Tanda tangan berhasil diimpor', 'success');
+            };
+            resultImg.src = processedDataUrl;
+
+        } catch (error) {
+            console.error('Signature processing failed', error);
+            app.showToast('Gagal memproses foto tanda tangan', 'error');
+            processingOverlay.remove();
+        }
+    },
+
+    loadImage(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    },
+
+    processSignatureImage(img) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Limit size for processing speed
+            const maxDim = 1000;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) { h *= maxDim / w; w = maxDim; }
+                else { w *= maxDim / h; h = maxDim; }
+            }
+            
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            const imageData = ctx.getImageData(0, 0, w, h);
+            const data = imageData.data;
+            
+            // Image processing algorithm:
+            // 1. Grayscale
+            // 2. Thresholding (Adaptive-ish)
+            // 3. Make non-signature pixels transparent
+            
+            // First pass: find average brightness
+            let totalBrightness = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
+                totalBrightness += brightness;
+            }
+            const avgBrightness = totalBrightness / (data.length / 4);
+            
+            // Threshold is slightly below average to catch only darker strokes
+            const threshold = avgBrightness * 0.85; 
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+                const brightness = (r + g + b) / 3;
+                
+                if (brightness > threshold) {
+                    // It's background (white paper) -> make transparent
+                    data[i + 3] = 0;
+                } else {
+                    // It's signature (pen stroke) -> make it solid black for clarity
+                    // or keep it but enhance contrast
+                    data[i] = 0;
+                    data[i+1] = 0;
+                    data[i+2] = 0;
+                    // Boost opacity based on how dark it was
+                    data[i+3] = Math.min(255, (threshold - brightness) * (255 / threshold) * 2);
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            resolve(canvas.toDataURL('image/png'));
+        });
     },
 
     initSignaturePads() {
@@ -939,7 +1107,8 @@ const formDigital = {
         document.getElementById('df-report-id').value = '';
         document.getElementById('ploting-tbody').innerHTML = '';
         document.getElementById('spesifikasi-tbody').innerHTML = '';
-        this.addPlotingRow(); this.addSpesifikasiRow();
+        PLOTTING_AREAS.forEach(area => this.addPlotingRow(area));
+        this.addSpesifikasiRow();
         this.calcTotal();
         Object.keys(this.sigPads || {}).forEach(k => this.clearSig(k));
 
@@ -962,11 +1131,16 @@ const formDigital = {
         if (document.getElementById('mp-total-middle')) document.getElementById('mp-total-middle').textContent = m;
     },
 
-    addPlotingRow() {
+    addPlotingRow(area = '') {
         const tbody = document.getElementById('ploting-tbody');
         const tr = document.createElement('tr');
         tr.className = 'ploting-row';
-        tr.innerHTML = `<td>${tbody.children.length + 1}</td><td><input type="text" class="ploting-area"></td><td><input type="text" class="ploting-petugas"></td><td style="text-align:center;"><button type="button" onclick="this.closest('tr').remove()">×</button></td>`;
+        tr.innerHTML = `
+            <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${tbody.children.length + 1}</td>
+            <td><input type="text" class="ploting-area" value="${area}" placeholder="Nama Area" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+            <td><input type="text" class="ploting-petugas" placeholder="Nama Petugas" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+            <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris">×</button></td>
+        `;
         tbody.appendChild(tr);
     },
 
@@ -980,62 +1154,99 @@ const formDigital = {
 
     collectData() {
         const mp = { TOTAL: 0, TOTAL_MIDDLE: 0 };
-        document.querySelectorAll('.mp-input').forEach(i => {
-            const val = parseInt(i.value || 0);
-            mp[i.dataset.jabatan] = val;
-            mp.TOTAL += val;
-        });
-        document.querySelectorAll('.mp-input-middle').forEach(i => {
-            const val = parseInt(i.value || 0);
-            mp[i.dataset.jabatan + '_middle'] = val;
-            mp.TOTAL_MIDDLE += val;
+        const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
+        
+        mp_j.forEach(j => {
+            const inp = document.querySelector(`.mp-input[data-jabatan="${j}"]`);
+            const inpMid = document.querySelector(`.mp-input-middle[data-jabatan="${j}"]`);
+            const v1 = parseInt(inp ? inp.value : 0) || 0;
+            const v2 = parseInt(inpMid ? inpMid.value : 0) || 0;
+            mp[j] = v1;
+            mp[j + '_middle'] = v2;
+            mp.TOTAL += v1;
+            mp.TOTAL_MIDDLE += v2;
         });
 
         const plot = [];
         document.querySelectorAll('#ploting-tbody tr').forEach((tr, i) => {
-            const area = tr.querySelector('.ploting-area').value;
-            const petugas = tr.querySelector('.ploting-petugas').value;
+            const areaInp = tr.querySelector('.ploting-area');
+            const petugasInp = tr.querySelector('.ploting-petugas');
+            const area = areaInp ? areaInp.value : '';
+            const petugas = petugasInp ? petugasInp.value : '';
             if (area || petugas) plot.push({ no: i + 1, area, petugas });
         });
 
         const perlen = [];
         document.querySelectorAll('#tbl-perlengkapan tbody tr').forEach((tr, i) => {
-            perlen.push({
-                no: i + 1,
-                nama: tr.querySelector('td:nth-child(2)').textContent.trim(),
-                jumlah: tr.querySelector('.perlen-jumlah').value,
-                baik: tr.querySelector('.perlen-baik').value,
-                rusak: tr.querySelector('.perlen-rusak').value,
-                keterangan: tr.querySelector('.perlen-ket').value
-            });
+            const nameEl = tr.querySelector('td:nth-child(2)');
+            const jInp = tr.querySelector('.perlen-jumlah');
+            const bInp = tr.querySelector('.perlen-baik');
+            const rInp = tr.querySelector('.perlen-rusak');
+            const kInp = tr.querySelector('.perlen-ket');
+            
+            if (nameEl) {
+                perlen.push({
+                    no: i + 1,
+                    nama: nameEl.textContent.trim(),
+                    jumlah: jInp ? jInp.value : '0',
+                    baik: bInp ? bInp.value : '0',
+                    rusak: rInp ? rInp.value : '0',
+                    keterangan: kInp ? kInp.value : '-'
+                });
+            }
         });
 
         const spec = [];
         document.querySelectorAll('#spesifikasi-tbody tr').forEach(tr => {
-            const jenis = tr.querySelector('.spec-jenis').value;
-            if (jenis) spec.push({ jenis, waktu: tr.querySelector('.spec-waktu').value, detail: tr.querySelector('.spec-detail').value, tindakan: tr.querySelector('.spec-tindakan').value, status: tr.querySelector('.spec-status').value });
+            const jInp = tr.querySelector('.spec-jenis');
+            const wInp = tr.querySelector('.spec-waktu');
+            const dInp = tr.querySelector('.spec-detail');
+            const tInp = tr.querySelector('.spec-tindakan');
+            const sInp = tr.querySelector('.spec-status');
+            
+            const jenis = jInp ? jInp.value : '';
+            const detail = dInp ? dInp.value : '';
+            
+            if (jenis || detail) {
+                spec.push({
+                    jenis: jenis,
+                    waktu: wInp ? wInp.value : '-',
+                    detail: detail,
+                    tindakan: tInp ? tInp.value : '-',
+                    status: sInp ? sInp.value : '-'
+                });
+            }
         });
 
         const sigs = {};
         const signerNames = {};
-        Object.keys(this.sigPads || {}).forEach(k => {
-            const pad = this.sigPads[k];
+        ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
+            const pad = this.sigPads?.[k];
+            if (!pad) return;
             const wrapper = pad.canvas.closest('.sig-pad-wrapper');
             const existing = wrapper.querySelector('.existing-sig');
-
-            // Get data-signer attribute if it exists (from loading existing)
             const existingSignerName = wrapper.dataset.signerName;
+            const nameInp = document.getElementById(`df-sig-name-${k}`);
 
             if (existing) {
                 sigs[k] = existing.src;
-                signerNames[k] = existingSignerName;
+                signerNames[k] = existingSignerName || (nameInp ? nameInp.value : '');
             } else if (!pad.isEmpty()) {
                 sigs[k] = pad.toDataURL();
-                signerNames[k] = window.Laravel.user.name; // Capture current logged in user
+                signerNames[k] = nameInp ? nameInp.value : (window.Laravel?.user?.name || '');
             }
         });
 
-        return { manpower: mp, ploting: plot, perlengkapan: perlen, briefing: document.getElementById('df-briefing').value, training: document.getElementById('df-training').value, spesifikasi: spec, signatures: sigs, signer_names: signerNames };
+        return { 
+            manpower: mp, 
+            ploting: plot, 
+            perlengkapan: perlen, 
+            briefing: document.getElementById('df-briefing')?.value || '', 
+            training: document.getElementById('df-training')?.value || '', 
+            spesifikasi: spec, 
+            signatures: sigs, 
+            signer_names: signerNames 
+        };
     },
 
     bindFormSubmit() {
@@ -1078,111 +1289,189 @@ const formDigital = {
     },
 
     openPrintPreview(data, report) {
-        const nama = report.spv_name || document.getElementById('df-nama').value;
-        const shift = report.shift || document.getElementById('df-shift').value;
-        const tgl = report.report_date || document.getElementById('df-tanggal').value;
+        const nama = report.spv_name || document.getElementById('df-nama')?.value || '-';
+        const shift = report.shift || document.getElementById('df-shift')?.value || '-';
+        const tgl = report.report_date || document.getElementById('df-tanggal')?.value || '-';
 
         let mpRows = '', plotRows = '', perRows = '', specRows = '';
         const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
+        
         mp_j.forEach(j => {
-            mpRows += `<tr><td style="padding:4px 8px; border:1px solid #000;">${j}</td><td style="text-align:center; border:1px solid #000;">${data.manpower?.[j] || '-'}</td><td style="text-align:center; border:1px solid #000;">${data.manpower?.[j + '_middle'] || '-'}</td></tr>`;
+            const val = data.manpower?.[j] || '0';
+            const valMid = data.manpower?.[j + '_middle'] || '0';
+            mpRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:6px 10px;">${j}</td>
+                    <td style="border:1px solid #000; padding:6px; text-align:center;">${val}</td>
+                    <td style="border:1px solid #000; padding:6px; text-align:center;">${valMid}</td>
+                </tr>`;
         });
 
-        (data.ploting || []).forEach(p => plotRows += `<tr><td style="text-align:center; border:1px solid #000;">${p.no}</td><td style="border:1px solid #000; padding:4px 8px;">${p.area}</td><td style="border:1px solid #000; padding:4px 8px;">${p.petugas}</td></tr>`);
-        (data.perlengkapan || []).forEach(p => perRows += `<tr><td style="text-align:center; border:1px solid #000;">${p.no}</td><td style="border:1px solid #000; padding:4px 8px;">${p.nama}</td><td style="text-align:center; border:1px solid #000;">${p.jumlah}</td><td style="text-align:center; border:1px solid #000; color:green;">${p.baik}</td><td style="text-align:center; border:1px solid #000; color:red;">${p.rusak}</td><td style="border:1px solid #000; padding:4px 8px;">${p.keterangan || '-'}</td></tr>`);
-        (data.spesifikasi || []).forEach(s => specRows += `<tr><td style="border:1px solid #000; padding:4px 8px;">${s.jenis}</td><td style="text-align:center; border:1px solid #000;">${s.waktu}</td><td style="border:1px solid #000; padding:4px 8px;">${s.detail}</td><td style="border:1px solid #000; padding:4px 8px;">${s.tindakan}</td><td style="text-align:center; border:1px solid #000;">${s.status}</td></tr>`);
+        (data.ploting || []).forEach(p => {
+            plotRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:6px; text-align:center;">${p.no}</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">${p.area || '-'}</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">${p.petugas || '-'}</td>
+                </tr>`;
+        });
+
+        (data.perlengkapan || []).forEach(p => {
+            perRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
+                    <td style="border:1px solid #000; padding:4px 8px;">${p.nama || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${p.jumlah || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center; color:green;">${p.baik || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center; color:red;">${p.rusak || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px 8px;">${p.keterangan || '-'}</td>
+                </tr>`;
+        });
+
+        (data.spesifikasi || []).forEach(s => {
+            specRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:6px 10px;">${s.jenis || '-'}</td>
+                    <td style="border:1px solid #000; padding:6px; text-align:center;">${s.waktu || '-'}</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">${s.detail || '-'}</td>
+                    <td style="border:1px solid #000; padding:6px 10px;">${s.tindakan || '-'}</td>
+                    <td style="border:1px solid #000; padding:6px; text-align:center;">${s.status || '-'}</td>
+                </tr>`;
+        });
 
         const html = `
-            <div style="text-align:center; margin-bottom:20px;">
-                <h2 style="margin:0; text-transform:uppercase;">DAILY REPORT SUPERVISOR</h2>
-                <p style="margin:5px 0;">GANDARIA CITY MALL</p>
-            </div>
-            <table style="width:100%; margin-bottom:15px; font-size:10pt;">
-                <tr><td style="width:15%;">Nama SPV</td><td>: ${nama}</td><td style="width:15%;">Shift</td><td>: ${shift}</td></tr>
-                <tr><td>Tanggal</td><td>: ${tgl}</td></tr>
-            </table>
-            <div style="margin-bottom:20px;">
-                <h4 style="margin:0 0 8px; font-size:10pt;">MAN POWER</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:15px;">
-                    <thead>
-                        <tr>
-                            <th style="border:1px solid #000; background:#eee; padding:6px;">JABATAN</th>
-                            <th style="border:1px solid #000; background:#eee; padding:6px; width:100px;">SHIFT</th>
-                            <th style="border:1px solid #000; background:#eee; padding:6px; width:100px;">MIDDLE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${mpRows}
-                        <tr style="font-weight:bold; background:#f9f9f9;">
-                            <td style="border:1px solid #000; padding:6px 10px;">TOTAL</td>
-                            <td style="text-align:center; border:1px solid #000; padding:6px;">${data.manpower?.TOTAL || 0}</td>
-                            <td style="text-align:center; border:1px solid #000; padding:6px;">${data.manpower?.TOTAL_MIDDLE || 0}</td>
-                        </tr>
-                    </tbody>
+            <div style="font-family: Arial, sans-serif; color: #000; line-height: 1.4; padding: 10px;">
+                <div style="text-align:center; margin-bottom:30px;">
+                    <h2 style="margin:0; font-size: 18pt;">DAILY REPORT SUPERVISOR</h2>
+                    <h3 style="margin:5px 0; font-size: 14pt;">GANDARIA CITY MALL</h3>
+                </div>
+
+                <table style="width:100%; margin-bottom:20px; font-size:11pt;">
+                    <tr>
+                        <td style="width:120px; padding:4px 0;">Nama SPV</td>
+                        <td style="padding:4px 0;">: <strong>${nama}</strong></td>
+                        <td style="width:100px; padding:4px 0;">Shift</td>
+                        <td style="padding:4px 0;">: <strong>${shift}</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding:4px 0;">Tanggal</td>
+                        <td colspan="3" style="padding:4px 0;">: <strong>${tgl}</strong></td>
+                    </tr>
                 </table>
 
-                <h4 style="margin:15px 0 8px; font-size:10pt;">PLOTING MANPOWER</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:15px;">
-                    <thead>
+                <div style="margin-bottom:25px;">
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">MAN POWER</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">JABATAN</th>
+                                <th style="border:1px solid #000; padding:8px; width:120px;">SHIFT</th>
+                                <th style="border:1px solid #000; padding:8px; width:120px;">MIDDLE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${mpRows}
+                            <tr style="background-color: #eee; font-weight: bold;">
+                                <td style="border:1px solid #000; padding:8px 10px;">TOTAL PERSONEL</td>
+                                <td style="border:1px solid #000; padding:8px; text-align:center;">${data.manpower?.TOTAL || 0}</td>
+                                <td style="border:1px solid #000; padding:8px; text-align:center;">${data.manpower?.TOTAL_MIDDLE || 0}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom:25px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PLOTING PERSONEL</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border:1px solid #000; padding:8px; width:40px;">NO</th>
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">AREA PLOTING</th>
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">NAMA PETUGAS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${plotRows || '<tr><td colspan="3" style="border:1px solid #000; padding:10px; text-align:center;">Tidak ada data plotting</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom:25px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERLENGKAPAN OPERASIONAL</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; width:30px;">NO</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:left;">NAMA PERLENGKAPAN</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; width:60px;">TOTAL</th>
+                                <th colspan="2" style="border:1px solid #000; padding:4px;">KONDISI</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px;">KETERANGAN</th>
+                            </tr>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border:1px solid #000; padding:4px; width:50px; color:green;">BAIK</th>
+                                <th style="border:1px solid #000; padding:4px; width:50px; color:red;">RUSAK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${perRows || '<tr><td colspan="6" style="border:1px solid #000; padding:10px; text-align:center;">Tidak ada data perlengkapan</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display:flex; gap:20px; margin-bottom:25px; page-break-inside: avoid;">
+                    <div style="flex:1; border:1px solid #000; padding:10px;">
+                        <h4 style="margin:0 0 10px; border-bottom:1px solid #000; padding-bottom:5px; font-size:10pt;">MATERI BRIEFING</h4>
+                        <div style="white-space:pre-wrap; min-height:60px; font-size:10pt;">${data.briefing || '-'}</div>
+                    </div>
+                    <div style="flex:1; border:1px solid #000; padding:10px;">
+                        <h4 style="margin:0 0 10px; border-bottom:1px solid #000; padding-bottom:5px; font-size:10pt;">TRAINING / INSTRUKSI</h4>
+                        <div style="white-space:pre-wrap; min-height:60px; font-size:10pt;">${data.training || '-'}</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:30px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">TEMUAN & TINDAKAN (SPESIFIKASI)</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">JENIS LAPORAN</th>
+                                <th style="border:1px solid #000; padding:8px; width:80px;">WAKTU</th>
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">DETAIL KEJADIAN</th>
+                                <th style="border:1px solid #000; padding:8px; text-align:left;">TINDAKAN</th>
+                                <th style="border:1px solid #000; padding:8px; width:100px;">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${specRows || '<tr><td colspan="5" style="border:1px solid #000; padding:10px; text-align:center;">Tidak ada temuan hari ini.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="page-break-inside: avoid; margin-top: 40px;">
+                    <table style="width:100%; border-collapse:collapse; text-align:center; font-size:10pt;">
                         <tr>
-                            <th style="width:40px; border:1px solid #000; background:#eee; padding:6px;">NO</th>
-                            <th style="border:1px solid #000; background:#eee; padding:6px;">AREA PLOTING</th>
-                            <th style="border:1px solid #000; background:#eee; padding:6px;">NAMA PETUGAS</th>
+                            <td style="width:33.3%; vertical-align: top;">
+                                Dibuat Oleh,<br><br>
+                                ${data.signatures?.spv ? `<img src="${data.signatures.spv}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
+                                <br><strong>( ${data.signer_names?.spv || nama} )</strong><br>
+                                <span style="font-size:8pt;">Supervisor / Leader</span>
+                            </td>
+                            <td style="width:33.3%; vertical-align: top;">
+                                Mengetahui,<br><br>
+                                ${data.signatures?.['mgr-1'] ? `<img src="${data.signatures['mgr-1']}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
+                                <br><strong>( ${data.signer_names?.['mgr-1'] || '....................'} )</strong><br>
+                                <span style="font-size:8pt;">Car Park Manager</span>
+                            </td>
+                            <td style="width:33.3%; vertical-align: top;">
+                                Menyetujui,<br><br>
+                                ${data.signatures?.['mgr-2'] ? `<img src="${data.signatures['mgr-2']}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
+                                <br><strong>( ${data.signer_names?.['mgr-2'] || '....................'} )</strong><br>
+                                <span style="font-size:8pt;">Inhouse Parking</span>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>${plotRows}</tbody>
-                </table>
-            </div>
-
-            <h4 style="margin:15px 0 8px; font-size:10pt;">PERLENGKAPAN</h4>
-            <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:15px;">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width:35px; border:1px solid #000; background:#eee; padding:4px;">NO</th>
-                        <th rowspan="2" style="border:1px solid #000; background:#eee; padding:4px;">NAMA PERLENGKAPAN</th>
-                        <th rowspan="2" style="width:60px; border:1px solid #000; background:#eee; padding:4px;">TOTAL</th>
-                        <th colspan="2" style="border:1px solid #000; background:#eee; padding:4px;">KONDISI</th>
-                        <th rowspan="2" style="border:1px solid #000; background:#eee; padding:4px;">KETERANGAN</th>
-                    </tr>
-                    <tr>
-                        <th style="width:50px; border:1px solid #000; background:#eee; color:green; padding:4px;">BAIK</th>
-                        <th style="width:50px; border:1px solid #000; background:#eee; color:red; padding:4px;">RUSAK</th>
-                    </tr>
-                </thead>
-                <tbody>${perRows}</tbody>
-            </table>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px; font-size:9pt;">
-                <div style="border:1px solid #000; padding:8px; min-height:80px;">
-                    <h4 style="margin:0 0 5px; border-bottom:1px solid #000; font-size:9pt;">BRIEFING</h4>
-                    <div style="white-space:pre-wrap;">${data.briefing || '-'}</div>
-                </div>
-                <div style="border:1px solid #000; padding:8px; min-height:80px;">
-                    <h4 style="margin:0 0 5px; border-bottom:1px solid #000; font-size:9pt;">TRAINING</h4>
-                    <div style="white-space:pre-wrap;">${data.training || '-'}</div>
+                    </table>
                 </div>
             </div>
-
-            <h4 style="margin:15px 0 8px; font-size:10pt;">SPESIFIKASI LAPORAN</h4>
-            <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:25px;">
-                <thead>
-                    <tr>
-                        <th style="border:1px solid #000; background:#eee; padding:6px; width:130px;">JENIS LAPORAN</th>
-                        <th style="width:70px; border:1px solid #000; background:#eee; padding:6px;">WAKTU</th>
-                        <th style="border:1px solid #000; background:#eee; padding:6px;">DETAIL LAPORAN</th>
-                        <th style="border:1px solid #000; background:#eee; padding:6px;">TINDAKAN</th>
-                        <th style="width:80px; border:1px solid #000; background:#eee; padding:6px;">STATUS</th>
-                    </tr>
-                </thead>
-                <tbody>${specRows}</tbody>
-            </table>
-            <table style="width:100%; border-collapse:collapse; font-size:9pt; text-align:center;">
-                <tr>
-                    <td>Dibuat,<br><br>${data.signatures?.spv ? `<img src="${data.signatures.spv}" style="height:50px;">` : '<br><br>'}<br><b>( ${data.signer_names?.spv || nama} )</b><br>Supervisor/Leader</td>
-                    <td>Mengetahui,<br><br>${data.signatures?.['mgr-1'] ? `<img src="${data.signatures['mgr-1']}" style="height:50px;">` : '<br><br>'}<br><b>( ${data.signer_names?.['mgr-1'] || '....................'} )</b><br>CarPark Manager</td>
-                    <td>Mengetahui,<br><br>${data.signatures?.['mgr-2'] ? `<img src="${data.signatures?.['mgr-2']}" style="height:50px;">` : '<br><br>'}<br><b>( ${data.signer_names?.['mgr-2'] || '....................'} )</b><br>Inhouse Parking</td>
-                </tr>
-            </table>
         `;
         document.getElementById('print-content').innerHTML = html;
         document.getElementById('print-modal').classList.remove('hidden');

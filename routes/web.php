@@ -39,6 +39,7 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
             return redirect()->route('dashboard');
         });
         Route::get('/reports/zip', [ReportController::class, 'downloadZIP'])->name('reports.zip');
+        Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
 
         // User Management (Admin Only)
         Route::get('/users', [UserController::class, 'index'])->name('users.index');

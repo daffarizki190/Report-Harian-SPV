@@ -346,6 +346,7 @@
                                             <th style="width:50px">NO</th>
                                             <th>AREA PLOTING</th>
                                             <th>NAMA PETUGAS</th>
+                                            <th style="width:40px"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="ploting-tbody">
@@ -369,6 +370,9 @@
                                                 <input type="text" class="ploting-petugas"
                                                     placeholder="Nama Petugas"
                                                     style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;">
+                                            </td>
+                                            <td style="text-align:center;">
+                                                <button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris">×</button>
                                             </td>
                                         </tr>
                                         @endforeach
@@ -502,6 +506,9 @@
                                     <div class="sig-pad-wrapper">
                                         <canvas id="sig-spv" class="sig-canvas {{ !in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'sig-readonly' : '' }}"></canvas>
                                         @if(in_array(auth()->user()->role, ['Supervisor', 'Leader']))
+                                            <button type="button" class="btn-upload-sig" onclick="formDigital.triggerSigPhotoUpload('spv')" title="Upload foto tanda tangan dari kertas putih">
+                                                <i class="fas fa-camera"></i> Foto
+                                            </button>
                                             <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('spv')">Hapus</button>
                                         @endif
                                     </div>
@@ -515,6 +522,9 @@
                                     <div class="sig-pad-wrapper">
                                         <canvas id="sig-mgr-1" class="sig-canvas {{ !in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']) ? 'sig-readonly' : '' }}"></canvas>
                                         @if(in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']))
+                                            <button type="button" class="btn-upload-sig" onclick="formDigital.triggerSigPhotoUpload('mgr-1')" title="Upload foto tanda tangan dari kertas putih">
+                                                <i class="fas fa-camera"></i> Foto
+                                            </button>
                                             <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('mgr-1')">Hapus</button>
                                         @endif
                                     </div>
@@ -528,6 +538,9 @@
                                     <div class="sig-pad-wrapper">
                                        <canvas id="sig-mgr-2" class="sig-canvas {{ !in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']) ? 'sig-readonly' : '' }}"></canvas>
                                        @if(in_array(auth()->user()->role, ['CAR PARK MANAGER','Admin','Inhouse']))
+                                           <button type="button" class="btn-upload-sig" onclick="formDigital.triggerSigPhotoUpload('mgr-2')" title="Upload foto tanda tangan dari kertas putih">
+                                               <i class="fas fa-camera"></i> Foto
+                                           </button>
                                            <button type="button" class="btn-clear-sig" onclick="formDigital.clearSig('mgr-2')">Hapus</button>
                                        @endif
                                    </div>
@@ -547,6 +560,8 @@
                                 <div class="dots-wave hidden"><span></span><span></span><span></span></div>
                             </button>
                         </div>
+                        {{-- Hidden Input for Signature Photo --}}
+                        <input type="file" id="sig-photo-input" accept="image/*" hidden>
                     </form>
                 </div>
             </section>

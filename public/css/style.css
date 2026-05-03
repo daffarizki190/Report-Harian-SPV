@@ -727,6 +727,59 @@ input:focus { border-color: var(--accent); }
     color: white;
 }
 
+.btn-upload-sig {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-upload-sig:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-upload-sig i {
+    font-size: 10px;
+}
+
+.sig-processing {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    backdrop-filter: blur(2px);
+    border-radius: 16px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.sig-processing i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
 .mobile-only-warning {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05));
     color: #b45309;
@@ -1061,17 +1114,65 @@ input:focus { border-color: var(--accent); }
    PRINT STYLES — hanya tampilkan #print-content
    ============================================================ */
 @media print {
-    body * { visibility: hidden !important; }
-    #print-content, #print-content * { visibility: visible !important; }
-    #print-content {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        padding: 24px;
-        font-size: 10pt;
+    body > * { display: none !important; }
+    
+    #print-modal {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        visibility: visible !important;
     }
-    .overlay { display: none !important; }
+
+    /* Force all parents to be visible and have auto height */
+    #print-modal, 
+    #print-modal > div, 
+    #print-modal > div > div {
+        display: block !important;
+        position: static !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: white !important;
+        visibility: visible !important;
+    }
+
+    /* Hide modal controls (buttons, header, footer) */
+    #print-modal .modal-header, 
+    #print-modal .modal-footer,
+    #print-modal .btn-close-modal,
+    #print-modal button,
+    #print-modal .modal-controls { 
+        display: none !important; 
+    }
+    
+    #print-content {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Preserve table displays */
+    table { display: table !important; width: 100% !important; }
+    tr { display: table-row !important; }
+    td, th { display: table-cell !important; }
+
+    /* Prevent page breaks inside critical sections */
+    .df-section { page-break-inside: avoid; margin-bottom: 20px; }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
 }
 
 

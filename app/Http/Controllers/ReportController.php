@@ -323,6 +323,33 @@ class ReportController extends Controller
         }
     }
 
+    public function destroy($id)
+    {
+        $report = Report::findOrFail($id);
+        $user = Auth::user();
+
+        // Security check: Only Admin/Manager can delete anything. 
+        // Supervisor/Leader can only delete their own reports.
+        if (!in_array($user->role, ['Admin', 'CAR PARK MANAGER', 'Inhouse'])) {
+            if ($report->user_id !== $user->id && $report->spv_name !== $user->name) {
+                return response()->json(['message' => 'Anda tidak memiliki hak untuk menghapus laporan ini.'], 403);
+            }
+        }
+
+        return DB::transaction(function () use ($report, $user) {
+            if ($report->file_path) {
+                $this->supabase->delete($report->file_path);
+            }
+            
+            $details = "Hapus laporan tgl {$report->report_date} - SPV: {$report->spv_name}";
+            $report->delete();
+            
+            $this->logActivity($user->name, 'Delete Report', $details);
+            
+            return response()->json(['message' => 'Laporan berhasil dihapus.']);
+        });
+    }
+
     /**
      * Get filtered report URLs for ZIP download.
      */
