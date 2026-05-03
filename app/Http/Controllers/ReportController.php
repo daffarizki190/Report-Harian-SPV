@@ -115,51 +115,57 @@ class ReportController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $totalReports = \App\Models\Report::count();
-        $totalUsers = \App\Models\User::count();
-        
-        // Stats for signatures
-        $reports = \App\Models\Report::all();
-        $completed = 0;
-        $pending = 0;
-        foreach ($reports as $r) {
-            $data = is_string($r->form_data) ? json_decode($r->form_data, true) : $r->form_data;
-            if (isset($data['signatures']['mgr-2'])) {
-                $completed++;
-            } else {
-                $pending++;
+        // Professional Laravel 11 Memoization: once()
+        // This ensures the logic is only executed once per request lifecycle
+        $info = once(function() {
+            $totalReports = \App\Models\Report::count();
+            $totalUsers = \App\Models\User::count();
+            
+            // Stats for signatures
+            $reports = \App\Models\Report::all();
+            $completed = 0;
+            $pending = 0;
+            foreach ($reports as $r) {
+                $data = is_string($r->form_data) ? json_decode($r->form_data, true) : $r->form_data;
+                if (isset($data['signatures']['mgr-2'])) {
+                    $completed++;
+                } else {
+                    $pending++;
+                }
             }
-        }
 
-        return response()->json([
-            'server' => [
-                'php_version' => PHP_VERSION,
-                'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Vercel/Production',
-                'environment' => config('app.env'),
-                'timezone' => config('app.timezone'),
-            ],
-            'database' => [
-                'driver' => config('database.default'),
-                'total_reports' => $totalReports,
-                'total_users' => $totalUsers,
-                'completion_rate' => $totalReports > 0 ? round(($completed / $totalReports) * 100, 2) : 0,
-                'stats' => [
-                    'completed' => $completed,
-                    'pending' => $pending
+            return [
+                'server' => [
+                    'php_version' => PHP_VERSION,
+                    'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Vercel/Production',
+                    'environment' => config('app.env'),
+                    'timezone' => config('app.timezone'),
+                ],
+                'database' => [
+                    'driver' => config('database.default'),
+                    'total_reports' => $totalReports,
+                    'total_users' => $totalUsers,
+                    'completion_rate' => $totalReports > 0 ? round(($completed / $totalReports) * 100, 2) : 0,
+                    'stats' => [
+                        'completed' => $completed,
+                        'pending' => $pending
+                    ]
+                ],
+                'storage' => [
+                    'status' => env('SUPABASE_URL') ? 'Connected' : 'Disconnected',
+                    'provider' => 'Supabase Cloud'
+                ],
+                'stack' => [
+                    'laravel' => app()->version(),
+                    'hosting' => 'Vercel (Production)',
+                    'database' => 'PostgreSQL (Supabase)',
+                    'storage' => 'Supabase Object Storage',
+                    'ui_kit' => 'Vanilla CSS / Glassmorphism Design'
                 ]
-            ],
-            'storage' => [
-                'status' => env('SUPABASE_URL') ? 'Connected' : 'Disconnected',
-                'provider' => 'Supabase Cloud'
-            ],
-            'stack' => [
-                'laravel' => app()->version(),
-                'hosting' => 'Vercel (Production)',
-                'database' => 'PostgreSQL (Supabase)',
-                'storage' => 'Supabase Object Storage',
-                'ui_kit' => 'Vanilla CSS / Glassmorphism Design'
-            ]
-        ]);
+            ];
+        });
+
+        return response()->json($info);
     }
 
     public function logs()
