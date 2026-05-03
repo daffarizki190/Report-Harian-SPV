@@ -122,7 +122,7 @@ class ReportController extends Controller
         $completed = 0;
         $pending = 0;
         foreach ($reports as $r) {
-            $data = is_string($r.form_data) ? json_decode($r.form_data, true) : $r.form_data;
+            $data = is_string($r->form_data) ? json_decode($r->form_data, true) : $r->form_data;
             if (isset($data['signatures']['mgr-2'])) {
                 $completed++;
             } else {
