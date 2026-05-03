@@ -349,39 +349,6 @@ class ReportController extends Controller
         }
     }
 
-    public function systemInfo()
-    {
-        try {
-            $totalReports = Report::count();
-            $totalUsers = DB::table('users')->count();
-            
-            // Completion rate based on mgr-2 (Inhouse) signature
-            $completedCount = Report::where('form_data', 'like', '%"mgr-2":%')->count();
-            $rate = $totalReports > 0 ? round(($completedCount / $totalReports) * 100) : 0;
-
-            return response()->json([
-                'server' => [
-                    'php_version' => PHP_VERSION,
-                    'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'N/A',
-                    'timezone' => config('app.timezone'),
-                    'os' => PHP_OS,
-                ],
-                'database' => [
-                    'driver' => config('database.default'),
-                    'total_reports' => $totalReports,
-                    'total_users' => $totalUsers,
-                    'completion_rate' => $rate,
-                    'stats' => [
-                        'completed' => $completedCount,
-                        'pending' => $totalReports - $completedCount,
-                    ]
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
-    }
-
     public function destroy($id)
     {
         $report = Report::findOrFail($id);
