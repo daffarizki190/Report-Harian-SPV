@@ -89,7 +89,7 @@ class ReportController extends Controller
             }
         });
 
-        return response()->json($reports);
+        return ReportResource::collection($reports);
     }
 
     public function stats()

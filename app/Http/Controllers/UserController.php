@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 use App\Http\Requests\StoreUserRequest;
 
+use App\Http\Resources\UserResource;
+
 class UserController extends Controller
 {
     /**
@@ -20,8 +22,9 @@ class UserController extends Controller
         if (Auth::user()->role !== 'Admin') {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
-        // Professional Eloquent optimization: latestOfMany + Eager Loading
-        return response()->json(User::with('latestReport')->get());
+        // Professional Eloquent optimization: latestOfMany + Eager Loading + API Resource
+        $users = User::with('latestReport')->get();
+        return UserResource::collection($users);
     }
 
     /**
