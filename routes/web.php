@@ -23,9 +23,7 @@ Route::get('/debug-env', function () {
 });
 
 Route::middleware(['auth', 'prevent-back'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [ReportController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

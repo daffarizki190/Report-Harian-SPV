@@ -94,16 +94,6 @@
 
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
-                @php
-                    $hour = (int)date('H');
-                    if ($hour >= 7 && $hour < 15) {
-                        $currentShift = 'Pagi';
-                    } elseif ($hour >= 15 && $hour < 23) {
-                        $currentShift = 'Siang';
-                    } else {
-                        $currentShift = 'Malam';
-                    }
-                @endphp
                 <div class="stats-grid">
                     <div class="glass-card stat-card animate-slide-up" style="border-left: 4px solid var(--accent);">
                         <div class="stat-header">
@@ -350,13 +340,6 @@
                                         </tr>
                                     </thead>
                                     <tbody id="ploting-tbody">
-                                        @php
-                                        $plotingAreas = [
-                                            'Mobile Basement','Mobile MSCP','Control Room Officer 1',
-                                            'Control Room Officer 2','PK Motor','Area Motor B2','Area Motor B1',
-                                            'Area B2','Area B2','Area B1','Area B1','Area LG','Area LG','Area MSCP',''
-                                        ];
-                                        @endphp
                                         @foreach($plotingAreas as $i => $area)
                                         <tr class="ploting-row">
                                             <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">{{ $i+1 }}</td>
@@ -400,16 +383,6 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php
-                                        $perlengkapan = [
-                                            ['Handy Talkie', 3],
-                                            ['Traffic Lamp', 5],
-                                            ['Jas Hujan', 1],
-                                            ['Traffic Cone CP', 200],
-                                            ['Sticke Cone CP', 100],
-                                            ['Senter', 1],
-                                        ];
-                                        @endphp
                                         @foreach($perlengkapan as $idx => $item)
                                         <tr>
                                             <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">{{ $idx+1 }}</td>

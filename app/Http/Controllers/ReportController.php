@@ -15,6 +15,35 @@ class ReportController extends Controller
         protected SupabaseStorageService $supabase
     ) {}
 
+    public function dashboard()
+    {
+        $hour = (int)date('H');
+        if ($hour >= 7 && $hour < 15) {
+            $currentShift = 'Pagi';
+        } elseif ($hour >= 15 && $hour < 23) {
+            $currentShift = 'Siang';
+        } else {
+            $currentShift = 'Malam';
+        }
+
+        $plotingAreas = [
+            'Mobile Basement', 'Mobile MSCP', 'Control Room Officer 1',
+            'Control Room Officer 2', 'PK Motor', 'Area Motor B2', 'Area Motor B1',
+            'Area B2', 'Area B2', 'Area B1', 'Area B1', 'Area LG', 'Area LG', 'Area MSCP', ''
+        ];
+
+        $perlengkapan = [
+            ['Handy Talkie', 3],
+            ['Traffic Lamp', 5],
+            ['Jas Hujan', 1],
+            ['Traffic Cone CP', 200],
+            ['Sticke Cone CP', 100],
+            ['Senter', 1],
+        ];
+
+        return view('dashboard', compact('currentShift', 'plotingAreas', 'perlengkapan'));
+    }
+
     /**
      * Display a listing of reports with professional filtering.
      */
