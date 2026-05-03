@@ -9,6 +9,12 @@ Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Passwordless Magic Link Login
+Route::post('/magic-link', [AuthController::class, 'sendMagicLink'])->name('magic.link.send');
+Route::get('/magic-login/{user}', [AuthController::class, 'loginViaMagicLink'])
+    ->name('magic.link.login')
+    ->middleware('signed');
+
 // TEMP DEBUG - remove after fixing env vars
 Route::get('/debug-env', function () {
     $serviceKey = env('SUPABASE_SERVICE_ROLE_KEY');

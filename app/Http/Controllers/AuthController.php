@@ -32,6 +32,32 @@ class AuthController extends Controller
         ]);
     }
 
+    public function sendMagicLink(Request $request)
+    {
+        $request->validate(['username' => 'required|exists:users,username']);
+        
+        $user = \App\Models\User::where('username', $request->username)->first();
+        
+        // Generate a temporary signed URL valid for 15 minutes
+        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+            'magic.link.login',
+            now()->addMinutes(15),
+            ['user' => $user->id]
+        );
+
+        return back()->with('magic_link', $url)->with('status', 'Magic Link berhasil dibuat! Silakan gunakan link di bawah untuk masuk (Berlaku 15 menit).');
+    }
+
+    public function loginViaMagicLink(Request $request, $userId)
+    {
+        // Signed middleware automatically handles validation
+        $user = \App\Models\User::findOrFail($userId);
+        Auth::login($user);
+        
+        $request->session()->regenerate();
+        return redirect()->intended('dashboard');
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();
