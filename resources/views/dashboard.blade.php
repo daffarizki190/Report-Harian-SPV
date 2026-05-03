@@ -595,65 +595,110 @@
             <!-- User Management -->
             @if(auth()->user()->role === 'Admin')
             <section id="view-monitoring" class="view-section hidden">
-                <div class="glass-card animate-fade-in">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h3 style="margin:0;"><i class="fas fa-desktop"></i> Monitoring Sistem</h3>
-                        <button onclick="app.loadMonitoringData()" class="btn-primary" style="width: auto; padding: 8px 16px;"><i class="fas fa-sync-alt"></i> Refresh Monitor</button>
+                <div class="bg-white/70 backdrop-blur-2xl border border-white/40 p-8 rounded-lg-custom shadow-custom animate-fade-in">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                        <h3 class="text-2xl font-bold text-primary m-0 flex items-center gap-3">
+                            <i class="fas fa-desktop text-accent"></i> 
+                            Monitoring Sistem
+                        </h3>
+                        <button onclick="app.loadMonitoringData()" class="bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-md-custom shadow-md transition-all flex items-center gap-2 text-sm font-semibold">
+                            <i class="fas fa-sync-alt"></i> Refresh Monitor
+                        </button>
                     </div>
                     
                     <!-- Tech Stack Details -->
-                    <div class="stats-grid">
-                        <div class="glass-card stat-card" style="border-top: 4px solid var(--accent);">
-                            <div class="stat-header"><i class="fab fa-php"></i> Server Engine</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <!-- Card 1 -->
+                        <div class="bg-white/50 backdrop-blur-xl border border-white/40 border-t-4 border-t-accent p-6 rounded-lg-custom shadow-sm hover:shadow-md transition-all">
+                            <div class="text-text-dim text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fab fa-php text-lg"></i> Server Engine
+                            </div>
                             <div class="stat-content">
-                                <h4 id="mon-php-version">Memuat...</h4>
-                                <p id="mon-server-software">Environment: -</p>
+                                <h4 id="mon-php-version" class="text-2xl font-bold text-primary mb-1">Memuat...</h4>
+                                <p id="mon-server-software" class="text-sm text-text-dim m-0">Environment: -</p>
                             </div>
                         </div>
-                        <div class="glass-card stat-card" style="border-top: 4px solid var(--success);">
-                            <div class="stat-header"><i class="fas fa-database"></i> Database Stats</div>
+                        <!-- Card 2 -->
+                        <div class="bg-white/50 backdrop-blur-xl border border-white/40 border-t-4 border-t-success p-6 rounded-lg-custom shadow-sm hover:shadow-md transition-all">
+                            <div class="text-text-dim text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fas fa-database text-lg"></i> Database Stats
+                            </div>
                             <div class="stat-content">
-                                <h4 id="mon-db-reports">0 Laporan</h4>
-                                <p id="mon-db-users">0 Pengguna Terdaftar</p>
+                                <h4 id="mon-db-reports" class="text-2xl font-bold text-primary mb-1">0 Laporan</h4>
+                                <p id="mon-db-users" class="text-sm text-text-dim m-0">0 Pengguna Terdaftar</p>
                             </div>
                         </div>
-                        <div class="glass-card stat-card" style="border-top: 4px solid var(--accent-gold);">
-                            <div class="stat-header"><i class="fas fa-percentage"></i> Completion Rate</div>
+                        <!-- Card 3 -->
+                        <div class="bg-white/50 backdrop-blur-xl border border-white/40 border-t-4 border-t-accent-gold p-6 rounded-lg-custom shadow-sm hover:shadow-md transition-all">
+                            <div class="text-text-dim text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                                <i class="fas fa-percentage text-lg"></i> Completion Rate
+                            </div>
                             <div class="stat-content">
-                                <h4 id="mon-completion-rate">0%</h4>
-                                <div class="progress-bar-bg">
-                                    <div id="mon-progress-fill" style="height: 100%; background: var(--accent-gold); width: 0%; transition: width 1s ease-in-out;"></div>
+                                <h4 id="mon-completion-rate" class="text-2xl font-bold text-primary mb-3">0%</h4>
+                                <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                    <div id="mon-progress-fill" class="h-full bg-accent-gold w-0 transition-all duration-1000"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+ 
                     <!-- Detailed Technical Info -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
-                            <h5 style="margin-bottom: 16px; font-weight: 700;"><i class="fas fa-info-circle"></i> Info Sistem</h5>
-                            <div class="mon-info-list">
-                                <div class="mon-info-item"><span class="mon-info-label">Timezone:</span> <span id="mon-timezone" class="mon-info-value">-</span></div>
-                                <div class="mon-info-item"><span class="mon-info-label">Storage Provider:</span> <span id="mon-storage" class="mon-info-value">Supabase Cloud</span></div>
-                                <div class="mon-info-item"><span class="mon-info-label">Database Driver:</span> <span id="mon-db-driver" class="mon-info-value">-</span></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-white/40 backdrop-blur-lg border border-white/20 p-6 rounded-lg-custom">
+                            <h5 class="text-lg font-bold text-primary mb-5 flex items-center gap-2">
+                                <i class="fas fa-info-circle text-accent"></i> Info Sistem
+                            </h5>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Timezone:</span> 
+                                    <span id="mon-timezone" class="font-semibold text-primary">-</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Storage Provider:</span> 
+                                    <span id="mon-storage" class="font-semibold text-primary">Supabase Cloud</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Database Driver:</span> 
+                                    <span id="mon-db-driver" class="font-semibold text-primary">-</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
-                            <h5 style="margin-bottom: 16px; font-weight: 700;"><i class="fas fa-chart-pie"></i> Distribusi Laporan</h5>
-                            <div class="mon-info-list">
-                                <div class="mon-info-item"><span class="mon-info-label">Sudah Final:</span> <span id="mon-reports-done" class="mon-info-value" style="color:var(--success);">0</span></div>
-                                <div class="mon-info-item"><span class="mon-info-label">Pending Approval:</span> <span id="mon-reports-pending" class="mon-info-value" style="color:var(--error);">0</span></div>
+                        <div class="bg-white/40 backdrop-blur-lg border border-white/20 p-6 rounded-lg-custom">
+                            <h5 class="text-lg font-bold text-primary mb-5 flex items-center gap-2">
+                                <i class="fas fa-chart-pie text-accent"></i> Distribusi Laporan
+                            </h5>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Sudah Final:</span> 
+                                    <span id="mon-reports-done" class="font-bold text-success">0</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Pending Approval:</span> 
+                                    <span id="mon-reports-pending" class="font-bold text-error">0</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
-                            <h5 style="margin-bottom: 16px; font-weight: 700; color: var(--primary);"><i class="fas fa-code"></i> Developer Tech Stack</h5>
-                            <div class="mon-info-list" id="mon-tech-stack-list">
-                                <!-- Loaded via JS -->
-                                <div class="mon-info-item"><span class="mon-info-label">Framework:</span> <span class="mon-info-value">Laravel</span></div>
-                                <div class="mon-info-item"><span class="mon-info-label">Hosting:</span> <span class="mon-info-value">Vercel</span></div>
+                        <div class="bg-white/40 backdrop-blur-lg border border-white/20 p-6 rounded-lg-custom">
+                            <h5 class="text-lg font-bold text-primary mb-5 flex items-center gap-2">
+                                <i class="fas fa-code text-accent"></i> Developer Tech Stack
+                            </h5>
+                            <div class="space-y-4" id="mon-tech-stack-list">
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Framework:</span> 
+                                    <span class="font-semibold text-primary">Laravel 11</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Styling:</span> 
+                                    <span class="font-semibold text-primary">Tailwind CSS</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-text-dim">Hosting:</span> 
+                                    <span class="font-semibold text-primary">Vercel</span>
+                                </div>
                             </div>
                         </div>
                     </div>
+>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <h4 style="margin:0;"><i class="fas fa-list-ul"></i> Audit Log Aktivitas</h4>
