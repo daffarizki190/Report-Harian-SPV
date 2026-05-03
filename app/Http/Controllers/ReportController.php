@@ -123,18 +123,10 @@ class ReportController extends Controller
             $totalReports = \App\Models\Report::count();
             $totalUsers = \App\Models\User::count();
             
-            // Stats for signatures
-            $reports = \App\Models\Report::all();
-            $completed = 0;
-            $pending = 0;
-            foreach ($reports as $r) {
-                $data = is_string($r->form_data) ? json_decode($r->form_data, true) : $r->form_data;
-                if (isset($data['signatures']['mgr-2'])) {
-                    $completed++;
-                } else {
-                    $pending++;
-                }
-            }
+            // Stats for signatures - OPTIMIZED: Query directly at DB level
+            // We count reports that have 'mgr-2' signature in form_data JSON
+            $completed = \App\Models\Report::whereNotNull('form_data->signatures->mgr-2')->count();
+            $pending = $totalReports - $completed;
 
             return [
                 'server' => [

@@ -303,27 +303,57 @@ const app = {
 
     async loadLogs() {
         const body = document.getElementById('monitoring-logs-body');
-        if (!body) return;
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat log...</td></tr>';
+        const feed = document.getElementById('logs-feed');
+        if (!body && !feed) return;
+
+        if (body) body.innerHTML = '<tr><td colspan="5" style="text-align:center;">Memuat log...</td></tr>';
+        if (feed) feed.innerHTML = '<div style="text-align:center; padding:10px; color:var(--text-dim);">Memuat aktivitas...</div>';
 
         try {
-            const response = await fetch('/v1/reports/logs');
-            const logs = await response.json();
-            body.innerHTML = '';
+            const response = await fetch(`${window.Laravel.baseUrl}/v1/reports/logs`);
+            const json = await response.json();
+            const logs = json.data || json;
 
-            logs.forEach(log => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight:700;">${log.user_name}</td>
-                    <td><span class="badge ${log.action.toLowerCase().includes('delete') ? 'malam' : 'pagi'}">${log.action}</span></td>
-                    <td style="font-size:0.85rem; color:var(--text-dim);">${log.details || '-'}</td>
-                    <td style="font-family:monospace; font-size:0.8rem;">${log.ip_address || '-'}</td>
-                    <td style="font-size:0.8rem;">${new Date(log.created_at).toLocaleString('id-ID')}</td>
-                `;
-                body.appendChild(tr);
-            });
+            if (body) {
+                body.innerHTML = '';
+                logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:700;">${log.user_name}</td>
+                        <td><span class="badge ${log.action.toLowerCase().includes('delete') ? 'malam' : 'pagi'}">${log.action}</span></td>
+                        <td style="font-size:0.85rem; color:var(--text-dim);">${log.details || '-'}</td>
+                        <td style="font-family:monospace; font-size:0.8rem;">${log.ip_address || '-'}</td>
+                        <td style="font-size:0.8rem;">${new Date(log.created_at).toLocaleString('id-ID')}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+            }
+
+            if (feed) {
+                feed.innerHTML = '';
+                logs.slice(0, 10).forEach(log => {
+                    const item = document.createElement('div');
+                    item.className = 'log-item';
+                    const date = new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+                    let icon = 'dot-circle', iconColor = 'var(--accent)';
+                    const action = (log.action || '').toLowerCase();
+                    if (action.includes('upload') || action.includes('create')) { icon = 'plus-circle'; iconColor = 'var(--success)'; }
+                    else if (action.includes('delete')) { icon = 'trash-alt'; iconColor = 'var(--error)'; }
+                    else if (action.includes('update')) { icon = 'edit'; iconColor = 'var(--accent-gold)'; }
+                    item.innerHTML = `
+                        <div class="log-icon" style="color:${iconColor}"><i class="fas fa-${icon}"></i></div>
+                        <div class="log-body">
+                            <div class="log-text"><strong>${log.user_name}</strong> ${log.action}</div>
+                            <div class="log-detail">${log.details || ''}</div>
+                        </div>
+                        <div class="log-time">${date}</div>
+                    `;
+                    feed.appendChild(item);
+                });
+            }
         } catch (e) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--error);">Gagal memuat log.</td></tr>';
+            console.error('Failed to load logs', e);
+            if (body) body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--error);">Gagal memuat log.</td></tr>';
         }
     },
 
@@ -333,7 +363,8 @@ const app = {
         tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Memuat user...</td></tr>';
         try {
             const response = await fetch(`${window.Laravel.baseUrl}/v1/users`);
-            const data = await response.json();
+            const json = await response.json();
+            const data = json.data || json;
             tableBody.innerHTML = '';
             if (data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Tidak ada user ditemukan.</td></tr>';
@@ -418,34 +449,6 @@ const app = {
         } catch (e) { }
     },
 
-    async loadLogs() {
-        const container = document.getElementById('logs-feed');
-        if (!container) return;
-        try {
-            const response = await fetch(`${window.Laravel.baseUrl}/v1/reports/logs`);
-            const data = await response.json();
-            container.innerHTML = '';
-            data.slice(0, 10).forEach(log => {
-                const item = document.createElement('div');
-                item.className = 'log-item';
-                const date = new Date(log.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-                let icon = 'dot-circle', iconColor = 'var(--accent)';
-                const action = log.action.toLowerCase();
-                if (action.includes('upload') || action.includes('create')) { icon = 'plus-circle'; iconColor = 'var(--success)'; }
-                else if (action.includes('delete')) { icon = 'trash-alt'; iconColor = 'var(--error)'; }
-                else if (action.includes('update')) { icon = 'edit'; iconColor = 'var(--accent-gold)'; }
-                item.innerHTML = `
-                    <div class="log-icon" style="color:${iconColor}"><i class="fas fa-${icon}"></i></div>
-                    <div class="log-body">
-                        <div class="log-text"><strong>${log.user_name}</strong> ${log.action}</div>
-                        <div class="log-detail">${log.details || ''}</div>
-                    </div>
-                    <div class="log-time">${date}</div>
-                `;
-                container.appendChild(item);
-            });
-        } catch (e) { }
-    },
 
     async loadReports(ignoreFilters = false) {
         const grid = document.getElementById('reports-grid');
@@ -465,7 +468,10 @@ const app = {
             if (searchFilter) url.searchParams.append('search', searchFilter);
 
             const response = await fetch(url);
-            const data = await response.json();
+            const json = await response.json();
+            
+            // Handle Laravel API Resource wrapper
+            const data = json.data || json;
             this.reports = data;
 
             // Pre-process data: ensure form_data is an object
