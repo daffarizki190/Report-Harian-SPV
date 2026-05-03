@@ -1307,3 +1307,63 @@ html.mode-auto-pdf body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Monitoring Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover { transform: translateY(-4px); }
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+.stat-header i { font-size: 1.1rem; color: var(--accent); }
+
+.stat-content h4 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+.stat-content p { font-size: 0.88rem; margin: 5px 0 0; color: var(--text-dim); }
+
+.progress-bar-bg {
+    height: 8px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.mon-info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    font-size: 0.88rem;
+}
+
+.mon-info-item:last-child { border-bottom: none; }
+.mon-info-label { color: var(--text-dim); }
+.mon-info-value { font-weight: 700; color: var(--text-main); }

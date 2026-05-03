@@ -604,7 +604,7 @@
                     </div>
                     
                     <!-- Tech Stack Details -->
-                    <div class="stats-grid" style="margin-bottom: 24px;">
+                    <div class="stats-grid">
                         <div class="glass-card stat-card" style="border-top: 4px solid var(--accent);">
                             <div class="stat-header"><i class="fab fa-php"></i> Server Engine</div>
                             <div class="stat-content">
@@ -623,7 +623,7 @@
                             <div class="stat-header"><i class="fas fa-percentage"></i> Completion Rate</div>
                             <div class="stat-content">
                                 <h4 id="mon-completion-rate">0%</h4>
-                                <div class="progress-bar-bg" style="height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 8px; overflow: hidden;">
+                                <div class="progress-bar-bg">
                                     <div id="mon-progress-fill" style="height: 100%; background: var(--accent-gold); width: 0%; transition: width 1s ease-in-out;"></div>
                                 </div>
                             </div>
@@ -632,19 +632,19 @@
 
                     <!-- Detailed Technical Info -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                        <div class="glass-card" style="padding: 20px; background: rgba(0,0,0,0.02);">
-                            <h5 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-info-circle"></i> Info Sistem</h5>
-                            <div style="font-size: 0.85rem; line-height: 1.8;">
-                                <div style="display: flex; justify-content: space-between;"><span>Timezone:</span> <span id="mon-timezone">-</span></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Storage Provider:</span> <span id="mon-storage">Supabase Cloud</span></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Database Driver:</span> <span id="mon-db-driver">-</span></div>
+                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
+                            <h5 style="margin-bottom: 16px; font-weight: 700;"><i class="fas fa-info-circle"></i> Info Sistem</h5>
+                            <div class="mon-info-list">
+                                <div class="mon-info-item"><span class="mon-info-label">Timezone:</span> <span id="mon-timezone" class="mon-info-value">-</span></div>
+                                <div class="mon-info-item"><span class="mon-info-label">Storage Provider:</span> <span id="mon-storage" class="mon-info-value">Supabase Cloud</span></div>
+                                <div class="mon-info-item"><span class="mon-info-label">Database Driver:</span> <span id="mon-db-driver" class="mon-info-value">-</span></div>
                             </div>
                         </div>
-                        <div class="glass-card" style="padding: 20px; background: rgba(0,0,0,0.02);">
-                            <h5 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-chart-pie"></i> Distribusi Laporan</h5>
-                            <div style="font-size: 0.85rem; line-height: 1.8;">
-                                <div style="display: flex; justify-content: space-between;"><span>Sudah Final:</span> <span id="mon-reports-done" style="color:var(--success); font-weight:700;">0</span></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Pending Approval:</span> <span id="mon-reports-pending" style="color:var(--error); font-weight:700;">0</span></div>
+                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
+                            <h5 style="margin-bottom: 16px; font-weight: 700;"><i class="fas fa-chart-pie"></i> Distribusi Laporan</h5>
+                            <div class="mon-info-list">
+                                <div class="mon-info-item"><span class="mon-info-label">Sudah Final:</span> <span id="mon-reports-done" class="mon-info-value" style="color:var(--success);">0</span></div>
+                                <div class="mon-info-item"><span class="mon-info-label">Pending Approval:</span> <span id="mon-reports-pending" class="mon-info-value" style="color:var(--error);">0</span></div>
                             </div>
                         </div>
                     </div>
