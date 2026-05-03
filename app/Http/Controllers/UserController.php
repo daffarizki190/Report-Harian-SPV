@@ -18,7 +18,8 @@ class UserController extends Controller
         if (Auth::user()->role !== 'Admin') {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
-        return response()->json(User::all());
+        // Professional Eloquent optimization: latestOfMany + Eager Loading
+        return response()->json(User::with('latestReport')->get());
     }
 
     /**
@@ -88,13 +89,14 @@ class UserController extends Controller
 
     private function logActivity($userName, $action, $details)
     {
-        DB::table('activity_logs')->insert([
+        // Laravel 11 defer() for non-blocking logging
+        defer(fn () => DB::table('activity_logs')->insert([
             'user_name' => $userName,
             'action' => $action,
             'details' => $details,
             'ip_address' => request()->ip(),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ]));
     }
 }
