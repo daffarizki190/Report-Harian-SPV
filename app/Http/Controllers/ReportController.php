@@ -152,7 +152,7 @@ class ReportController extends Controller
                     ]
                 ],
                 'storage' => [
-                    'status' => env('SUPABASE_URL') ? 'Connected' : 'Disconnected',
+                    'status' => config('database.default') === 'pgsql' ? 'Connected' : 'Local',
                     'provider' => 'Supabase Cloud'
                 ],
                 'stack' => [

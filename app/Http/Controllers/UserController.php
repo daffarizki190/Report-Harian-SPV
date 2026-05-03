@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+use App\Http\Requests\StoreUserRequest;
+
 class UserController extends Controller
 {
     /**
@@ -25,18 +27,10 @@ class UserController extends Controller
     /**
      * Store a new user or update existing.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        if (Auth::user()->role !== 'Admin') {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
+        $validated = $request->validated();
 
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'username' => 'required|string|unique:users,username' . ($request->id ? ',' . $request->id : ''),
-            'role'     => 'required|in:Admin,Supervisor,CAR PARK MANAGER,Leader,Inhouse',
-            'password' => $request->id ? 'nullable|string|min:6' : 'required|string|min:6',
-        ]);
 
         if ($request->id) {
             // ── Update user yang sudah ada ──
