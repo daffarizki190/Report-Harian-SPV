@@ -1,32 +1,29 @@
-# Gandaria City - SPV Daily Report (Laravel Edition)
+# 🛡️ Gandaria City - SPV Daily Report (Premium L11 Edition)
 
-Sistem pengolahan data laporan harian pengawas Gandaria City dengan standar keamanan tinggi dan pengolahan data otomatis.
+Sistem pengolahan data laporan harian pengawas Gandaria City dengan standar **Senior Developer** yang mengutamakan performa, keamanan tinggi, dan arsitektur kode yang modern.
 
-## 🛡️ Cyber Security & Reliability
-- **Anti-Redundancy Logic**: Sistem secara otomatis melakukan *purge* (pembersihan) data lama jika SPV melakukan upload ulang pada hari yang sama. Ini menjamin integritas data ("Single Version of Truth").
-- **Unique ID Constraint**: Memastikan kepatuhan aturan 1 laporan per hari per SPV di level database.
-- **Audit Trails**: Mencatat setiap user, aksi, IP address, dan timestamp untuk verifikasi keamanan.
-- **S3 Compatible Storage**: Menggunakan Supabase Storage dengan enkripsi dan akses terproteksi.
+## 🚀 Modern Stack & Features (Update 2024)
+-   **Engine**: Laravel 11.x + PHP 8.2 (State-of-the-art backend)
+-   **Styling**: Tailwind CSS (Build-optimized) & Premium Glassmorphism UI
+-   **Real-time**: Laravel Reverb ready for instant notifications
+-   **Testing**: Pest Architecture Testing (Code Police)
+-   **Automation**: `defer()` background processing for zero-latency logging
 
-## 📊 Data Analyst Features
-- **Auto-Standardized Naming**: Nama file diatur otomatis: `REPORTS/{Tanggal}/{SPV}_{Tanggal}_{Shift}.pdf`.
-- **Bulk Data Export**: Fitur ekspor ke Excel (`.xlsx`) dan Batch Download ZIP untuk analisis manajemen.
-- **Dual Flow**: Mendukung upload PDF konvensional maupun pengetikan laporan langsung (Manual Input).
+## 💎 Premium Architecture
+-   **Pipeline Logic**: Arsitektur filter data yang modular dan scalable.
+-   **Smart Search**: Implementasi `whereAny()` untuk pencarian lintas kolom yang efisien.
+-   **Memoization**: Menggunakan `once()` helper untuk efisiensi memory tingkat tinggi.
+-   **API Resources**: Transformasi data yang aman dan terprediksi via `JsonResource`.
+-   **Data Integrity**: *Anti-Redundancy Logic* menjamin integritas data ("Single Version of Truth").
 
-## 🚀 Setup & Deployment
-1. **Database**: Hubungkan PostgreSQL Supabase via `.env`.
-2. **Migration**: Jalankan `php artisan migrate`.
-3. **Storage**: Pastikan Bucket `daily-reports` sudah dibuat di Supabase.
-4. **Environment Variables**:
-   ```env
-   SUPABASE_ENDPOINT=https://[YOUR_PROJECT_ID].supabase.co/storage/v1/s3
-   SUPABASE_BUCKET=daily-reports
-   ```
+## 🛠️ Setup & Development
+1.  **Backend**: `composer install` & `php artisan migrate`
+2.  **Frontend**: `npm install` & `npm run build`
+3.  **Real-time**: `php artisan reverb:start` (Optional)
+4.  **Audit**: `php vendor/bin/pest` untuk verifikasi kualitas arsitektur.
 
-## 🛠️ Stack Teknologi
-- **Backend**: Laravel 10 (Symmetry/Optimization Focus)
-- **Frontend**: Blade, Vanilla CSS (Premium Glassmorphism), JS
-- **Storage/DB**: Supabase (PostgreSQL + S3 Storage)
+## 📊 Administrative Monitoring
+Dashboard Admin dilengkapi dengan **System Monitoring** untuk visibilitas real-time terhadap technical stack, performa database, dan audit trails pengembang.
 
 ---
-*Dibuat dengan standar profesional untuk Gandaria City Asset.*
+*Standard Operasional Gandaria City - Asset Management System.*
