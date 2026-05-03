@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    /**
+     * Premium Glassmorphism Design System
+     * Centralized utility for consistent UI across the portal.
+     */
+    .glass-card {
+        @apply bg-white/70 backdrop-blur-2xl border border-white/40 rounded-lg-custom shadow-custom transition-all duration-300;
+    }
+    
+    .glass-card:hover {
+        @apply -translate-y-1 bg-white/85 border-white/60 shadow-xl;
+    }
+
+    .btn-premium {
+        @apply bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-md-custom shadow-md transition-all flex items-center gap-2 text-sm font-semibold;
+    }
+}

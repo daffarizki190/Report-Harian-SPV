@@ -595,13 +595,13 @@
             <!-- User Management -->
             @if(auth()->user()->role === 'Admin')
             <section id="view-monitoring" class="view-section hidden">
-                <div class="bg-white/70 backdrop-blur-2xl border border-white/40 p-8 rounded-lg-custom shadow-custom animate-fade-in">
+                <div class="glass-card p-8 animate-fade-in">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <h3 class="text-2xl font-bold text-primary m-0 flex items-center gap-3">
                             <i class="fas fa-desktop text-accent"></i> 
                             Monitoring Sistem
                         </h3>
-                        <button onclick="app.loadMonitoringData()" class="bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-md-custom shadow-md transition-all flex items-center gap-2 text-sm font-semibold">
+                        <button onclick="app.loadMonitoringData()" class="btn-premium">
                             <i class="fas fa-sync-alt"></i> Refresh Monitor
                         </button>
                     </div>
