@@ -620,6 +620,14 @@
                                 <div class="mon-info-item"><span class="mon-info-label">Pending Approval:</span> <span id="mon-reports-pending" class="mon-info-value" style="color:var(--error);">0</span></div>
                             </div>
                         </div>
+                        <div class="glass-card" style="padding: 24px; background: rgba(255,255,255,0.4);">
+                            <h5 style="margin-bottom: 16px; font-weight: 700; color: var(--primary);"><i class="fas fa-code"></i> Developer Tech Stack</h5>
+                            <div class="mon-info-list" id="mon-tech-stack-list">
+                                <!-- Loaded via JS -->
+                                <div class="mon-info-item"><span class="mon-info-label">Framework:</span> <span class="mon-info-value">Laravel</span></div>
+                                <div class="mon-info-item"><span class="mon-info-label">Hosting:</span> <span class="mon-info-value">Vercel</span></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">

@@ -150,6 +150,13 @@ class ReportController extends Controller
             'storage' => [
                 'status' => env('SUPABASE_URL') ? 'Connected' : 'Disconnected',
                 'provider' => 'Supabase Cloud'
+            ],
+            'stack' => [
+                'laravel' => app()->version(),
+                'hosting' => 'Vercel (Production)',
+                'database' => 'PostgreSQL (Supabase)',
+                'storage' => 'Supabase Object Storage',
+                'ui_kit' => 'Vanilla CSS / Glassmorphism Design'
             ]
         ]);
     }

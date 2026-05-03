@@ -267,6 +267,21 @@ const app = {
 
             const pendEl = document.getElementById('mon-reports-pending');
             if (pendEl) pendEl.textContent = data.database.stats.pending;
+
+            // Developer Tech Stack
+            const stackList = document.getElementById('mon-tech-stack-list');
+            if (stackList && data.stack) {
+                stackList.innerHTML = '';
+                Object.entries(data.stack).forEach(([key, value]) => {
+                    const item = document.createElement('div');
+                    item.className = 'mon-info-item';
+                    item.innerHTML = `
+                        <span class="mon-info-label" style="text-transform: capitalize;">${key}:</span>
+                        <span class="mon-info-value">${value}</span>
+                    `;
+                    stackList.appendChild(item);
+                });
+            }
         } catch (e) { console.error('Failed to load system info', e); }
     },
 
