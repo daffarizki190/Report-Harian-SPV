@@ -443,13 +443,14 @@ class ReportController extends Controller
      */
     private function logActivity($userName, $action, $details)
     {
-        DB::table('activity_logs')->insert([
+        // Laravel 11 defer() for background processing without Redis/Queue setup
+        defer(fn () => DB::table('activity_logs')->insert([
             'user_name'  => $userName,
             'action'     => $action,
             'details'    => $details,
             'ip_address' => request()->ip(),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ]));
     }
 }
