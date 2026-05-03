@@ -49,6 +49,8 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
+        $user = Auth::user();
+
         $query = Report::query()
             ->leftJoin('users', 'reports.user_id', '=', 'users.id')
             ->select(
@@ -57,10 +59,7 @@ class ReportController extends Controller
                 'users.role as user_role'
             );
 
-        $user = Auth::user();
-
-        // Supervisor & Leader hanya bisa melihat laporan mereka sendiri
-        // Atau laporan lama (user_id NULL) yang namanya cocok dengan mereka
+        // Security check
         if (in_array($user->role, ['Supervisor', 'Leader', 'SPV'])) {
             $query->where(function($q) use ($user) {
                 $q->where('reports.user_id', $user->id)
@@ -71,19 +70,17 @@ class ReportController extends Controller
             });
         }
 
-        if ($request->has('start_date') && $request->start_date) {
-            $query->whereDate('reports.report_date', '>=', $request->start_date);
-        }
-
-        if ($request->has('end_date') && $request->end_date) {
-            $query->whereDate('reports.report_date', '<=', $request->end_date);
-        }
-
-        if ($request->has('shift') && $request->shift) {
-            $query->where('reports.shift', $request->shift);
-        }
-
-        $reports = $query->orderBy('reports.report_date', 'desc')->get();
+        // Professional Pipeline Filtering
+        $reports = app(\Illuminate\Pipeline\Pipeline::class)
+            ->send($query)
+            ->through([
+                \App\Filters\StartDate::class,
+                \App\Filters\EndDate::class,
+                \App\Filters\Shift::class,
+            ])
+            ->thenReturn()
+            ->orderBy('reports.report_date', 'desc')
+            ->get();
 
         $reports->each(function ($report) {
             if ($report->file_path) {
