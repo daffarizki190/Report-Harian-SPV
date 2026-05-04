@@ -1114,11 +1114,22 @@ const formDigital = {
             const canvas = pad.canvas;
             if (canvas && canvas.offsetParent) {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                const data = pad.toData();
+                
+                // If it's not empty, capture current state as image to preserve it (including photos)
+                const isEmpty = pad.isEmpty();
+                const currentDataUrl = isEmpty ? null : pad.toDataURL();
+                
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
                 canvas.getContext("2d").scale(ratio, ratio);
-                pad.clear(); pad.fromData(data);
+                
+                pad.clear();
+                if (currentDataUrl) {
+                    pad.fromDataURL(currentDataUrl, {
+                        width: canvas.offsetWidth,
+                        height: canvas.offsetHeight
+                    });
+                }
             }
         });
     },
