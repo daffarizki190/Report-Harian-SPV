@@ -11,6 +11,7 @@ const app = {
         this.handleUrlParams();
 
         // Real-time: Listen for new reports via Reverb
+        try { this.initEcho(); } catch(e) { console.error('Pusher/Echo initialization error:', e); }
         if (window.Echo) {
             window.Echo.channel('reports')
                 .listen('ReportSubmitted', (e) => {
@@ -27,6 +28,16 @@ const app = {
                 this.refreshData();
             }
         }, 10000);
+    },
+
+    initEcho() {
+        if (typeof window.Echo === 'undefined') return;
+        window.Echo.channel('reports')
+            .listen('ReportSubmitted', (e) => {
+                console.log('Real-time: New report received', e);
+                this.showToast(`Laporan baru dari ${e.spv_name || 'SPV'}`, 'info');
+                this.refreshData();
+            });
     },
 
     async handleUrlParams() {

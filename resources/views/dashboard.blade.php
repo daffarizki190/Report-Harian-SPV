@@ -14,6 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
     <script>
         window.Pusher = Pusher;
+        @if(!empty(env('REVERB_APP_KEY')))
         window.Echo = new Echo({
             broadcaster: 'reverb',
             key: '{{ env('REVERB_APP_KEY') }}',
@@ -22,6 +23,7 @@
             forceTLS: true,
             enabledTransports: ['ws', 'wss'],
         });
+        @endif
     </script>
     <script>
         window.Laravel = {
