@@ -11,6 +11,7 @@ module.exports = {
         primary: {
           DEFAULT: '#0f172a',
           light: '#1e293b',
+          dark: '#020617',
         },
         accent: {
           DEFAULT: '#6366f1',
@@ -31,7 +32,10 @@ module.exports = {
       boxShadow: {
         'custom-sm': '0 1px 3px 0 rgb(0 0 0 / 0.1)',
         'custom': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      }
+      },
+      fontFamily: {
+        outfit: ['Outfit', 'sans-serif'],
+      },
     },
   },
   plugins: [],
