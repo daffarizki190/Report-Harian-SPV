@@ -19,7 +19,7 @@
             key: '{{ env('REVERB_APP_KEY') }}',
             wsHost: '{{ env('REVERB_HOST') }}',
             wsPort: {{ env('REVERB_PORT', 80) }},
-            forceTLS: false,
+            forceTLS: true,
             enabledTransports: ['ws', 'wss'],
         });
     </script>

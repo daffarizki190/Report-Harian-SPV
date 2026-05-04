@@ -26,7 +26,7 @@ const app = {
                 console.log('Background refreshing data...');
                 this.refreshData();
             }
-        }, 120000);
+        }, 10000);
     },
 
     async handleUrlParams() {
