@@ -83,9 +83,9 @@
             </form>
         </div>
 
-        <div class="mt-12 flex flex-col items-center gap-4 opacity-30">
+        <div class="mt-12 flex flex-col items-center gap-4 opacity-40">
             <div class="flex items-center gap-6">
-                <img src="https://www.gandariacity.co.id/images/logo.png" alt="Gancy Logo" class="h-8 grayscale">
+                <img src="{{ asset('img/logo.png') }}" alt="Gancy Logo" class="h-8 brightness-0 invert">
                 <div class="w-px h-6 bg-white/20"></div>
                 <span class="text-white text-[9px] font-black tracking-[0.5em] uppercase">Security Level 4</span>
             </div>
