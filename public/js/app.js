@@ -12,14 +12,6 @@ const app = {
 
         // Real-time: Listen for new reports via Reverb
         try { this.initEcho(); } catch(e) { console.error('Pusher/Echo initialization error:', e); }
-        if (window.Echo) {
-            window.Echo.channel('reports')
-                .listen('ReportSubmitted', (e) => {
-                    console.log('Real-time: New report submitted!', e);
-                    this.showToast(`Laporan baru: ${e.spv_name} (${e.shift})`, 'success');
-                    this.refreshData(); 
-                });
-        }
 
         // Fallback: Auto-refresh data every 2 minutes
         this.refreshInterval = setInterval(() => {
@@ -1327,14 +1319,6 @@ const formDigital = {
 
         const sigs = {};
         const signerNames = {};
-        ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
-            const pad = this.sigPads?.[k];
-            if (!pad) return;
-            const wrapper = pad.canvas.closest('.sig-pad-wrapper');
-            const existing = wrapper.querySelector('.existing-sig');
-            const existingSignerName = wrapper.dataset.signerName;
-            const nameInp = document.getElementById(`df-sig-name-${k}`);
-
         ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
             const pad = this.sigPads?.[k];
             if (!pad) return;
