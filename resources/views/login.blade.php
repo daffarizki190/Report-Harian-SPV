@@ -54,7 +54,7 @@
             <!-- Forms Container -->
             <div>
                 <!-- Password Form -->
-                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-3">
+                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-3" style="display: block;">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
@@ -70,7 +70,7 @@
                 </form>
 
                 <!-- Magic Link Form -->
-                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-3 hidden">
+                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-3" style="display: none;">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-envelope-open absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
@@ -98,21 +98,31 @@
             const btnMagic = document.getElementById('btn-magic');
             
             if (method === 'pass') {
-                passForm.classList.remove('hidden');
-                magicForm.classList.add('hidden');
+                // Show Pass
+                passForm.style.display = 'block';
+                magicForm.style.display = 'none';
+                
                 btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnPass.classList.remove('text-white/30');
                 btnMagic.classList.add('text-white/30');
                 btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             } else {
-                passForm.classList.add('hidden');
-                magicForm.classList.remove('hidden');
+                // Show Magic
+                passForm.style.display = 'none';
+                magicForm.style.display = 'block';
+                
                 btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnMagic.classList.remove('text-white/30');
                 btnPass.classList.add('text-white/30');
                 btnPass.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             }
         }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleLoginMethod('pass');
+        });
+    </script>
 
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function() {
