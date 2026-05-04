@@ -47,8 +47,8 @@
 
             <!-- Tab Switcher -->
             <div class="flex bg-white/5 p-1 rounded-xl mb-6 border border-white/5 relative z-20">
-                <button type="button" onclick="toggleLoginMethod('pass')" id="btn-pass" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all bg-blue-600 text-white shadow-lg">KATA SANDI</button>
-                <button type="button" onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all text-white/30 hover:text-white">LINK AJAIB</button>
+                <button type="button" id="btn-pass" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all bg-blue-600 text-white shadow-lg">KATA SANDI</button>
+                <button type="button" id="btn-magic" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all text-white/30 hover:text-white">LINK AJAIB</button>
             </div>
 
             <!-- Forms Container -->
@@ -65,7 +65,7 @@
                         <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-xl hover:-translate-y-0.5 transition-all mt-4 tracking-widest text-[10px] uppercase">
-                        Authenticate Access
+                        <span class="btn-text">Authenticate Access</span>
                     </button>
                 </form>
 
@@ -78,7 +78,7 @@
                     </div>
                     <p class="text-white/20 text-[8px] text-center px-6 font-black uppercase tracking-tighter">Verification required after access.</p>
                     <button type="submit" class="w-full bg-white text-black font-black py-4 rounded-xl shadow-xl hover:bg-slate-100 transition-all mt-4 tracking-widest text-[10px] uppercase">
-                        Send Access Link
+                        <span class="btn-text">Send Access Link</span>
                     </button>
                 </form>
             </div>
@@ -91,16 +91,13 @@
     </div>
 
     <script>
-        // Force fresh logic on every load
-        (function() {
-            window.toggleLoginMethod = function(method) {
-                const passForm = document.getElementById('login-form');
-                const magicForm = document.getElementById('magic-link-form');
-                const btnPass = document.getElementById('btn-pass');
-                const btnMagic = document.getElementById('btn-magic');
-                
-                if (!passForm || !magicForm) return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const passForm = document.getElementById('login-form');
+            const magicForm = document.getElementById('magic-link-form');
+            const btnPass = document.getElementById('btn-pass');
+            const btnMagic = document.getElementById('btn-magic');
 
+            function showMethod(method) {
                 if (method === 'pass') {
                     passForm.style.display = 'block';
                     magicForm.style.display = 'none';
@@ -116,28 +113,23 @@
                     btnPass.classList.add('text-white/30');
                     btnPass.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
                 }
-            };
+            }
+
+            if (btnPass) btnPass.addEventListener('click', () => showMethod('pass'));
+            if (btnMagic) btnMagic.addEventListener('click', () => showMethod('magic'));
 
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function() {
                     const btn = this.querySelector('button');
-                    if (!btn) return;
-                    const btnText = btn.querySelector('.btn-text');
-                    const dots = btn.querySelector('.dots-wave');
-                    
-                    if (btnText) btnText.classList.add('hidden');
-                    if (dots) dots.classList.remove('hidden');
-                    
-                    const card = this.closest('.backdrop-blur-2xl');
-                    if (card) card.classList.add('opacity-50', 'pointer-events-none');
+                    const btnText = btn ? btn.querySelector('.btn-text') : null;
+                    if (btnText) btnText.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+                    this.closest('.backdrop-blur-2xl').classList.add('opacity-50', 'pointer-events-none');
                 });
             });
 
-            // Auto-initialize
-            document.addEventListener('DOMContentLoaded', () => {
-                toggleLoginMethod('pass');
-            });
-        })();
+            // Init
+            showMethod('pass');
+        });
     </script>
 </body>
 </html>
