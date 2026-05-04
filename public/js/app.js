@@ -952,31 +952,32 @@ const formDigital = {
             const ctx = canvas.getContext('2d');
             const resultImg = new Image();
             resultImg.onload = () => {
-                // Calculate scaling to fit the pad while maintaining aspect ratio
-                const ratio = Math.min(canvas.width / resultImg.width, canvas.height / resultImg.height) * 0.8;
-                const nw = resultImg.width * ratio;
-                const nh = resultImg.height * ratio;
-                const nx = (canvas.width - nw) / 2;
-                const ny = (canvas.height - nh) / 2;
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                const cw = canvas.width;
+                const ch = canvas.height;
                 
-                // Clear and draw
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(resultImg, nx, ny, nw, nh);
-                
-                // If it's an existing signature view, we should handle it
+                // Scale to 90% of physical canvas size
+                const scale = Math.min(cw / resultImg.width, ch / resultImg.height) * 0.9;
+                const sw = resultImg.width * scale;
+                const sh = resultImg.height * scale;
+                const sx = (cw - sw) / 2;
+                const sy = (ch - sh) / 2;
+
+                // Create a temp canvas of the SAME physical size as the main canvas
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = cw;
+                tempCanvas.height = ch;
+                const tCtx = tempCanvas.getContext('2d');
+                tCtx.drawImage(resultImg, sx, sy, sw, sh);
+
+                // Clear existing and handle loading
                 wrapper.querySelector('.existing-sig')?.remove();
                 canvas.style.opacity = '1';
                 
-                // Update pad state
-                // SignaturePad doesn't have a simple way to "capture" what's on canvas
-                // but we can just use pad.fromDataURL(processedDataUrl) for simplicity
-                // though manual drawing is often cleaner for positioning.
-                // Actually, pad.fromDataURL is safer for its internal state.
-                pad.fromDataURL(processedDataUrl, {
-                    width: nw / (window.devicePixelRatio || 1),
-                    height: nh / (window.devicePixelRatio || 1),
-                    x: nx / (window.devicePixelRatio || 1),
-                    y: ny / (window.devicePixelRatio || 1)
+                // Load the entire temp canvas into the pad
+                pad.fromDataURL(tempCanvas.toDataURL(), {
+                    width: cw / ratio,
+                    height: ch / ratio
                 });
                 
                 processingOverlay.remove();
@@ -1063,7 +1064,34 @@ const formDigital = {
             }
             
             ctx.putImageData(imageData, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
+
+            // Auto-crop: Find the bounding box of non-transparent pixels
+            let minX = w, minY = h, maxX = 0, maxY = 0;
+            let found = false;
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const alpha = data[(y * w + x) * 4 + 3];
+                    if (alpha > 0) {
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                        found = true;
+                    }
+                }
+            }
+
+            if (found) {
+                const cropW = (maxX - minX) + 1;
+                const cropH = (maxY - minY) + 1;
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = cropW;
+                cropCanvas.height = cropH;
+                cropCanvas.getContext('2d').drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+                resolve(cropCanvas.toDataURL('image/png'));
+            } else {
+                resolve(canvas.toDataURL('image/png'));
+            }
         });
     },
 
@@ -1269,14 +1297,21 @@ const formDigital = {
 
             if (existing) {
                 sigs[k] = existing.src;
-                signerNames[k] = existingSignerName || (nameInp ? nameInp.value : '');
+                signerNames[k] = existingSignerName || (nameInp ? nameInp.textContent : '');
             } else if (!pad.isEmpty()) {
                 sigs[k] = pad.toDataURL();
-                signerNames[k] = nameInp ? nameInp.value : (window.Laravel?.user?.name || '');
+                signerNames[k] = (nameInp && nameInp.textContent && nameInp.textContent !== '....................') 
+                    ? nameInp.textContent 
+                    : (window.Laravel?.user?.name || '');
             }
         });
 
         return { 
+            metadata: {
+                spv_name: document.getElementById('df-nama')?.value || '',
+                report_date: document.getElementById('df-tanggal')?.value || '',
+                shift: document.getElementById('df-shift')?.value || ''
+            },
             manpower: mp, 
             ploting: plot, 
             perlengkapan: perlen, 
@@ -1292,7 +1327,13 @@ const formDigital = {
         document.getElementById('form-digital')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-form');
+            const btnText = btn.querySelector('.btn-text-form');
+            const loader = btn.querySelector('.dots-wave');
+            
             btn.disabled = true;
+            if (btnText) btnText.classList.add('hidden');
+            if (loader) loader.classList.remove('hidden');
+            
             const data = this.collectData();
             const payload = {
                 report_id: document.getElementById('df-report-id').value,
@@ -1306,8 +1347,21 @@ const formDigital = {
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.Laravel.csrfToken, 'Accept': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (res.ok) { app.showToast('Laporan berhasil disimpan', 'success'); app.switchView('dashboard'); }
-            } catch (e) { } finally { btn.disabled = false; }
+                const result = await res.json();
+                if (res.ok) { 
+                    app.showToast('Laporan berhasil disimpan', 'success'); 
+                    app.switchView('dashboard'); 
+                } else {
+                    app.showToast(result.message || 'Gagal menyimpan laporan', 'error');
+                }
+            } catch (e) { 
+                console.error('Save error:', e);
+                app.showToast('Kesalahan server: Tidak dapat menyimpan laporan', 'error');
+            } finally { 
+                btn.disabled = false; 
+                if (btnText) btnText.classList.remove('hidden');
+                if (loader) loader.classList.add('hidden');
+            }
         });
     },
 
@@ -1486,26 +1540,38 @@ const formDigital = {
                     </table>
                 </div>
 
-                <div style="page-break-inside: avoid; margin-top: 40px;">
+                <div style="page-break-inside: avoid; margin-top: 50px;">
                     <table style="width:100%; border-collapse:collapse; text-align:center; font-size:10pt;">
                         <tr>
                             <td style="width:33.3%; vertical-align: top;">
-                                Dibuat Oleh,<br><br>
-                                ${data.signatures?.spv ? `<img src="${data.signatures.spv}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
-                                <br><strong>( ${data.signer_names?.spv || nama} )</strong><br>
-                                <span style="font-size:8pt;">Supervisor / Leader</span>
+                                <div style="margin-bottom:10px;">Dibuat Oleh,</div>
+                                <div style="height:80px; display:flex; align-items:center; justify-content:center;">
+                                    ${data.signatures?.spv ? `<img src="${data.signatures.spv}" style="max-height:80px; max-width:160px; object-fit:contain;">` : ''}
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <strong>( ${data.signer_names?.spv || nama} )</strong><br>
+                                    <span style="font-size:8pt; color:#666;">Supervisor / Leader</span>
+                                </div>
                             </td>
                             <td style="width:33.3%; vertical-align: top;">
-                                Mengetahui,<br><br>
-                                ${data.signatures?.['mgr-1'] ? `<img src="${data.signatures['mgr-1']}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
-                                <br><strong>( ${data.signer_names?.['mgr-1'] || '....................'} )</strong><br>
-                                <span style="font-size:8pt;">Car Park Manager</span>
+                                <div style="margin-bottom:10px;">Mengetahui,</div>
+                                <div style="height:80px; display:flex; align-items:center; justify-content:center;">
+                                    ${data.signatures?.['mgr-1'] ? `<img src="${data.signatures['mgr-1']}" style="max-height:80px; max-width:160px; object-fit:contain;">` : ''}
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <strong>( ${data.signer_names?.['mgr-1'] || '....................'} )</strong><br>
+                                    <span style="font-size:8pt; color:#666;">Car Park Manager</span>
+                                </div>
                             </td>
                             <td style="width:33.3%; vertical-align: top;">
-                                Menyetujui,<br><br>
-                                ${data.signatures?.['mgr-2'] ? `<img src="${data.signatures['mgr-2']}" style="height:70px; max-width:150px; object-fit:contain;">` : '<div style="height:70px;"></div>'}
-                                <br><strong>( ${data.signer_names?.['mgr-2'] || '....................'} )</strong><br>
-                                <span style="font-size:8pt;">Inhouse Parking</span>
+                                <div style="margin-bottom:10px;">Menyetujui,</div>
+                                <div style="height:80px; display:flex; align-items:center; justify-content:center;">
+                                    ${data.signatures?.['mgr-2'] ? `<img src="${data.signatures['mgr-2']}" style="max-height:80px; max-width:160px; object-fit:contain;">` : ''}
+                                </div>
+                                <div style="margin-top:10px;">
+                                    <strong>( ${data.signer_names?.['mgr-2'] || '....................'} )</strong><br>
+                                    <span style="font-size:8pt; color:#666;">Inhouse Parking</span>
+                                </div>
                             </td>
                         </tr>
                     </table>

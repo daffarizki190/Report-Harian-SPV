@@ -553,7 +553,7 @@
                             <button type="button" id="btn-print-preview" class="btn-secondary" style="flex:1;">
                                 <i class="fas fa-print"></i> Preview & Cetak PDF
                             </button>
-                            <button type="submit" id="btn-submit-form" class="btn-primary" style="flex:2;">
+                            <button type="submit" id="btn-submit-form" class="btn-primary" style="flex:2; background-color: #0f172a !important; color: #ffffff !important;">
                                 <span class="btn-text-form"><i class="fas fa-paper-plane"></i> Simpan Laporan Digital</span>
                                 <div class="dots-wave hidden"><span></span><span></span><span></span></div>
                             </button>

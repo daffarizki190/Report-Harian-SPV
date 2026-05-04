@@ -293,10 +293,10 @@ tr:hover { background: #fafafa; }
 
 /* Buttons */
 .btn-primary {
-    background: var(--primary);
-    color: white;
+    background: #0f172a !important; /* Force Dark Blue */
+    color: #ffffff !important; /* Force White */
     padding: 12px 24px;
-    border-radius: var(--radius-md);
+    border-radius: 14px;
     font-weight: 700;
     font-size: 0.9rem;
     border: none;
@@ -304,12 +304,23 @@ tr:hover { background: #fafafa; }
     transition: all 0.2s;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
 }
 
 .btn-primary:hover {
-    background: #000000;
-    transform: translateY(-1px);
+    background: #000000 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:disabled {
+    background: #64748b !important; /* Darker grey when disabled */
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .btn-secondary {

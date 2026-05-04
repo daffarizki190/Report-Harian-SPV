@@ -241,7 +241,7 @@ class ReportController extends Controller
     public function storeForm(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['Supervisor', 'CAR PARK MANAGER', 'Admin', 'Inhouse'])) {
+        if (!in_array($user->role, ['Supervisor', 'Leader', 'CAR PARK MANAGER', 'Admin', 'Inhouse'])) {
             return response()->json(['message' => 'Anda tidak memiliki akses untuk fitur ini.'], 403);
         }
 
@@ -303,7 +303,11 @@ class ReportController extends Controller
             $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");
 
             // Real-time: Trigger Reverb broadcast
-            ReportSubmitted::dispatch($report);
+            try {
+                ReportSubmitted::dispatch($report);
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed: " . $e->getMessage());
+            }
 
             return response()->json([
                 'message' => 'Laporan Digital berhasil disimpan.',
