@@ -21,7 +21,7 @@
 <body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 relative overflow-hidden font-outfit">
     <!-- Parking Background -->
     <div class="fixed inset-0 z-0">
-        <img src="{{ asset('images/login-bg.png') }}" class="w-full h-full object-cover opacity-60" alt="Background">
+        <img src="{{ asset('img/login-bg.png') }}" class="w-full h-full object-cover opacity-60" alt="Background">
         <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900/60 to-transparent"></div>
     </div>
 
