@@ -18,77 +18,75 @@
         .gahar-glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="bg-slate-900 min-h-screen flex flex-col items-center py-20 px-6 relative overflow-y-auto font-outfit">
+<body class="bg-slate-900 h-screen w-screen flex items-center justify-center p-4 relative overflow-hidden font-outfit">
     <!-- Parking Background -->
     <div class="fixed inset-0 z-0">
         <img src="{{ asset('img/login-bg.png') }}" class="w-full h-full object-cover opacity-60" alt="Background">
         <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900/60 to-transparent"></div>
     </div>
 
-    <div class="relative z-10 w-full max-w-md">
-        <div class="bg-slate-900/40 backdrop-blur-3xl border border-white/10 p-10 rounded-[48px] shadow-2xl animate-fade-in relative overflow-hidden">
+    <div class="relative z-10 w-full max-w-md flex flex-col items-center">
+        <div class="bg-slate-900/40 backdrop-blur-3xl border border-white/10 p-8 rounded-[40px] shadow-2xl animate-fade-in relative overflow-hidden w-full">
             <!-- Decorative Glow -->
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/20 blur-[80px]"></div>
             
-            <!-- Header with Dashboard Logo -->
-            <div class="text-center mb-10 relative">
-                <div class="inline-block bg-white rounded-3xl shadow-2xl mb-6 overflow-hidden border-4 border-white/20">
-                    <img src="{{ asset('img/logo.png') }}" alt="Logo" class="w-24 h-24 object-cover">
+            <!-- Header -->
+            <div class="text-center mb-6 relative">
+                <div class="inline-block bg-white rounded-2xl shadow-2xl mb-4 overflow-hidden border-4 border-white/20">
+                    <img src="{{ asset('img/logo.png') }}" alt="Logo" class="w-20 h-20 object-cover">
                 </div>
-                <h1 class="text-4xl font-black text-white tracking-tight mb-1 uppercase italic">Daily Report</h1>
-                <p class="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em]">Gandaria City Parking</p>
+                <h1 class="text-3xl font-black text-white tracking-tight mb-0.5 uppercase italic">Daily Report</h1>
+                <p class="text-blue-400 text-[9px] font-black uppercase tracking-[0.4em]">Gandaria City Parking</p>
             </div>
 
             @if($errors->any())
-                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-xs mb-6 animate-shake text-center">
+                <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-[10px] mb-4 animate-shake text-center">
                     <i class="fas fa-shield-virus mr-2"></i> {{ $errors->first() }}
                 </div>
             @endif
 
             <!-- Tab Switcher -->
-            <div class="flex bg-white/5 p-1.5 rounded-2xl mb-8 border border-white/5 relative z-20">
-                <button type="button" onclick="toggleLoginMethod('pass')" id="btn-pass" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/20">KATA SANDI</button>
-                <button type="button" onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all text-white/30 hover:text-white">LINK AJAIB</button>
+            <div class="flex bg-white/5 p-1 rounded-xl mb-6 border border-white/5 relative z-20">
+                <button type="button" onclick="toggleLoginMethod('pass')" id="btn-pass" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all bg-blue-600 text-white shadow-lg">KATA SANDI</button>
+                <button type="button" onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all text-white/30 hover:text-white">LINK AJAIB</button>
             </div>
 
-            <!-- Forms -->
-            <div id="forms-wrapper">
+            <!-- Forms Container -->
+            <div>
                 <!-- Password Form -->
-                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-4">
+                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-3">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="text" name="username" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required value="{{ old('username') }}">
+                        <input type="text" name="username" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required value="{{ old('username') }}">
                     </div>
                     <div class="relative group">
                         <i class="fas fa-fingerprint absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
+                        <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 mt-6 tracking-widest text-xs uppercase">
-                        <span class="btn-text">Authenticate Access</span>
-                        <div class="dots-wave hidden"><span></span><span></span><span></span></div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-xl hover:-translate-y-0.5 transition-all mt-4 tracking-widest text-[10px] uppercase">
+                        Authenticate Access
                     </button>
                 </form>
 
                 <!-- Magic Link Form -->
-                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-4 hidden">
+                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-3 hidden">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-envelope-open absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="text" name="username" placeholder="Username / ID" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
+                        <input type="text" name="username" placeholder="Username / ID" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required>
                     </div>
-                    <p class="text-white/20 text-[9px] text-center px-8 font-black uppercase tracking-tighter">Security verification will be required after accessing the link.</p>
-                    <button type="submit" class="w-full bg-white text-black font-black py-5 rounded-2xl shadow-2xl hover:bg-slate-100 transition-all mt-6 tracking-widest text-xs uppercase">
-                        <span class="btn-text">Send Access Link</span>
-                        <div class="dots-wave hidden"><span></span><span></span><span></span></div>
+                    <p class="text-white/20 text-[8px] text-center px-6 font-black uppercase tracking-tighter">Verification required after access.</p>
+                    <button type="submit" class="w-full bg-white text-black font-black py-4 rounded-xl shadow-xl hover:bg-slate-100 transition-all mt-4 tracking-widest text-[10px] uppercase">
+                        Send Access Link
                     </button>
                 </form>
             </div>
         </div>
 
-        <div class="mt-8 text-center pb-12">
-            <p class="text-white/60 text-[9px] font-black tracking-[0.4em] uppercase mb-1">Parking Management System</p>
-            <p class="text-white text-[10px] font-bold uppercase tracking-widest">© 2026 Crafted with Excellence by Daffa Rizki Ariyanto</p>
+        <div class="mt-4 text-center">
+            <p class="text-white/50 text-[8px] font-black tracking-[0.4em] uppercase mb-0.5">Parking Management System</p>
+            <p class="text-white/70 text-[9px] font-bold uppercase tracking-widest">© 2026 Crafted with Excellence by Daffa Rizki Ariyanto</p>
         </div>
     </div>
 
