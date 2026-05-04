@@ -18,7 +18,7 @@
         .gahar-glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6 relative overflow-hidden font-outfit">
+<body class="bg-slate-900 min-h-screen flex flex-col items-center py-20 px-6 relative overflow-y-auto font-outfit">
     <!-- Parking Background -->
     <div class="fixed inset-0 z-0">
         <img src="{{ asset('img/login-bg.png') }}" class="w-full h-full object-cover opacity-60" alt="Background">
@@ -51,10 +51,10 @@
                 <button type="button" onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all text-white/30 hover:text-white">LINK AJAIB</button>
             </div>
 
-            <!-- Form Container with Fixed Height to Prevent Layout Shift -->
-            <div class="relative min-h-[280px]">
+            <!-- Forms -->
+            <div id="forms-wrapper">
                 <!-- Password Form -->
-                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-4 transition-all duration-500 opacity-100">
+                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-4">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
@@ -71,7 +71,7 @@
                 </form>
 
                 <!-- Magic Link Form -->
-                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-4 absolute inset-0 transition-all duration-500 opacity-0 pointer-events-none">
+                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-4 hidden">
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-envelope-open absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
@@ -86,7 +86,7 @@
             </div>
         </div>
 
-        <div class="mt-6 text-center">
+        <div class="mt-8 text-center pb-12">
             <p class="text-white/60 text-[9px] font-black tracking-[0.4em] uppercase mb-1">Parking Management System</p>
             <p class="text-white text-[10px] font-bold uppercase tracking-widest">© 2026 Crafted with Excellence by Daffa Rizki Ariyanto</p>
         </div>
@@ -100,25 +100,15 @@
             const btnMagic = document.getElementById('btn-magic');
             
             if (method === 'pass') {
-                // Show Pass Form
-                passForm.classList.remove('opacity-0', 'pointer-events-none');
-                passForm.classList.add('opacity-100');
-                // Hide Magic Form
-                magicForm.classList.remove('opacity-100');
-                magicForm.classList.add('opacity-0', 'pointer-events-none');
-                
+                passForm.classList.remove('hidden');
+                magicForm.classList.add('hidden');
                 btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnPass.classList.remove('text-white/30');
                 btnMagic.classList.add('text-white/30');
                 btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             } else {
-                // Show Magic Form
-                magicForm.classList.remove('opacity-0', 'pointer-events-none');
-                magicForm.classList.add('opacity-100');
-                // Hide Pass Form
-                passForm.classList.remove('opacity-100');
-                passForm.classList.add('opacity-0', 'pointer-events-none');
-                
+                passForm.classList.add('hidden');
+                magicForm.classList.remove('hidden');
                 btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnMagic.classList.remove('text-white/30');
                 btnPass.classList.add('text-white/30');
