@@ -83,7 +83,7 @@
             </form>
         </div>
 
-        <div class="mt-12 text-center">
+        <div class="mt-6 text-center">
             <p class="text-white/60 text-[9px] font-black tracking-[0.4em] uppercase mb-1">Parking Management System</p>
             <p class="text-white text-[10px] font-bold uppercase tracking-widest">© 2026 Crafted with Excellence by Daffa Rizki Ariyanto</p>
         </div>
