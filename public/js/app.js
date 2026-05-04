@@ -467,6 +467,8 @@ const app = {
             if (shiftFilter) url.searchParams.append('shift', shiftFilter);
             if (searchFilter) url.searchParams.append('search', searchFilter);
 
+            // Add cache-busting timestamp
+            url.searchParams.append('_', new Date().getTime());
             const response = await fetch(url);
             const json = await response.json();
             
