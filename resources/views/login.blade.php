@@ -83,9 +83,9 @@
             </form>
         </div>
 
-        <div class="mt-12 flex flex-col items-center gap-2 opacity-40">
-            <p class="text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">Parking Management System</p>
-            <p class="text-white/20 text-[8px] font-bold uppercase tracking-widest">© 2024 Crafted with Excellence by Daffa Rizki Ariyanto</p>
+        <div class="mt-12 flex flex-col items-center gap-3 opacity-60">
+            <p class="text-white text-[10px] font-black tracking-[0.4em] uppercase">Parking Management System</p>
+            <p class="text-white/70 text-[10px] font-bold uppercase tracking-widest">© 2024 Crafted with Excellence by Daffa Rizki Ariyanto</p>
         </div>
     </div>
 
