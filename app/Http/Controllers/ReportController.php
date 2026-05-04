@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 use App\Events\ReportSubmitted;
+use App\Http\Resources\ReportResource;
+use App\Http\Resources\UserResource;
 
 class ReportController extends Controller
 {
