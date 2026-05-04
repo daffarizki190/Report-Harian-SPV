@@ -18,14 +18,14 @@
         .gahar-glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="bg-slate-900 h-screen w-screen flex items-center justify-center p-4 relative overflow-hidden font-outfit">
+<body class="bg-slate-900 h-screen w-screen flex flex-col items-center justify-center p-6 relative overflow-hidden font-outfit">
     <!-- Parking Background -->
     <div class="fixed inset-0 z-0">
         <img src="{{ asset('img/login-bg.png') }}" class="w-full h-full object-cover opacity-60" alt="Background">
         <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900/60 to-transparent"></div>
     </div>
 
-    <div class="relative z-10 w-full max-w-md flex flex-col items-center">
+    <div class="relative z-10 w-full max-w-md">
         <div class="bg-slate-900/40 backdrop-blur-3xl border border-white/10 p-8 rounded-[40px] shadow-2xl animate-fade-in relative overflow-hidden w-full">
             <!-- Decorative Glow -->
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/20 blur-[80px]"></div>
