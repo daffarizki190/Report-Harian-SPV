@@ -32,8 +32,8 @@
             
             <!-- Header with Dashboard Logo -->
             <div class="text-center mb-10 relative">
-                <div class="inline-block p-4 bg-white/10 rounded-[32px] shadow-2xl mb-6 backdrop-blur-md border border-white/20">
-                    <img src="{{ asset('img/logo.png') }}" alt="Logo" class="w-16 h-16 object-contain">
+                <div class="inline-block bg-white rounded-3xl shadow-2xl mb-6 overflow-hidden border-4 border-white/20">
+                    <img src="{{ asset('img/logo.png') }}" alt="Logo" class="w-24 h-24 object-cover">
                 </div>
                 <h1 class="text-4xl font-black text-white tracking-tight mb-1 uppercase italic">Daily Report</h1>
                 <p class="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em]">Gandaria City Parking</p>
