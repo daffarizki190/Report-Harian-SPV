@@ -32,12 +32,12 @@
             
             <!-- Header with Custom Logo -->
             <div class="text-center mb-10 relative">
-                <div class="inline-block p-1 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-[32px] shadow-2xl mb-6">
-                    <div class="bg-slate-900 rounded-[30px] p-4 flex items-center justify-center">
-                        <img src="{{ asset('images/app-logo.png') }}" alt="Logo" class="w-16 h-16 object-contain">
+                <div class="inline-block p-1 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-full shadow-2xl mb-6">
+                    <div class="bg-slate-900 rounded-full p-4 flex items-center justify-center">
+                        <img src="{{ asset('images/app-logo.png') }}" alt="Logo" class="w-16 h-16 object-contain rounded-full">
                     </div>
                 </div>
-                <h1 class="text-3xl font-black text-white tracking-tight mb-1 uppercase">Management Portal</h1>
+                <h1 class="text-4xl font-black text-white tracking-tight mb-1 uppercase">Daily Report</h1>
                 <p class="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em]">Gandaria City Parking</p>
             </div>
 
