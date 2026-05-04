@@ -24,8 +24,18 @@ class ReportResource extends JsonResource
             'description'    => $this->description,
             'manual_content' => $this->manual_content,
             'file_path'      => $this->file_path,
-            'file_url'       => $this->file_url, // Accessor or attribute
-            'form_data'      => $this->form_data,
+            'file_url'       => $this->file_url,
+            
+            // Signature status flags for lightweight list view
+            'has_mgr1_sig'   => isset($this->form_data['signatures']['mgr-1']),
+            'has_mgr2_sig'   => isset($this->form_data['signatures']['mgr-2']),
+            
+            // Only include full form_data if explicitly requested or in detail view
+            'form_data'      => $this->when(
+                $request->routeIs('reports.show') || $request->has('full_data'), 
+                $this->form_data
+            ),
+            
             'created_at'     => $this->created_at,
             'updated_at'     => $this->updated_at,
             

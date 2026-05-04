@@ -90,6 +90,24 @@ class ReportController extends Controller
         return ReportResource::collection($reports);
     }
 
+    /**
+     * Get a single report with full data.
+     */
+    public function show(string $id)
+    {
+        $report = Report::findOrFail($id);
+        
+        // Security check: Only owners or management can view full details
+        $user = Auth::user();
+        if (in_array($user->role, ['Supervisor', 'Leader', 'SPV']) && $report->user_id !== $user->id) {
+            if ($report->spv_name !== $user->name) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        }
+
+        return new ReportResource($report);
+    }
+
     public function stats()
     {
         $user = Auth::user();

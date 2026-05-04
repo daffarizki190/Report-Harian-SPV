@@ -485,10 +485,9 @@ const app = {
 
             if (grid) {
                 grid.innerHTML = '';
-                // Dashboard ONLY shows reports that ARE NOT signed by Inhouse (mgr-2)
+                
                 const pendingReports = data.filter(r => {
-                    const sigs = r.form_data?.signatures || {};
-                    return !sigs['mgr-2'];
+                    return !r.has_mgr2_sig;
                 });
 
                 if (pendingReports.length === 0) {
@@ -512,11 +511,11 @@ const app = {
                             <div class="rc-info"><i class="far fa-calendar-alt"></i> ${dateStr}</div>
                             
                             <div class="sig-status-row">
-                                <span class="sig-badge ${report.form_data?.signatures?.['mgr-1'] ? 'signed' : 'pending'}">
-                                    <i class="fas ${report.form_data?.signatures?.['mgr-1'] ? 'fa-check-circle' : 'fa-clock'}"></i> Mgr: ${report.form_data?.signatures?.['mgr-1'] ? 'Sudah' : 'Belum'}
+                                <span class="sig-badge ${report.has_mgr1_sig ? 'signed' : 'pending'}">
+                                    <i class="fas ${report.has_mgr1_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Mgr: ${report.has_mgr1_sig ? 'Sudah' : 'Belum'}
                                 </span>
-                                <span class="sig-badge ${report.form_data?.signatures?.['mgr-2'] ? 'signed' : 'pending'}">
-                                    <i class="fas ${report.form_data?.signatures?.['mgr-2'] ? 'fa-check-circle' : 'fa-clock'}"></i> Inhouse: ${report.form_data?.signatures?.['mgr-2'] ? 'Sudah' : 'Belum'}
+                                <span class="sig-badge ${report.has_mgr2_sig ? 'signed' : 'pending'}">
+                                    <i class="fas ${report.has_mgr2_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Inhouse: ${report.has_mgr2_sig ? 'Sudah' : 'Belum'}
                                 </span>
                             </div>
 
@@ -537,8 +536,7 @@ const app = {
 
                 // History ONLY shows reports that ARE signed by Inhouse (mgr-2)
                 const completedReports = data.filter(r => {
-                    const sigs = r.form_data?.signatures || {};
-                    return sigs['mgr-2'];
+                    return r.has_mgr2_sig;
                 });
 
                 if (completedReports.length === 0) {
@@ -573,8 +571,7 @@ const app = {
 
         const filteredReports = this.reports.filter(r => {
             const date = r.report_date;
-            const sigs = r.form_data?.signatures || {};
-            return date >= start && date <= end && sigs['mgr-2'];
+            return date >= start && date <= end && r.has_mgr2_sig;
         });
 
         if (filteredReports.length === 0) {
@@ -679,13 +676,20 @@ const app = {
         }
     },
 
-    previewReport(id) {
-        const report = this.reports.find(r => r.id == id);
+    async previewReport(id) {
+        let report = this.reports.find(r => r.id == id);
         if (!report) return;
 
-        // Ensure form_data is an object
-        if (typeof report.form_data === 'string' && report.form_data.trim() !== '') {
-            try { report.form_data = JSON.parse(report.form_data); } catch (e) { console.error('Parse error', e); }
+        // Fetch full data if form_data is not present (lazy loading for performance)
+        if (!report.form_data || Object.keys(report.form_data).length === 0) {
+            this.showToast('Memuat detail laporan...', 'info');
+            try {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`);
+                const detail = await res.json();
+                report.form_data = detail.data.form_data;
+            } catch (e) {
+                return this.showToast('Gagal memuat detail laporan', 'error');
+            }
         }
 
         if (report.file_url) window.open(report.file_url, '_blank');
@@ -699,12 +703,19 @@ const app = {
     },
 
     async editDigitalForm(id) {
-        const report = this.reports.find(r => r.id == id);
+        let report = this.reports.find(r => r.id == id);
         if (!report) return;
 
-        // Ensure form_data is an object
-        if (typeof report.form_data === 'string' && report.form_data.trim() !== '') {
-            try { report.form_data = JSON.parse(report.form_data); } catch (e) { console.error('Parse error', e); }
+        // Fetch full data if form_data is not present (lazy loading for performance)
+        if (!report.form_data || Object.keys(report.form_data).length === 0) {
+            this.showToast('Memuat detail laporan...', 'info');
+            try {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`);
+                const detail = await res.json();
+                report.form_data = detail.data.form_data;
+            } catch (e) {
+                return this.showToast('Gagal memuat detail laporan', 'error');
+            }
         }
 
         if (!report.form_data) return this.showToast('Laporan digital tidak ditemukan', 'error');

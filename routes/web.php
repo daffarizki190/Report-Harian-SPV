@@ -33,6 +33,7 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
 
     Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/{id}', [ReportController::class, 'show'])->name('reports.show');
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
         Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
