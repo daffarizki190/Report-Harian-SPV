@@ -83,11 +83,18 @@
             </form>
         </div>
 
-        <div class="mt-12 flex flex-col items-center gap-3 opacity-60">
-            <p class="text-white text-[10px] font-black tracking-[0.4em] uppercase">Parking Management System</p>
-            <p class="text-white/70 text-[10px] font-bold uppercase tracking-widest">© 2026 Crafted with Excellence by Daffa Rizki Ariyanto</p>
+        <div class="mt-16 mb-12 flex flex-col items-center gap-3">
+            <p class="text-white font-black tracking-[0.5em] text-[11px] uppercase opacity-90">Parking Management System</p>
+            <div class="h-px w-12 bg-blue-500/50"></div>
+            <p class="text-white font-bold uppercase tracking-[0.2em] text-[10px] bg-blue-600/20 px-4 py-2 rounded-full border border-blue-500/30">
+                © 2026 Crafted with Excellence by Daffa Rizki Ariyanto
+            </p>
         </div>
     </div>
+
+    <style>
+        body { padding-bottom: 50px; }
+    </style>
 
     <script>
         function toggleLoginMethod(method) {
