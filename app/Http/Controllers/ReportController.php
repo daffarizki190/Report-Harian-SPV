@@ -57,11 +57,22 @@ class ReportController extends Controller
 
         $query = Report::query()
             ->leftJoin('users', 'reports.user_id', '=', 'users.id')
-            ->select(
-                'reports.*', 
+            ->select([
+                'reports.id',
+                'reports.user_id',
+                'reports.spv_name',
+                'reports.report_date',
+                'reports.shift',
+                'reports.description',
+                'reports.file_path',
+                'reports.created_at',
+                'reports.updated_at',
                 DB::raw("COALESCE(users.name, reports.spv_name) as user_name"),
-                'users.role as user_role'
-            );
+                'users.role as user_role',
+                // Efficiently check for signatures without loading the full JSON blob
+                DB::raw("CASE WHEN reports.form_data LIKE '%\"mgr-1\":%' THEN 1 ELSE 0 END as has_mgr1_sig"),
+                DB::raw("CASE WHEN reports.form_data LIKE '%\"mgr-2\":%' THEN 1 ELSE 0 END as has_mgr2_sig")
+            ]);
 
         // Security check
         if (in_array($user->role, ['Supervisor', 'Leader', 'SPV'])) {
