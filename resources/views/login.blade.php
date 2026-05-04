@@ -98,39 +98,38 @@
             const btnMagic = document.getElementById('btn-magic');
             
             if (method === 'pass') {
-                // Show Pass
                 passForm.style.display = 'block';
                 magicForm.style.display = 'none';
-                
                 btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnPass.classList.remove('text-white/30');
                 btnMagic.classList.add('text-white/30');
                 btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             } else {
-                // Show Magic
                 passForm.style.display = 'none';
                 magicForm.style.display = 'block';
-                
                 btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnMagic.classList.remove('text-white/30');
                 btnPass.classList.add('text-white/30');
                 btnPass.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             }
         }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            toggleLoginMethod('pass');
-        });
-    </script>
 
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function() {
                 const btn = this.querySelector('button');
-                btn.querySelector('.btn-text').classList.add('hidden');
-                btn.querySelector('.dots-wave').classList.remove('hidden');
-                this.closest('.bg-slate-900\/40').classList.add('opacity-50', 'pointer-events-none');
+                const btnText = btn.querySelector('.btn-text');
+                const dots = btn.querySelector('.dots-wave');
+                
+                if (btnText) btnText.classList.add('hidden');
+                if (dots) dots.classList.remove('hidden');
+                
+                this.closest('.backdrop-blur-2xl').classList.add('opacity-50', 'pointer-events-none');
             });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleLoginMethod('pass');
         });
     </script>
 </body>
