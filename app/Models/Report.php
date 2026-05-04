@@ -37,6 +37,6 @@ class Report extends Model
         if (!$this->file_path) return null;
         
         // Use app() to get the service from container
-        return app(\App\Services\SupabaseService::class)->publicUrl($this->file_path);
+        return app(\App\Services\SupabaseStorageService::class)->publicUrl($this->file_path);
     }
 }
