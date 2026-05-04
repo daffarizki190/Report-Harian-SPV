@@ -46,41 +46,44 @@
             @endif
 
             <!-- Tab Switcher -->
-            <div class="flex bg-white/5 p-1.5 rounded-2xl mb-8 border border-white/5">
-                <button onclick="toggleLoginMethod('pass')" id="btn-pass" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/20">KATA SANDI</button>
-                <button onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all text-white/30 hover:text-white">LINK AJAIB</button>
+            <div class="flex bg-white/5 p-1.5 rounded-2xl mb-8 border border-white/5 relative z-20">
+                <button type="button" onclick="toggleLoginMethod('pass')" id="btn-pass" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/20">KATA SANDI</button>
+                <button type="button" onclick="toggleLoginMethod('magic')" id="btn-magic" class="flex-1 py-3 text-[10px] font-black rounded-xl transition-all text-white/30 hover:text-white">LINK AJAIB</button>
             </div>
 
-            <!-- Password Form -->
-            <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-4">
-                @csrf
-                <div class="relative group">
-                    <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                    <input type="text" name="username" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required value="{{ old('username') }}">
-                </div>
-                <div class="relative group">
-                    <i class="fas fa-fingerprint absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                    <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 mt-6 tracking-widest text-xs uppercase">
-                    <span class="btn-text">Authenticate Access</span>
-                    <div class="dots-wave hidden"><span></span><span></span><span></span></div>
-                </button>
-            </form>
+            <!-- Form Container with Fixed Height to Prevent Layout Shift -->
+            <div class="relative min-h-[280px]">
+                <!-- Password Form -->
+                <form id="login-form" action="{{ route('login.post') }}" method="POST" class="space-y-4 transition-all duration-500 opacity-100">
+                    @csrf
+                    <div class="relative group">
+                        <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" name="username" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required value="{{ old('username') }}">
+                    </div>
+                    <div class="relative group">
+                        <i class="fas fa-fingerprint absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-2xl shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 mt-6 tracking-widest text-xs uppercase">
+                        <span class="btn-text">Authenticate Access</span>
+                        <div class="dots-wave hidden"><span></span><span></span><span></span></div>
+                    </button>
+                </form>
 
-            <!-- Magic Link Form -->
-            <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-4 hidden">
-                @csrf
-                <div class="relative group">
-                    <i class="fas fa-envelope-open absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                    <input type="text" name="username" placeholder="Username / ID" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
-                </div>
-                <p class="text-white/20 text-[9px] text-center px-8 font-black uppercase tracking-tighter">Security verification will be required after accessing the link.</p>
-                <button type="submit" class="w-full bg-white text-black font-black py-5 rounded-2xl shadow-2xl hover:bg-slate-100 transition-all mt-6 tracking-widest text-xs uppercase">
-                    <span class="btn-text">Send Access Link</span>
-                    <div class="dots-wave hidden"><span></span><span></span><span></span></div>
-                </button>
-            </form>
+                <!-- Magic Link Form -->
+                <form id="magic-link-form" action="{{ route('magic.link.send') }}" method="POST" class="space-y-4 absolute inset-0 transition-all duration-500 opacity-0 pointer-events-none">
+                    @csrf
+                    <div class="relative group">
+                        <i class="fas fa-envelope-open absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" name="username" placeholder="Username / ID" class="w-full bg-white/5 border border-white/10 rounded-2xl px-14 py-4.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all font-medium" required>
+                    </div>
+                    <p class="text-white/20 text-[9px] text-center px-8 font-black uppercase tracking-tighter">Security verification will be required after accessing the link.</p>
+                    <button type="submit" class="w-full bg-white text-black font-black py-5 rounded-2xl shadow-2xl hover:bg-slate-100 transition-all mt-6 tracking-widest text-xs uppercase">
+                        <span class="btn-text">Send Access Link</span>
+                        <div class="dots-wave hidden"><span></span><span></span><span></span></div>
+                    </button>
+                </form>
+            </div>
         </div>
 
         <div class="mt-6 text-center">
@@ -97,15 +100,25 @@
             const btnMagic = document.getElementById('btn-magic');
             
             if (method === 'pass') {
-                passForm.classList.remove('hidden');
-                magicForm.classList.add('hidden');
+                // Show Pass Form
+                passForm.classList.remove('opacity-0', 'pointer-events-none');
+                passForm.classList.add('opacity-100');
+                // Hide Magic Form
+                magicForm.classList.remove('opacity-100');
+                magicForm.classList.add('opacity-0', 'pointer-events-none');
+                
                 btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnPass.classList.remove('text-white/30');
                 btnMagic.classList.add('text-white/30');
                 btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
             } else {
-                passForm.classList.add('hidden');
-                magicForm.classList.remove('hidden');
+                // Show Magic Form
+                magicForm.classList.remove('opacity-0', 'pointer-events-none');
+                magicForm.classList.add('opacity-100');
+                // Hide Pass Form
+                passForm.classList.remove('opacity-100');
+                passForm.classList.add('opacity-0', 'pointer-events-none');
+                
                 btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
                 btnMagic.classList.remove('text-white/30');
                 btnPass.classList.add('text-white/30');
