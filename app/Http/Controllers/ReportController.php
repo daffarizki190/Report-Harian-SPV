@@ -269,6 +269,7 @@ class ReportController extends Controller
             } else {
                 $report = Report::where('spv_name', $spvName)
                                 ->whereDate('report_date', $request->report_date)
+                                ->where('shift', $request->shift)
                                 ->first();
             }
 

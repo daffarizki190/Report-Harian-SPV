@@ -1143,6 +1143,7 @@ const formDigital = {
                 wrapper.querySelector('.existing-sig')?.remove();
                 pad.canvas.style.opacity = '1';
                 delete wrapper.dataset.signerName;
+                delete wrapper.dataset.existingSrc;
             }
 
             // Reset display name
