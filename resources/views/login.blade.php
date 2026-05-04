@@ -91,46 +91,53 @@
     </div>
 
     <script>
-        function toggleLoginMethod(method) {
-            const passForm = document.getElementById('login-form');
-            const magicForm = document.getElementById('magic-link-form');
-            const btnPass = document.getElementById('btn-pass');
-            const btnMagic = document.getElementById('btn-magic');
-            
-            if (method === 'pass') {
-                passForm.style.display = 'block';
-                magicForm.style.display = 'none';
-                btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-                btnPass.classList.remove('text-white/30');
-                btnMagic.classList.add('text-white/30');
-                btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
-            } else {
-                passForm.style.display = 'none';
-                magicForm.style.display = 'block';
-                btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
-                btnMagic.classList.remove('text-white/30');
-                btnPass.classList.add('text-white/30');
-                btnPass.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
-            }
-        }
+        // Force fresh logic on every load
+        (function() {
+            window.toggleLoginMethod = function(method) {
+                const passForm = document.getElementById('login-form');
+                const magicForm = document.getElementById('magic-link-form');
+                const btnPass = document.getElementById('btn-pass');
+                const btnMagic = document.getElementById('btn-magic');
+                
+                if (!passForm || !magicForm) return;
 
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function() {
-                const btn = this.querySelector('button');
-                const btnText = btn.querySelector('.btn-text');
-                const dots = btn.querySelector('.dots-wave');
-                
-                if (btnText) btnText.classList.add('hidden');
-                if (dots) dots.classList.remove('hidden');
-                
-                this.closest('.backdrop-blur-2xl').classList.add('opacity-50', 'pointer-events-none');
+                if (method === 'pass') {
+                    passForm.style.display = 'block';
+                    magicForm.style.display = 'none';
+                    btnPass.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+                    btnPass.classList.remove('text-white/30');
+                    btnMagic.classList.add('text-white/30');
+                    btnMagic.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                } else {
+                    passForm.style.display = 'none';
+                    magicForm.style.display = 'block';
+                    btnMagic.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+                    btnMagic.classList.remove('text-white/30');
+                    btnPass.classList.add('text-white/30');
+                    btnPass.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                }
+            };
+
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    const btn = this.querySelector('button');
+                    if (!btn) return;
+                    const btnText = btn.querySelector('.btn-text');
+                    const dots = btn.querySelector('.dots-wave');
+                    
+                    if (btnText) btnText.classList.add('hidden');
+                    if (dots) dots.classList.remove('hidden');
+                    
+                    const card = this.closest('.backdrop-blur-2xl');
+                    if (card) card.classList.add('opacity-50', 'pointer-events-none');
+                });
             });
-        });
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            toggleLoginMethod('pass');
-        });
+            // Auto-initialize
+            document.addEventListener('DOMContentLoaded', () => {
+                toggleLoginMethod('pass');
+            });
+        })();
     </script>
 </body>
 </html>
