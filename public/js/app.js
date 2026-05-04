@@ -975,12 +975,10 @@ const formDigital = {
                 // Clear existing and handle loading
                 wrapper.querySelector('.existing-sig')?.remove();
                 canvas.style.opacity = '1';
+                pad.clear();
                 
-                // Load the entire temp canvas into the pad
-                pad.fromDataURL(tempCanvas.toDataURL(), {
-                    width: cw / ratio,
-                    height: ch / ratio
-                });
+                // Load the entire temp canvas into the pad without extra options to avoid doubling/scaling
+                pad.fromDataURL(tempCanvas.toDataURL());
                 
                 processingOverlay.remove();
                 app.showToast('Tanda tangan berhasil diimpor', 'success');
