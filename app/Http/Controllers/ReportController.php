@@ -279,25 +279,28 @@ class ReportController extends Controller
                 : 'Form Digital — Kondisi Normal';
 
             if ($report) {
-                // Update existing
-                $report->update([
-                    'shift'       => $request->shift,
-                    'description' => $description,
-                    'form_data'   => $formDataDecoded,
-                    'updated_at'  => now()
-                ]);
+                // Update existing - Use direct assignment to ensure casted attributes are handled correctly
+                $report->shift = $request->shift;
+                $report->description = $description;
+                $report->form_data = $formDataDecoded;
+                $report->updated_at = now();
+                $report->save();
+                
                 $action = 'Update Form';
+                \Log::info("Report updated ID: {$report->id}, Sig count: " . count($formDataDecoded['signatures'] ?? []));
             } else {
-                // Create new (hanya SPV yang biasanya buat baru)
-                $report = Report::create([
-                    'user_id'     => $user->id,
-                    'spv_name'    => $spvName,
-                    'report_date' => $request->report_date,
-                    'shift'       => $request->shift,
-                    'description' => $description,
-                    'form_data'   => $formDataDecoded
-                ]);
+                // Create new
+                $report = new Report();
+                $report->user_id = $user->id;
+                $report->spv_name = $spvName;
+                $report->report_date = $request->report_date;
+                $report->shift = $request->shift;
+                $report->description = $description;
+                $report->form_data = $formDataDecoded;
+                $report->save();
+
                 $action = 'Form Digital';
+                \Log::info("Report created ID: {$report->id}");
             }
 
             $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");

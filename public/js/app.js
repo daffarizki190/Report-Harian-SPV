@@ -1156,19 +1156,25 @@ const formDigital = {
 
     loadExistingSignatures(sigs, names = {}) {
         Object.keys(sigs).forEach(key => {
-            const canvas = document.getElementById(`sig-${key}`);
+            const pad = this.sigPads?.[key];
+            const canvas = pad?.canvas;
             const wrapper = canvas?.closest('.sig-pad-wrapper');
-            if (wrapper && sigs[key]) {
+            if (pad && sigs[key]) {
+                // Remove any old overlaid images if they exist
                 wrapper.querySelector('.existing-sig')?.remove();
-                const img = document.createElement('img');
-                img.src = sigs[key];
-                img.className = 'existing-sig';
-                img.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; background:white; z-index:5;';
-                wrapper.style.position = 'relative';
-                wrapper.appendChild(img);
-                canvas.style.opacity = '0';
+                
+                // Ensure canvas is visible
+                canvas.style.opacity = '1';
+                
+                // Load the image directly into the pad
+                pad.clear();
+                pad.fromDataURL(sigs[key], {
+                    width: canvas.offsetWidth,
+                    height: canvas.offsetHeight
+                });
 
-                // Store signer name in dataset and display it
+                // Store signer name and existing source for fallback
+                wrapper.dataset.existingSrc = sigs[key];
                 if (names[key]) {
                     wrapper.dataset.signerName = names[key];
                     const nameDisp = document.getElementById(`df-sig-name-${key}`);
@@ -1306,14 +1312,22 @@ const formDigital = {
             const existingSignerName = wrapper.dataset.signerName;
             const nameInp = document.getElementById(`df-sig-name-${k}`);
 
-            if (existing) {
-                sigs[k] = existing.src;
-                signerNames[k] = existingSignerName || (nameInp ? nameInp.textContent : '');
-            } else if (!pad.isEmpty()) {
+        ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
+            const pad = this.sigPads?.[k];
+            if (!pad) return;
+            const wrapper = pad.canvas.closest('.sig-pad-wrapper');
+            const existingSignerName = wrapper.dataset.signerName;
+            const nameInp = document.getElementById(`df-sig-name-${k}`);
+
+            if (!pad.isEmpty()) {
                 sigs[k] = pad.toDataURL();
                 signerNames[k] = (nameInp && nameInp.textContent && nameInp.textContent !== '....................') 
                     ? nameInp.textContent 
                     : (window.Laravel?.user?.name || '');
+            } else if (wrapper.dataset.existingSrc) {
+                // Fallback for cases where pad is empty but we have an existing source (though loadExistingSignatures now fills the pad)
+                sigs[k] = wrapper.dataset.existingSrc;
+                signerNames[k] = existingSignerName || (nameInp ? nameInp.textContent : '');
             }
         });
 
@@ -1361,8 +1375,9 @@ const formDigital = {
                 const result = await res.json();
                 if (res.ok) { 
                     app.showToast('Laporan berhasil disimpan', 'success'); 
+                    await app.refreshData();
                     app.switchView('dashboard'); 
-                } else {
+                    document.getElementById('modal-digital').classList.add('hidden');                } else {
                     app.showToast(result.message || 'Gagal menyimpan laporan', 'error');
                 }
             } catch (e) { 
