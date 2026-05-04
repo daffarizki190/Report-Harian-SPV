@@ -119,9 +119,9 @@ class ReportController extends Controller
             $totalReports = \App\Models\Report::count();
             $totalUsers = \App\Models\User::count();
             
-            // Stats for signatures - OPTIMIZED: Query directly at DB level
-            // We count reports that have 'mgr-2' signature in form_data JSON
-            $completed = \App\Models\Report::whereNotNull('form_data->signatures->mgr-2')->count();
+            // Stats for signatures - OPTIMIZED for text/json column compatibility
+            // Since form_data is longText in migration, we use a robust string check
+            $completed = \App\Models\Report::where('form_data', 'like', '%"mgr-2":%')->count();
             $pending = $totalReports - $completed;
 
             return [
