@@ -72,7 +72,7 @@ class ReportController extends Controller
             });
         }
 
-        // Professional Pipeline Filtering
+        // Professional Pagination: Limit data to 10 per page for high performance
         $reports = app(\Illuminate\Pipeline\Pipeline::class)
             ->send($query)
             ->through([
@@ -83,13 +83,7 @@ class ReportController extends Controller
             ])
             ->thenReturn()
             ->orderBy('reports.report_date', 'desc')
-            ->get();
-
-        $reports->each(function ($report) {
-            if ($report->file_path) {
-                $report->file_url = $this->supabase->publicUrl($report->file_path);
-            }
-        });
+            ->paginate(10);
 
         return ReportResource::collection($reports);
     }
