@@ -89,6 +89,7 @@
                 <div class="w-px h-6 bg-white/20"></div>
                 <span class="text-white text-[9px] font-black tracking-[0.4em] uppercase">Parking Management</span>
             </div>
+            <p class="text-white/30 text-[8px] font-bold uppercase tracking-widest mt-2">© 2024 Crafted with Excellence by Daffa Rizki</p>
         </div>
     </div>
 
