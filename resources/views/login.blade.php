@@ -83,13 +83,9 @@
             </form>
         </div>
 
-        <div class="mt-12 flex flex-col items-center gap-4 opacity-40">
-            <div class="flex items-center gap-6">
-                <img src="{{ asset('img/logo.png') }}" alt="Gancy Logo" class="h-8 brightness-0 invert opacity-80">
-                <div class="w-px h-6 bg-white/20"></div>
-                <span class="text-white text-[9px] font-black tracking-[0.4em] uppercase">Parking Management</span>
-            </div>
-            <p class="text-white/30 text-[8px] font-bold uppercase tracking-widest mt-2">© 2024 Crafted with Excellence by Daffa Rizki</p>
+        <div class="mt-12 flex flex-col items-center gap-2 opacity-40">
+            <p class="text-white/40 text-[9px] font-black tracking-[0.4em] uppercase">Parking Management System</p>
+            <p class="text-white/20 text-[8px] font-bold uppercase tracking-widest">© 2024 Crafted with Excellence by Daffa Rizki</p>
         </div>
     </div>
 
