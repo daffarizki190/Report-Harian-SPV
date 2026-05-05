@@ -13,7 +13,7 @@ const app = {
         // Real-time: Listen for new reports via Reverb
         try { this.initEcho(); } catch(e) { console.error('Pusher/Echo initialization error:', e); }
 
-        // Fallback: Auto-refresh data every 2 minutes
+        // Fallback: Auto-refresh data every 10 seconds
         this.refreshInterval = setInterval(() => {
             if (document.visibilityState === 'visible' && !document.querySelector('.overlay:not(.hidden)')) {
                 console.log('Background refreshing data...');
@@ -436,14 +436,15 @@ const app = {
     },
 
     async deleteUser(id) {
-        if (!confirm('Hapus user ini?')) return;
-        try {
-            const res = await fetch(`${window.Laravel.baseUrl}/v1/users/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': window.Laravel.csrfToken }
-            });
-            if (res.ok) { this.showToast('User dihapus', 'success'); this.loadUsers(); }
-        } catch (e) { console.error(e); }
+        this.showConfirm('Hapus user ini?', async () => {
+            try {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': window.Laravel.csrfToken }
+                });
+                if (res.ok) { this.showToast('User dihapus', 'success'); this.loadUsers(); }
+            } catch (e) { console.error('Delete user failed:', e); }
+        });
     },
 
     refreshData() {
@@ -458,7 +459,7 @@ const app = {
             const data = await response.json();
             document.getElementById('stat-total').textContent = data.total || 0;
             document.getElementById('stat-today').textContent = data.today || 0;
-        } catch (e) { }
+        } catch (e) { console.error('Load stats failed:', e); }
     },
 
 
@@ -515,7 +516,7 @@ const app = {
                         <div class="rc-header">
                             <div class="rc-user">
                                 <div class="rc-avatar">${report.user_name ? report.user_name.charAt(0).toUpperCase() : '?'}</div>
-                                <div><h4>${report.user_name}</h4><span>${report.user_role || 'SPV'}</span></div>
+                                <div><h4>${report.user_name}</h4><span>${report.user_role || 'Supervisor'}</span></div>
                             </div>
                             <span class="badge ${(report.shift || '').toLowerCase()}">${report.shift}</span>
                         </div>
@@ -535,7 +536,7 @@ const app = {
                         </div>
                         <div class="rc-footer">
                             <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
-                            ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'SPV', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit"><i class="fas fa-signature"></i> TTD</button>` : ''}
+                            ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit"><i class="fas fa-signature"></i> TTD</button>` : ''}
                             ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${report.id}')" class="rc-btn delete"><i class="fas fa-trash"></i></button>` : ''}
                         </div>
                     `;
@@ -790,16 +791,32 @@ const app = {
             perlenTbody.innerHTML = '';
             formData.perlengkapan.forEach((p, i) => {
                 const tr = document.createElement('tr');
-                tr.className = 'perlen-row';
                 tr.innerHTML = `
                     <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
-                    <td><input type="text" class="perlen-nama" value="${p.nama || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
-                    <td><input type="number" class="perlen-total" value="${p.jumlah || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; font-size:0.9rem;"></td>
-                    <td><input type="number" class="perlen-baik" value="${p.baik || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; color:green; font-size:0.9rem;"></td>
-                    <td><input type="number" class="perlen-rusak" value="${p.rusak || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; color:red; font-size:0.9rem;"></td>
-                    <td><input type="text" class="perlen-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+                    <td style="font-weight:600;">${p.nama || ''}</td>
+                    <td style="text-align:center;"><input type="number" class="perlen-jumlah" value="${p.jumlah || 0}" style="width:65px; text-align:center;"></td>
+                    <td style="text-align:center;"><input type="number" class="perlen-baik" value="${p.baik || 0}" style="width:65px; text-align:center; color:green;"></td>
+                    <td style="text-align:center;"><input type="number" class="perlen-rusak" value="${p.rusak || 0}" style="width:65px; text-align:center; color:red;"></td>
+                    <td><input type="text" class="perlen-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent;"></td>
                 `;
                 perlenTbody.appendChild(tr);
+            });
+        }
+
+        const alatTbody = document.querySelector('#tbl-peralatan tbody');
+        if (alatTbody && formData.peralatan) {
+            alatTbody.innerHTML = '';
+            formData.peralatan.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
+                    <td style="font-weight:600;">${p.nama || ''}</td>
+                    <td style="text-align:center;"><input type="number" class="alat-jumlah" value="${p.jumlah || 0}" style="width:65px; text-align:center;"></td>
+                    <td style="text-align:center;"><input type="number" class="alat-baik" value="${p.baik || 0}" style="width:65px; text-align:center; color:green;"></td>
+                    <td style="text-align:center;"><input type="number" class="alat-rusak" value="${p.rusak || 0}" style="width:65px; text-align:center; color:red;"></td>
+                    <td><input type="text" class="alat-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent;"></td>
+                `;
+                alatTbody.appendChild(tr);
             });
         }
 
@@ -873,14 +890,15 @@ const app = {
     },
 
     async deleteReport(id) {
-        if (!confirm('Hapus laporan ini?')) return;
-        try {
-            const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': window.Laravel.csrfToken }
-            });
-            if (res.ok) { this.showToast('Laporan dihapus', 'success'); this.refreshData(); }
-        } catch (e) { }
+        this.showConfirm('Hapus laporan ini?', async () => {
+            try {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': window.Laravel.csrfToken }
+                });
+                if (res.ok) { this.showToast('Laporan dihapus', 'success'); this.refreshData(); }
+            } catch (e) { console.error('Delete report failed:', e); }
+        });
     },
 
     viewDigitalForm(id) {
@@ -906,7 +924,7 @@ const app = {
                 const data = await res.json();
                 this.showToast(data.message || 'Gagal menyimpan', 'error');
             }
-        } catch (e) { } finally { btn.disabled = false; }
+        } catch (e) { console.error('Upload failed:', e); } finally { btn.disabled = false; }
     },
 
     async handlePurge(all) {
@@ -914,15 +932,16 @@ const app = {
         const endDate = document.getElementById('purge-end')?.value;
         if (!all && !startDate && !endDate) return this.showToast('Pilih range tanggal', 'error');
 
-        if (!confirm(all ? 'Hapus SEMUA data?' : 'Hapus data di range ini?')) return;
-        try {
-            const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/purge`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.Laravel.csrfToken },
-                body: JSON.stringify({ start_date: startDate, end_date: endDate, all })
-            });
-            if (res.ok) { this.showToast('Data dibersihkan', 'success'); this.refreshData(); }
-        } catch (e) { }
+        this.showConfirm(all ? 'Hapus SEMUA data?' : 'Hapus data di range ini?', async () => {
+            try {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/purge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.Laravel.csrfToken },
+                    body: JSON.stringify({ start_date: startDate, end_date: endDate, all })
+                });
+                if (res.ok) { this.showToast('Data dibersihkan', 'success'); this.refreshData(); }
+            } catch (e) { console.error('Purge failed:', e); }
+        });
     },
 
     showToast(message, type = 'info') {
@@ -933,6 +952,38 @@ const app = {
         toast.innerHTML = `<i class="fas fa-info-circle"></i> <span>${message}</span>`;
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
+    },
+
+    showConfirm(message, onYes) {
+        const modal = document.getElementById('confirm-modal');
+        const msgEl = document.getElementById('confirm-message');
+        const btnYes = document.getElementById('confirm-yes');
+        const btnNo = document.getElementById('confirm-no');
+
+        if (!modal || !msgEl || !btnYes || !btnNo) {
+            if (confirm(message)) onYes();
+            return;
+        }
+
+        msgEl.textContent = message;
+        modal.classList.remove('hidden');
+
+        const handleYes = () => {
+            modal.classList.add('hidden');
+            onYes();
+            cleanup();
+        };
+        const handleNo = () => {
+            modal.classList.add('hidden');
+            cleanup();
+        };
+        const cleanup = () => {
+            btnYes.removeEventListener('click', handleYes);
+            btnNo.removeEventListener('click', handleNo);
+        };
+
+        btnYes.addEventListener('click', handleYes);
+        btnNo.addEventListener('click', handleNo);
     }
 };
 
@@ -1157,13 +1208,18 @@ const formDigital = {
             if (canvas && canvas.offsetParent) {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
                 
-                // If it's not empty, capture current state as image to preserve it (including photos)
+                // Simpan state saat ini
                 const isEmpty = pad.isEmpty();
                 const currentDataUrl = isEmpty ? null : pad.toDataURL();
                 
+                // Atur ukuran canvas fisik
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
+                
+                // Atur skala konteks 2D
+                const ctx = canvas.getContext("2d");
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform sebelum scaling
+                ctx.scale(ratio, ratio);
                 
                 pad.clear();
                 if (currentDataUrl) {
@@ -1323,6 +1379,26 @@ const formDigital = {
             }
         });
 
+        const alat = [];
+        document.querySelectorAll('#tbl-peralatan tbody tr').forEach((tr, i) => {
+            const nameEl = tr.querySelector('td:nth-child(2)');
+            const jInp = tr.querySelector('.alat-jumlah');
+            const bInp = tr.querySelector('.alat-baik');
+            const rInp = tr.querySelector('.alat-rusak');
+            const kInp = tr.querySelector('.alat-ket');
+            
+            if (nameEl) {
+                alat.push({
+                    no: i + 1,
+                    nama: nameEl.textContent.trim(),
+                    jumlah: jInp ? jInp.value : '0',
+                    baik: bInp ? bInp.value : '0',
+                    rusak: rInp ? rInp.value : '0',
+                    keterangan: kInp ? kInp.value : '-'
+                });
+            }
+        });
+
         const spec = [];
         document.querySelectorAll('#spesifikasi-tbody tr').forEach(tr => {
             const jInp = tr.querySelector('.spec-jenis');
@@ -1375,6 +1451,7 @@ const formDigital = {
             manpower: mp, 
             ploting: plot, 
             perlengkapan: perlen, 
+            peralatan: alat,
             briefing: document.getElementById('df-briefing')?.value || '', 
             training: document.getElementById('df-training')?.value || '', 
             spesifikasi: spec, 
@@ -1447,7 +1524,7 @@ const formDigital = {
         const shift = report.shift || document.getElementById('df-shift')?.value || '-';
         const tgl = report.report_date || document.getElementById('df-tanggal')?.value || '-';
 
-        let mpRows = '', plotRows = '', perRows = '', specRows = '';
+        let mpRows = '', plotRows = '', perRows = '', alatRows = '', specRows = '';
         const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         
         mp_j.forEach(j => {
@@ -1482,6 +1559,18 @@ const formDigital = {
                 </tr>`;
         });
 
+        (data.peralatan || []).forEach(p => {
+            alatRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
+                    <td style="border:1px solid #000; padding:4px 8px;">${p.nama || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${p.jumlah || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center; color:green;">${p.baik || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center; color:red;">${p.rusak || '0'}</td>
+                    <td style="border:1px solid #000; padding:4px 8px;">${p.keterangan || '-'}</td>
+                </tr>`;
+        });
+
         (data.spesifikasi || []).forEach(s => {
             specRows += `
                 <tr>
@@ -1502,7 +1591,7 @@ const formDigital = {
 
                 <table style="width:100%; margin-bottom:20px; font-size:11pt;">
                     <tr>
-                        <td style="width:120px; padding:4px 0;">Nama SPV</td>
+                        <td style="width:120px; padding:4px 0;">Supervisor</td>
                         <td style="padding:4px 0;">: <strong>${nama}</strong></td>
                         <td style="width:100px; padding:4px 0;">Shift</td>
                         <td style="padding:4px 0;">: <strong>${shift}</strong></td>
@@ -1568,6 +1657,28 @@ const formDigital = {
                         </thead>
                         <tbody>
                             ${perRows || '<tr><td colspan="6" style="border:1px solid #000; padding:10px; text-align:center;">Tidak ada data perlengkapan</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom:25px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERALATAN OPERASIONAL</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:9pt;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; width:30px;">NO</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; text-align:left;">NAMA PERALATAN</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px; width:60px;">TOTAL</th>
+                                <th colspan="2" style="border:1px solid #000; padding:4px;">KONDISI</th>
+                                <th rowspan="2" style="border:1px solid #000; padding:4px;">KETERANGAN</th>
+                            </tr>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border:1px solid #000; padding:4px; width:50px; color:green;">BAIK</th>
+                                <th style="border:1px solid #000; padding:4px; width:50px; color:red;">RUSAK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${alatRows || '<tr><td colspan="6" style="border:1px solid #000; padding:10px; text-align:center;">Tidak ada data peralatan</td></tr>'}
                         </tbody>
                     </table>
                 </div>

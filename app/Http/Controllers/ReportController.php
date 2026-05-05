@@ -46,7 +46,17 @@ class ReportController extends Controller
             ['Senter', 1],
         ];
 
-        return view('dashboard', compact('currentShift', 'plotingAreas', 'perlengkapan'));
+        $peralatan = [
+            ['Parking Entrance', 16],
+            ['Parking Exit', 23],
+            ['Server parking', 2],
+            ['DDS', 7],
+            ['Emergency button', 43],
+            ['Hanging Sign', 355],
+            ['Totem Sign', 35],
+        ];
+
+        return view('dashboard', compact('currentShift', 'plotingAreas', 'perlengkapan', 'peralatan'));
     }
 
     /**
@@ -76,7 +86,7 @@ class ReportController extends Controller
             ]);
 
         // Security check
-        if (in_array($user->role, ['Supervisor', 'Leader', 'SPV'])) {
+        if (in_array($user->role, ['Supervisor', 'Leader'])) {
             $query->where(function($q) use ($user) {
                 $q->where('reports.user_id', $user->id)
                   ->orWhere(function($sq) use ($user) {
@@ -111,7 +121,7 @@ class ReportController extends Controller
         
         // Security check: Only owners or management can view full details
         $user = Auth::user();
-        if (in_array($user->role, ['Supervisor', 'Leader', 'SPV']) && $report->user_id !== $user->id) {
+        if (in_array($user->role, ['Supervisor', 'Leader']) && $report->user_id !== $user->id) {
             if ($report->spv_name !== $user->name) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
@@ -244,11 +254,11 @@ class ReportController extends Controller
             $report = Report::updateOrCreate(
                 [
                     'user_id'     => Auth::id(),
-                    'report_date' => $request->report_date
+                    'report_date' => $request->report_date,
+                    'shift'       => $request->shift,
                 ],
                 [
                     'spv_name'       => $spvName,
-                    'shift'          => $request->shift,
                     'description'    => $request->description,
                     'file_path'      => $filePath,
                     'manual_content' => $request->manual_content,

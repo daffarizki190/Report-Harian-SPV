@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SPV Daily Report | Gandaria City</title>
+    <title>Supervisor Daily Report | Gandaria City</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -450,9 +450,54 @@
                             </div>
                         </div>
 
-                        {{-- SEKSI 5: BRIEFING & TRAINING --}}
+                        {{-- SEKSI 5: PERALATAN --}}
                         <div class="glass-card df-section">
-                            <div class="df-section-title"><span>5</span> BRIEFING &amp; TRAINING</div>
+                            <div class="df-section-title"><span>5</span> PERALATAN</div>
+                            <div class="table-container">
+                                <table id="tbl-peralatan">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40px">NO</th>
+                                            <th>NAMA PERALATAN</th>
+                                            <th style="width:80px; text-align:center">JUMLAH</th>
+                                            <th style="width:80px; text-align:center; color:var(--success)">BAIK</th>
+                                            <th style="width:80px; text-align:center; color:var(--error)">RUSAK</th>
+                                            <th>KETERANGAN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($peralatan as $idx => $item)
+                                        <tr>
+                                            <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">{{ $idx+1 }}</td>
+                                            <td style="font-weight:600;">{{ $item[0] }}</td>
+                                            <td style="text-align:center; padding:8px 12px;">
+                                                <input type="number" class="alat-jumlah" min="0"
+                                                    value="{{ $item[1] }}"
+                                                    style="width:65px; text-align:center; padding:6px 8px;">
+                                            </td>
+                                            <td style="text-align:center; padding:8px 12px;">
+                                                <input type="number" class="alat-baik" min="0" value="{{ $item[1] }}"
+                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;">
+                                            </td>
+                                            <td style="text-align:center; padding:8px 12px;">
+                                                <input type="number" class="alat-rusak" min="0" value="0"
+                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;">
+                                            </td>
+                                            <td style="padding:8px 16px;">
+                                                <input type="text" class="alat-ket"
+                                                    placeholder="Keterangan..."
+                                                    style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.88rem;">
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- SEKSI 6: BRIEFING & TRAINING --}}
+                        <div class="glass-card df-section">
+                            <div class="df-section-title"><span>6</span> BRIEFING &amp; TRAINING</div>
                             <div class="df-grid-2">
                                 <div class="form-group">
                                     <label>Materi Briefing</label>
@@ -465,9 +510,9 @@
                             </div>
                         </div>
 
-                        {{-- SEKSI 6: SPESIFIKASI LAPORAN --}}
+                        {{-- SEKSI 7: SPESIFIKASI LAPORAN --}}
                         <div class="glass-card df-section">
-                            <div class="df-section-title"><span>6</span> SPESIFIKASI LAPORAN</div>
+                            <div class="df-section-title"><span>7</span> SPESIFIKASI LAPORAN</div>
                             <div class="table-container" style="overflow-x:auto;">
                                 <table id="tbl-spesifikasi" style="min-width:700px;">
                                     <thead>
@@ -592,7 +637,7 @@
                         <table id="reports-history-table">
                             <thead>
                                 <tr>
-                                    <th>SPV</th>
+                                    <th>Supervisor</th>
                                     <th>Tanggal</th>
                                     <th>Shift</th>
                                     <th>Keterangan</th>
