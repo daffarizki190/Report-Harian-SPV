@@ -4,7 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Digital Reporting Portal for Gandaria City Supervisors. Streamline daily reports, signatures, and monitoring in one professional platform.">
+    <meta name="keywords" content="Supervisor Report, Gandaria City, Digital Reporting, Management Portal, Car Park Management">
+    <meta name="author" content="Gandaria City IT Team">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Supervisor Daily Report | Gandaria City">
+    <meta property="og:description" content="Professional digital reporting system for Gandaria City.">
+    <meta property="og:image" content="{{ asset('img/logo.png') }}">
+
     <title>Supervisor Daily Report | Gandaria City</title>
+    
+    <!-- Performance: Preconnect to CDNs -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -68,7 +86,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="sidebar-logo">
+                <img src="{{ asset('img/logo.png') }}" alt="Gandaria City Corporate Logo" class="sidebar-logo" loading="lazy">
                 <span>Gandaria City</span>
             </div>
             <nav>
@@ -105,7 +123,9 @@
                 </div>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn-icon" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+                    <button type="submit" class="btn-icon" title="Logout" aria-label="Keluar dari sistem">
+                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    </button>
                 </form>
             </div>
         </aside>
@@ -116,7 +136,9 @@
                 <h2 id="view-title">Daftar Persetujuan</h2>
                 <div class="actions">
                     <div class="date-display" id="current-date">{{ date('d M Y') }}</div>
-                    <button class="btn-secondary" id="btn-refresh"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn-secondary" id="btn-refresh" title="Refresh Data" aria-label="Segarkan data laporan">
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    </button>
                 </div>
             </header>
 
@@ -231,6 +253,36 @@
                 </div>
                 @endif
             </section>
+            
+            <!-- History View -->
+            <section id="view-history" class="view-section hidden">
+                <div class="glass-card animate-fade-in">
+                    <div class="card-header" style="margin-bottom: 24px;">
+                        <h3>Daftar Laporan Selesai</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem;">Menampilkan laporan yang telah ditandatangani oleh Inhouse.</p>
+                    </div>
+                    
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table id="reports-history-table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                            <thead>
+                                <tr style="text-align: left; color: var(--text-dim); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                    <th style="padding: 12px 16px;">Pengawas</th>
+                                    <th style="padding: 12px 16px;">Tanggal</th>
+                                    <th style="padding: 12px 16px;">Shift</th>
+                                    <th style="padding: 12px 16px;">Keterangan</th>
+                                    <th style="padding: 12px 16px; text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" style="text-align:center; padding: 40px; color: var(--text-dim);">Memuat riwayat laporan...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
 
             <!-- Upload/Input View -->
             <section id="view-upload" class="view-section hidden">
@@ -514,32 +566,37 @@
                         <div class="glass-card df-section">
                             <div class="df-section-title"><span>7</span> SPESIFIKASI LAPORAN</div>
                             <div class="table-container" style="overflow-x:auto; -webkit-overflow-scrolling: touch;">
-                                <table id="tbl-spesifikasi" style="min-width: 850px; table-layout: fixed;">
+                                <table id="tbl-spesifikasi" style="min-width: 1000px; border-collapse: separate; border-spacing: 0;">
                                     <thead>
-                                        <tr>
-                                            <th style="width:130px">JENIS LAPORAN</th>
-                                            <th style="width:80px; text-align:center">WAKTU</th>
-                                            <th>DETAIL LAPORAN</th>
-                                            <th>TINDAKAN</th>
-                                            <th style="width:130px; text-align:center">STATUS</th>
-                                            <th style="width:50px; text-align:center"></th>
+                                        <tr style="background: var(--bg-app);">
+                                            <th style="width:140px; padding:12px;">JENIS LAPORAN</th>
+                                            <th style="width:100px; padding:12px; text-align:center">WAKTU</th>
+                                            <th style="padding:12px;">DETAIL LAPORAN</th>
+                                            <th style="padding:12px;">TINDAKAN</th>
+                                            <th style="width:160px; padding:12px; text-align:center">STATUS</th>
+                                            <th style="width:60px; padding:12px; text-align:center"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="spesifikasi-tbody">
                                         <tr class="spesifikasi-row">
-                                            <td><input type="text" class="spec-jenis" placeholder="Jenis laporan..." style="width:100%; border:none; background:transparent;"></td>
-                                            <td><input type="text" class="spec-waktu" placeholder="Waktu..." style="width:100%; border:none; background:transparent; padding:4px 0;"></td>
-                                            <td><input type="text" class="spec-detail" placeholder="Detail kejadian..." style="width:100%; border:none; background:transparent;"></td>
-                                            <td><input type="text" class="spec-tindakan" placeholder="Tindakan dilakukan..." style="width:100%; border:none; background:transparent;"></td>
-                                            <td style="text-align:center; padding:8px;">
-                                                <select class="spec-status" style="width:100%; padding:5px; border-radius:6px; border:1px solid var(--border-dark); font-size:0.82rem;">
-                                                    <option value="">-</option>
-                                                    <option value="On Progres">On Progres</option>
-                                                    <option value="Done">Done</option>
+                                            <td style="padding:8px;">
+                                                <select class="spec-jenis" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:white;">
+                                                    <option value="Temuan">Temuan</option>
+                                                    <option value="Kejadian">Kejadian</option>
+                                                    <option value="Kegiatan">Kegiatan</option>
                                                 </select>
                                             </td>
-                                            <td style="text-align:center;">
-                                                <button type="button" class="btn-remove-row" onclick="formDigital.removeSpesifikasiRow(this)" title="Hapus baris">×</button>
+                                            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+                                            <td style="padding:8px;"><textarea class="spec-detail" placeholder="Detail kejadian..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
+                                            <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Tindakan dilakukan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
+                                            <td style="text-align:center; padding:8px;">
+                                                <select class="spec-status" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white; font-weight:700;">
+                                                    <option value="Done">Done</option>
+                                                    <option value="On Progres">On Progres</option>
+                                                </select>
+                                            </td>
+                                            <td style="text-align:center; padding:8px;">
+                                                <button type="button" class="btn-remove-row" onclick="formDigital.removeSpesifikasiRow(this)" title="Hapus baris" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:32px; height:32px; border-radius:8px;"><i class="fas fa-times"></i></button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -924,6 +981,14 @@
     </div>
 
     <div id="toast-container"></div>
+    
+    <!-- Global Loader -->
+    <div id="global-loader" class="overlay hidden">
+        <div class="glass-card" style="text-align:center; padding:30px;">
+            <div class="loader-spinner" style="margin: 0 auto 15px;"></div>
+            <p style="font-weight:700; color:var(--primary);">Memuat Data...</p>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>

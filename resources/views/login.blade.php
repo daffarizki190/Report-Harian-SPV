@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | SPV Report Gandaria City</title>
+    <meta name="description" content="Secure login for Gandaria City Supervisor Report Portal.">
+    <meta name="author" content="Gandaria City IT Team">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}">
+    <title>Login | Supervisor Report Gandaria City</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +36,7 @@
             <!-- Header -->
             <div class="text-center mb-6 relative">
                 <div class="inline-block bg-white rounded-2xl shadow-2xl mb-4 overflow-hidden border-4 border-white/20">
-                    <img src="{{ asset('img/logo.png') }}" alt="Logo" class="w-20 h-20 object-cover">
+                    <img src="{{ asset('img/logo.png') }}" alt="Gandaria City Logo" class="w-20 h-20 object-cover">
                 </div>
                 <h1 class="text-3xl font-black text-white tracking-tight mb-0.5 uppercase italic">Daily Report</h1>
                 <p class="text-blue-400 text-[9px] font-black uppercase tracking-[0.4em]">Gandaria City Parking</p>
@@ -47,8 +50,8 @@
 
             <!-- Tab Switcher -->
             <div class="flex bg-white/5 p-1 rounded-xl mb-6 border border-white/5 relative z-20">
-                <button type="button" id="btn-pass" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all bg-blue-600 text-white shadow-lg">KATA SANDI</button>
-                <button type="button" id="btn-magic" class="flex-1 py-2.5 text-[9px] font-black rounded-lg transition-all text-white/30 hover:text-white">LINK AJAIB</button>
+                <button type="button" id="btn-pass" class="flex-1 py-2.5 text-[11px] font-black rounded-lg transition-all bg-blue-600 text-white shadow-lg" aria-label="Masuk dengan Kata Sandi">KATA SANDI</button>
+                <button type="button" id="btn-magic" class="flex-1 py-2.5 text-[11px] font-black rounded-lg transition-all text-white/30 hover:text-white" aria-label="Masuk dengan Link Ajaib">LINK AJAIB</button>
             </div>
 
             <!-- Forms Container -->
@@ -58,11 +61,11 @@
                     @csrf
                     <div class="relative group">
                         <i class="fas fa-user-circle absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="text" name="username" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required value="{{ old('username') }}">
+                        <input type="text" name="username" placeholder="Username" aria-label="Username" autocomplete="username" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required value="{{ old('username') }}">
                     </div>
                     <div class="relative group">
                         <i class="fas fa-fingerprint absolute left-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="password" name="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required>
+                        <input type="password" name="password" placeholder="Password" aria-label="Password" autocomplete="current-password" class="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-sm" required>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-xl hover:-translate-y-0.5 transition-all mt-4 tracking-widest text-[10px] uppercase">
                         <span class="btn-text">Authenticate Access</span>

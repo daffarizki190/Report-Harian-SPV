@@ -299,7 +299,7 @@ class ReportController extends Controller
         }
 
         $request->validate([
-            'report_id'   => 'nullable|integer|exists:reports,id',
+            'report_id'   => 'nullable|string', // Allow empty string from JS
             'report_date' => 'required|date',
             'shift'       => 'required|string|in:Pagi,Siang,Malam',
             'form_data'   => 'required|string', 
@@ -317,7 +317,7 @@ class ReportController extends Controller
             $report = DB::transaction(function () use ($request, $spvName, $formDataDecoded, $user) {
                 // Cari existing report
                 $report = null;
-                if ($request->report_id) {
+                if ($request->report_id && $request->report_id !== '' && $request->report_id !== 'null') {
                     $report = Report::find($request->report_id);
                 } else {
                     $report = Report::where('spv_name', $spvName)
@@ -337,9 +337,23 @@ class ReportController extends Controller
                     ? count($spesiifikasi) . ' temuan/kejadian dicatat'
                     : 'Form Digital — Kondisi Normal';
 
+                // Prevent unique constraint violation if user changes shift/date to an existing one
+                $existing = Report::where('spv_name', $spvName)
+                                ->whereDate('report_date', $request->report_date)
+                                ->where('shift', $request->shift)
+                                ->when($report, function($q) use ($report) {
+                                    return $q->where('id', '!=', $report->id);
+                                })
+                                ->first();
+
+                if ($existing) {
+                    throw new \Exception("Laporan untuk {$spvName} pada tanggal {$request->report_date} shift {$request->shift} sudah ada.");
+                }
+
                 if ($report) {
                     // Update existing
                     $report->shift = $request->shift;
+                    $report->report_date = $request->report_date; // Allow updating date if needed
                     $report->description = $description;
                     $report->form_data = $formDataDecoded;
                     $report->updated_at = now();

@@ -41,10 +41,17 @@ const app = {
         // Fallback: Auto-refresh data every 10 seconds
         this.refreshInterval = setInterval(() => {
             if (document.visibilityState === 'visible' && !document.querySelector('.overlay:not(.hidden)')) {
-                console.log('Background refreshing data...');
-                this.refreshData();
+                this.refreshData(true);
             }
         }, 10000);
+    },
+
+    debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     },
 
     initEcho() {
@@ -53,7 +60,7 @@ const app = {
             .listen('ReportSubmitted', (e) => {
                 console.log('Real-time: New report received', e);
                 this.showToast(`Laporan baru dari ${e.spv_name || 'SPV'}`, 'info');
-                this.refreshData();
+                this.refreshData(true);
             });
     },
 
@@ -472,10 +479,19 @@ const app = {
         });
     },
 
-    refreshData() {
-        this.loadStats();
-        this.loadLogs();
-        return this.loadReports();
+    async refreshData(silent = false) {
+        if (!silent) this.showGlobalLoader();
+        try {
+            await Promise.allSettled([
+                this.loadStats(),
+                this.loadLogs(),
+                this.loadReports()
+            ]);
+        } catch (e) {
+            console.error('Refresh data failed:', e);
+        } finally {
+            if (!silent) this.hideGlobalLoader();
+        }
     },
 
     async loadStats() {
@@ -507,7 +523,12 @@ const app = {
 
             // Add cache-busting timestamp
             url.searchParams.append('_', new Date().getTime());
-            const response = await fetch(url);
+            
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
             const json = await response.json();
             
             // Handle Laravel API Resource wrapper
@@ -537,6 +558,19 @@ const app = {
                     card.className = 'report-card animate-slide-up';
                     const d = new Date(report.report_date);
                     const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                    const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
+                    const isStaff = ['Supervisor', 'Leader'].includes(window.Laravel.user.role);
+                    
+                    // Labeling logic: Owner sees "Edit / TTD", Managers see "TTD"
+                    let editLabel = 'TTD';
+                    let editIcon = 'fa-signature';
+                    
+                    if (isOwner) {
+                        editLabel = 'Edit / TTD';
+                        editIcon = 'fa-edit';
+                    }
+
                     card.innerHTML = `
                         <div class="rc-header">
                             <div class="rc-user">
@@ -561,8 +595,14 @@ const app = {
                         </div>
                         <div class="rc-footer">
                             <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
-                            ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'Inhouse'].includes(window.Laravel.user.role) ? `<button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit"><i class="fas fa-signature"></i> TTD</button>` : ''}
-                            ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${report.id}')" class="rc-btn delete"><i class="fas fa-trash"></i></button>` : ''}
+                            ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'Inhouse'].includes(window.Laravel.user.role) ? `
+                                <button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit">
+                                    <i class="fas ${editIcon}"></i> ${editLabel}
+                                </button>` : ''}
+                            ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `
+                                <button onclick="app.deleteReport('${report.id}')" class="rc-btn delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : ''}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -598,7 +638,10 @@ const app = {
                     historyBody.appendChild(tr);
                 });
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error('Load reports failed:', e); 
+            this.showToast('Gagal memuat data laporan.', 'error');
+        }
     },
 
     processExport() {
@@ -856,23 +899,25 @@ const app = {
                 const tr = document.createElement('tr');
                 tr.className = 'spec-row';
                 tr.innerHTML = `
-                    <td>
-                        <select class="spec-jenis">
+                    <td style="padding:8px;">
+                        <select class="spec-jenis" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:white;">
                             <option value="Temuan" ${s.jenis === 'Temuan' ? 'selected' : ''}>Temuan</option>
                             <option value="Kejadian" ${s.jenis === 'Kejadian' ? 'selected' : ''}>Kejadian</option>
                             <option value="Kegiatan" ${s.jenis === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
                         </select>
                     </td>
-                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="text-align:center;"></td>
-                    <td><textarea class="spec-detail" style="resize:none; min-height:40px;">${s.detail || ''}</textarea></td>
-                    <td><textarea class="spec-tindakan" style="resize:none; min-height:40px;">${s.tindakan || ''}</textarea></td>
-                    <td>
-                        <select class="spec-status">
+                    <td style="padding:8px;"><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+                    <td style="padding:8px;"><textarea class="spec-detail" style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${s.detail || ''}</textarea></td>
+                    <td style="padding:8px;"><textarea class="spec-tindakan" style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${s.tindakan || ''}</textarea></td>
+                    <td style="text-align:center; padding:8px;">
+                        <select class="spec-status" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white; font-weight:700;">
                             <option value="Done" ${s.status === 'Done' ? 'selected' : ''}>Done</option>
                             <option value="On Progres" ${s.status === 'On Progres' ? 'selected' : ''}>On Progres</option>
                         </select>
                     </td>
-                    <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" style="color:var(--error); background:none; border:none;"><i class="fas fa-times"></i></button></td>
+                    <td style="text-align:center; padding:8px;">
+                        <button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:32px; height:32px; border-radius:8px;"><i class="fas fa-times"></i></button>
+                    </td>
                 `;
                 specTbody.appendChild(tr);
             });
@@ -1054,22 +1099,6 @@ const app = {
     }
 };
 
-const PLOTTING_AREAS = [
-    'Mobile Basement', 'Mobile MSCP', 'Control Room Officer 1', 'Control Room Officer 2',
-    'PK Motor', 'Area Motor B2', 'Area Motor B1', 'Area B2', 'Area B2', 'Area B1', 'Area B1',
-    'Area LG', 'Area LG', 'Area MSCP'
-];
-
-const DEFAULT_PERALATAN = [
-    ['Parking Entrance', 16],
-    ['Parking Exit', 23],
-    ['Server parking', 2],
-    ['DDS', 7],
-    ['Emergency button', 43],
-    ['Hanging Sign', 355],
-    ['Totem Sign', 35],
-];
-
 const formDigital = {
     init() {
         this.bindManpowerAutoSum();
@@ -1077,7 +1106,9 @@ const formDigital = {
         this.bindPrintPreview();
         this.initSignaturePads();
         this.bindSigPhotoUpload();
-        window.addEventListener('resize', () => this.resizeSignaturePads());
+        
+        const debouncedResize = app.debounce(() => this.resizeSignaturePads(), 250);
+        window.addEventListener('resize', debouncedResize);
     },
 
     bindSigPhotoUpload() {
@@ -1409,23 +1440,25 @@ const formDigital = {
         const tr = document.createElement('tr');
         tr.className = 'spesifikasi-row';
         tr.innerHTML = `
-            <td>
-                <select class="spec-jenis">
+            <td style="padding:8px;">
+                <select class="spec-jenis" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:white;">
                     <option value="Temuan">Temuan</option>
                     <option value="Kejadian">Kejadian</option>
                     <option value="Kegiatan">Kegiatan</option>
                 </select>
             </td>
-            <td><input type="text" class="spec-waktu" placeholder="00:00" style="text-align:center;"></td>
-            <td><textarea class="spec-detail" placeholder="Isi detail..." style="resize:none; min-height:40px;"></textarea></td>
-            <td><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="resize:none; min-height:40px;"></textarea></td>
-            <td>
-                <select class="spec-status">
+            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+            <td style="padding:8px;"><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
+            <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
+            <td style="text-align:center; padding:8px;">
+                <select class="spec-status" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white; font-weight:700;">
                     <option value="Done">Done</option>
                     <option value="On Progres">On Progres</option>
                 </select>
             </td>
-            <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" style="color:var(--error); background:none; border:none;"><i class="fas fa-times"></i></button></td>
+            <td style="text-align:center; padding:8px;">
+                <button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:32px; height:32px; border-radius:8px;"><i class="fas fa-times"></i></button>
+            </td>
         `;
         tbody.appendChild(tr);
     },
@@ -1579,19 +1612,29 @@ const formDigital = {
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.Laravel.csrfToken, 'Accept': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const result = await res.json();
+
+                let result;
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    result = await res.json();
+                } else {
+                    const text = await res.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error(`Server returned non-JSON response (${res.status})`);
+                }
+
                 if (res.ok) { 
                     app.showToast('Laporan berhasil disimpan', 'success'); 
                     await app.refreshData();
                     app.switchView('dashboard'); 
-                    document.getElementById('modal-digital').classList.add('hidden');                } else {
+                } else {
                     app.showToast(result.message || 'Gagal menyimpan laporan', 'error');
                 }
             } catch (e) { 
-                console.error('Save error:', e);
-                app.showToast('Kesalahan server: Tidak dapat menyimpan laporan', 'error');
+                console.error('Save error details:', e);
+                app.showToast('Gagal menyimpan: ' + (e.message || 'Kesalahan Server'), 'error');
             } finally { 
-                btn.disabled = false; 
+                if (btn) btn.disabled = false; 
                 if (btnText) btnText.classList.remove('hidden');
                 if (loader) loader.classList.add('hidden');
             }
@@ -1743,7 +1786,7 @@ const formDigital = {
                 </div>
 
                 <div style="margin-bottom:25px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERLENGKAPAN OPERASIONAL</h4>
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERLENGKAPAN</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:9pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
@@ -1765,7 +1808,7 @@ const formDigital = {
                 </div>
 
                 <div style="margin-bottom:25px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERALATAN OPERASIONAL</h4>
+                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERALATAN</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:9pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
