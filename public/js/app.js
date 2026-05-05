@@ -560,15 +560,24 @@ const app = {
                     const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
                     const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
-                    const isStaff = ['Supervisor', 'Leader'].includes(window.Laravel.user.role);
+                    const isAdmin = window.Laravel.user.role === 'Admin';
+                    const isManager = ['CAR PARK MANAGER', 'Inhouse'].includes(window.Laravel.user.role);
                     
-                    // Labeling logic: Owner sees "Edit / TTD", Managers see "TTD"
-                    let editLabel = 'TTD';
-                    let editIcon = 'fa-signature';
-                    
-                    if (isOwner) {
-                        editLabel = 'Edit / TTD';
-                        editIcon = 'fa-edit';
+                    let showActionBtn = false;
+                    let actionLabel = 'TTD';
+                    let actionIcon = 'fa-signature';
+
+                    if (isOwner || isAdmin) {
+                        showActionBtn = true;
+                        actionLabel = isOwner ? 'Edit / TTD' : 'Admin Edit';
+                        actionIcon = 'fa-edit';
+                    } else if (isManager) {
+                        // Managers can see TTD button if they haven't signed yet
+                        const needsMgr1 = window.Laravel.user.role === 'CAR PARK MANAGER' && !report.has_mgr1_sig;
+                        const needsMgr2 = window.Laravel.user.role === 'Inhouse' && !report.has_mgr2_sig;
+                        if (needsMgr1 || needsMgr2) {
+                            showActionBtn = true;
+                        }
                     }
 
                     card.innerHTML = `
@@ -595,9 +604,9 @@ const app = {
                         </div>
                         <div class="rc-footer">
                             <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
-                            ${['Admin', 'CAR PARK MANAGER', 'Supervisor', 'Leader', 'Inhouse'].includes(window.Laravel.user.role) ? `
+                            ${showActionBtn ? `
                                 <button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit">
-                                    <i class="fas ${editIcon}"></i> ${editLabel}
+                                    <i class="fas ${actionIcon}"></i> ${actionLabel}
                                 </button>` : ''}
                             ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `
                                 <button onclick="app.deleteReport('${report.id}')" class="rc-btn delete">
@@ -827,6 +836,31 @@ const app = {
         document.getElementById('df-shift').value = report.shift;
         document.getElementById('df-briefing').value = formData.briefing || '';
         document.getElementById('df-training').value = formData.training || '';
+
+        // Ownership & Permissions Check
+        const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
+        const isAdmin = window.Laravel.user.role === 'Admin';
+        const canEdit = isOwner || isAdmin;
+
+        // Toggle Readonly state for inputs
+        const inputs = document.querySelectorAll('#view-upload input, #view-upload textarea, #view-upload select');
+        inputs.forEach(input => {
+            if (input.id === 'df-report-id' || input.id === 'sig-photo-input') return;
+
+            if (!canEdit) {
+                input.setAttribute('readonly', true);
+                input.classList.add('input-readonly');
+                if (input.tagName === 'SELECT') input.disabled = true;
+            } else {
+                input.removeAttribute('readonly');
+                input.classList.remove('input-readonly');
+                if (input.tagName === 'SELECT') input.disabled = false;
+            }
+        });
+
+        // Hide 'Add Row' button if can't edit
+        const addRowBtn = document.querySelector('.btn-add-row');
+        if (addRowBtn) addRowBtn.style.display = canEdit ? 'block' : 'none';
 
         const mp_jabatan = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         mp_jabatan.forEach(j => {

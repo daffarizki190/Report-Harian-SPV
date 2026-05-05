@@ -327,8 +327,17 @@ class ReportController extends Controller
                 }
 
                 // PERMANENCE: If report exists, preserve the original SPV name unless Admin
-                if ($report && $user->role !== 'Admin') {
-                    $spvName = $report->spv_name;
+                if ($report) {
+                    $isOwner = $report->user_id === $user->id || ($report->spv_name === $user->name && !$report->user_id);
+                    $canUpdate = $isOwner || in_array($user->role, ['Admin', 'CAR PARK MANAGER', 'Inhouse']);
+                    
+                    if (!$canUpdate) {
+                        throw new \Exception("Anda tidak memiliki izin untuk mengedit laporan ini.");
+                    }
+
+                    if ($user->role !== 'Admin') {
+                        $spvName = $report->spv_name;
+                    }
                 }
 
                 // Ambil ringkasan untuk kolom description
