@@ -23,7 +23,7 @@ const app = {
     },
 
     initEcho() {
-        if (typeof window.Echo === 'undefined') return;
+        if (typeof window.Echo === 'undefined' || typeof window.Echo.channel !== 'function') return;
         window.Echo.channel('reports')
             .listen('ReportSubmitted', (e) => {
                 console.log('Real-time: New report received', e);

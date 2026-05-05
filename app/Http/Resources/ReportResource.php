@@ -27,8 +27,8 @@ class ReportResource extends JsonResource
             'file_url'       => $this->file_url,
             
             // Signature status flags from query attributes (optimized)
-            'has_mgr1_sig'   => (bool) ($this->has_mgr1_sig ?? isset($this->form_data['signatures']['mgr-1'])),
-            'has_mgr2_sig'   => (bool) ($this->has_mgr2_sig ?? isset($this->form_data['signatures']['mgr-2'])),
+            'has_mgr1_sig'   => (bool) ($this->has_mgr1_sig ?? (is_array($this->form_data) && isset($this->form_data['signatures']['mgr-1']))),
+            'has_mgr2_sig'   => (bool) ($this->has_mgr2_sig ?? (is_array($this->form_data) && isset($this->form_data['signatures']['mgr-2']))),
             
             // Only include full form_data if explicitly requested or in detail view
             'form_data'      => $this->when(

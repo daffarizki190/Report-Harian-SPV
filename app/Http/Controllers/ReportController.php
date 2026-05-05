@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Report;
+use App\Models\ActivityLog;
 use App\Services\SupabaseStorageService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
