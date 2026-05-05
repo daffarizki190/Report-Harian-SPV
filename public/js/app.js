@@ -545,76 +545,74 @@ const app = {
             if (grid) {
                 grid.innerHTML = '';
                 
-                const pendingReports = data.filter(r => {
-                    return !r.has_mgr2_sig;
-                });
+                const pendingReports = data.filter(r => !r.has_mgr2_sig);
 
                 if (pendingReports.length === 0) {
                     grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-dim);">Semua laporan sudah lengkap.</div>';
                 }
 
                 pendingReports.forEach(report => {
-                    const card = document.createElement('div');
-                    card.className = 'report-card animate-slide-up';
-                    const d = new Date(report.report_date);
-                    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                    try {
+                        const d = new Date(report.report_date);
+                        const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
-                    const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
-                    const isAdmin = window.Laravel.user.role === 'Admin';
-                    const isManager = ['CAR PARK MANAGER', 'Inhouse'].includes(window.Laravel.user.role);
-                    
-                    let showActionBtn = false;
-                    let actionLabel = 'TTD';
-                    let actionIcon = 'fa-signature';
+                        const user = window.Laravel?.user || {};
+                        const isOwner = report.user_id === user.id || (report.user_name === user.name && !report.user_id);
+                        const isAdmin = user.role === 'Admin';
+                        const isManager = ['CAR PARK MANAGER', 'Inhouse'].includes(user.role);
+                        
+                        let showActionBtn = false;
+                        let actionLabel = 'TTD';
+                        let actionIcon = 'fa-signature';
 
-                    if (isOwner || isAdmin) {
-                        showActionBtn = true;
-                        actionLabel = isOwner ? 'Edit / TTD' : 'Admin Edit';
-                        actionIcon = 'fa-edit';
-                    } else if (isManager) {
-                        // Managers can see TTD button if they haven't signed yet
-                        const needsMgr1 = window.Laravel.user.role === 'CAR PARK MANAGER' && !report.has_mgr1_sig;
-                        const needsMgr2 = window.Laravel.user.role === 'Inhouse' && !report.has_mgr2_sig;
-                        if (needsMgr1 || needsMgr2) {
+                        if (isOwner || isAdmin) {
                             showActionBtn = true;
+                            actionLabel = isOwner ? 'Edit / TTD' : 'Admin Edit';
+                            actionIcon = 'fa-edit';
+                        } else if (isManager) {
+                            const needsMgr1 = user.role === 'CAR PARK MANAGER' && !report.has_mgr1_sig;
+                            const needsMgr2 = user.role === 'Inhouse' && !report.has_mgr2_sig;
+                            if (needsMgr1 || needsMgr2) showActionBtn = true;
                         }
+
+                        const card = document.createElement('div');
+                        card.className = 'report-card animate-slide-up';
+                        card.innerHTML = `
+                            <div class="rc-header">
+                                <div class="rc-user">
+                                    <div class="rc-avatar">${report.user_name ? report.user_name.charAt(0).toUpperCase() : '?'}</div>
+                                    <div><h4>${report.user_name}</h4><span>${report.user_role || 'Supervisor'}</span></div>
+                                </div>
+                                <span class="badge ${(report.shift || '').toLowerCase()}">${report.shift}</span>
+                            </div>
+                            <div class="rc-body">
+                                <div class="rc-info"><i class="far fa-calendar-alt"></i> ${dateStr}</div>
+                                <div class="sig-status-row">
+                                    <span class="sig-badge ${report.has_mgr1_sig ? 'signed' : 'pending'}">
+                                        <i class="fas ${report.has_mgr1_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Mgr: ${report.has_mgr1_sig ? 'Sudah' : 'Belum'}
+                                    </span>
+                                    <span class="sig-badge ${report.has_mgr2_sig ? 'signed' : 'pending'}">
+                                        <i class="fas ${report.has_mgr2_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Inhouse: ${report.has_mgr2_sig ? 'Sudah' : 'Belum'}
+                                    </span>
+                                </div>
+                                <div class="rc-desc">${report.description || 'Tidak ada keterangan'}</div>
+                            </div>
+                            <div class="rc-footer">
+                                <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
+                                ${showActionBtn ? `
+                                    <button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit">
+                                        <i class="fas ${actionIcon}"></i> ${actionLabel}
+                                    </button>` : ''}
+                                ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(user.role) ? `
+                                    <button onclick="app.deleteReport('${report.id}')" class="rc-btn delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>` : ''}
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    } catch (err) {
+                        console.error('Error rendering report card:', err, report);
                     }
-
-                    card.innerHTML = `
-                        <div class="rc-header">
-                            <div class="rc-user">
-                                <div class="rc-avatar">${report.user_name ? report.user_name.charAt(0).toUpperCase() : '?'}</div>
-                                <div><h4>${report.user_name}</h4><span>${report.user_role || 'Supervisor'}</span></div>
-                            </div>
-                            <span class="badge ${(report.shift || '').toLowerCase()}">${report.shift}</span>
-                        </div>
-                        <div class="rc-body">
-                            <div class="rc-info"><i class="far fa-calendar-alt"></i> ${dateStr}</div>
-                            
-                            <div class="sig-status-row">
-                                <span class="sig-badge ${report.has_mgr1_sig ? 'signed' : 'pending'}">
-                                    <i class="fas ${report.has_mgr1_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Mgr: ${report.has_mgr1_sig ? 'Sudah' : 'Belum'}
-                                </span>
-                                <span class="sig-badge ${report.has_mgr2_sig ? 'signed' : 'pending'}">
-                                    <i class="fas ${report.has_mgr2_sig ? 'fa-check-circle' : 'fa-clock'}"></i> Inhouse: ${report.has_mgr2_sig ? 'Sudah' : 'Belum'}
-                                </span>
-                            </div>
-
-                            <div class="rc-desc">${report.description || 'Tidak ada keterangan'}</div>
-                        </div>
-                        <div class="rc-footer">
-                            <button onclick="app.previewReport('${report.id}')" class="rc-btn view"><i class="fas fa-eye"></i> Detail</button>
-                            ${showActionBtn ? `
-                                <button onclick="app.editDigitalForm('${report.id}')" class="rc-btn edit">
-                                    <i class="fas ${actionIcon}"></i> ${actionLabel}
-                                </button>` : ''}
-                            ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `
-                                <button onclick="app.deleteReport('${report.id}')" class="rc-btn delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>` : ''}
-                        </div>
-                    `;
-                    grid.appendChild(card);
                 });
             }
 

@@ -48,6 +48,7 @@
             csrfToken: '{{ csrf_token() }}',
             baseUrl: '{{ url("/") }}',
             user: {
+                id: {{ Auth::user()->id ?? 0 }},
                 name: '{{ Auth::user()->name ?? "Guest" }}',
                 role: '{{ Auth::user()->role ?? "Guest" }}'
             }
