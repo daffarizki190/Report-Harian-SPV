@@ -174,7 +174,7 @@ const app = {
         });
 
         // Export
-        document.getElementById('btn-export-excel')?.addEventListener('click', () => this.handleExportExcel());
+        document.getElementById('btn-export-excel')?.addEventListener('click', () => this.exportToExcel());
         document.getElementById('btn-bulk-zip')?.addEventListener('click', () => this.handleBulkDownload());
 
         // Upload Form
@@ -988,6 +988,44 @@ const app = {
 
         btnYes.addEventListener('click', handleYes);
         btnNo.addEventListener('click', handleNo);
+    },
+
+    showGlobalLoader() {
+        const el = document.getElementById('global-loader');
+        if (el) el.classList.remove('hidden');
+    },
+
+    hideGlobalLoader() {
+        const el = document.getElementById('global-loader');
+        if (el) el.classList.add('hidden');
+    },
+
+    async handleBulkDownload() {
+        const startDate = document.getElementById('filter-start-date')?.value;
+        const endDate = document.getElementById('filter-end-date')?.value;
+        const shift = document.getElementById('filter-shift')?.value;
+
+        if (!startDate || !endDate) {
+            return this.showToast('Pilih periode tanggal di filter terlebih dahulu', 'error');
+        }
+
+        this.showToast('Menyiapkan ZIP laporan...', 'info');
+        this.showGlobalLoader();
+
+        try {
+            const url = new URL(`${window.Laravel.baseUrl}/v1/reports/zip`);
+            url.searchParams.append('start_date', startDate);
+            url.searchParams.append('end_date', endDate);
+            if (shift) url.searchParams.append('shift', shift);
+
+            window.location.href = url.toString();
+            
+            setTimeout(() => this.hideGlobalLoader(), 2000);
+        } catch (e) {
+            console.error('Bulk download failed:', e);
+            this.showToast('Gagal mengunduh ZIP', 'error');
+            this.hideGlobalLoader();
+        }
     }
 };
 
@@ -1347,17 +1385,17 @@ const formDigital = {
         tr.className = 'spesifikasi-row';
         tr.innerHTML = `
             <td>
-                <select class="spec-jenis" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                <select class="spec-jenis">
                     <option value="Temuan">Temuan</option>
                     <option value="Kejadian">Kejadian</option>
                     <option value="Kegiatan">Kegiatan</option>
                 </select>
             </td>
-            <td><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; border:none; background:transparent; text-align:center; font-size:0.85rem;"></td>
-            <td><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none; min-height:40px;"></textarea></td>
-            <td><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none; min-height:40px;"></textarea></td>
+            <td><input type="text" class="spec-waktu" placeholder="00:00" style="text-align:center;"></td>
+            <td><textarea class="spec-detail" placeholder="Isi detail..." style="resize:none; min-height:40px;"></textarea></td>
+            <td><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="resize:none; min-height:40px;"></textarea></td>
             <td>
-                <select class="spec-status" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                <select class="spec-status">
                     <option value="Done">Done</option>
                     <option value="On Progres">On Progres</option>
                 </select>
