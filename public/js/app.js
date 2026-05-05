@@ -804,9 +804,13 @@ const app = {
         }
 
         const alatTbody = document.querySelector('#tbl-peralatan tbody');
-        if (alatTbody && formData.peralatan) {
+        if (alatTbody) {
             alatTbody.innerHTML = '';
-            formData.peralatan.forEach((p, i) => {
+            const peralatanData = (formData.peralatan && formData.peralatan.length > 0) 
+                ? formData.peralatan 
+                : DEFAULT_PERALATAN.map((item, i) => ({ no: i+1, nama: item[0], jumlah: item[1], baik: item[1], rusak: 0, keterangan: '-' }));
+            
+            peralatanData.forEach((p, i) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
@@ -991,6 +995,16 @@ const PLOTTING_AREAS = [
     'Mobile Basement', 'Mobile MSCP', 'Control Room Officer 1', 'Control Room Officer 2',
     'PK Motor', 'Area Motor B2', 'Area Motor B1', 'Area B2', 'Area B2', 'Area B1', 'Area B1',
     'Area LG', 'Area LG', 'Area MSCP'
+];
+
+const DEFAULT_PERALATAN = [
+    ['Parking Entrance', 16],
+    ['Parking Exit', 23],
+    ['Server parking', 2],
+    ['DDS', 7],
+    ['Emergency button', 43],
+    ['Hanging Sign', 355],
+    ['Totem Sign', 35],
 ];
 
 const formDigital = {
@@ -1559,7 +1573,11 @@ const formDigital = {
                 </tr>`;
         });
 
-        (data.peralatan || []).forEach(p => {
+        const pData = (data.peralatan && data.peralatan.length > 0)
+            ? data.peralatan
+            : DEFAULT_PERALATAN.map((item, i) => ({ no: i+1, nama: item[0], jumlah: item[1], baik: item[1], rusak: 0, keterangan: '-' }));
+
+        pData.forEach(p => {
             alatRows += `
                 <tr>
                     <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
