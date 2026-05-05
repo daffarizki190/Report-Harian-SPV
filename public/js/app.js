@@ -380,13 +380,22 @@ const app = {
                     <td>${user.username}</td>
                     <td><span class="badge ${(user.role || '').toLowerCase()}">${user.role}</span></td>
                     <td>
-                        <button class="btn-icon" onclick="app.showUserForm(${JSON.stringify(user).replace(/"/g, '&quot;')})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" onclick="app.editUser(${user.id})"><i class="fas fa-edit"></i></button>
                         <button class="btn-icon" onclick="app.deleteUser(${user.id})" style="color:var(--error)"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 tableBody.appendChild(tr);
             });
         } catch (e) { console.error(e); }
+    },
+
+    async editUser(id) {
+        try {
+            const res = await fetch(`${window.Laravel.baseUrl}/v1/users`);
+            const users = await res.json();
+            const user = (users.data || users).find(u => u.id == id);
+            if (user) this.showUserForm(user);
+        } catch (e) { this.showToast('Gagal memuat data user', 'error'); }
     },
 
     showUserForm(user = null) {
@@ -398,7 +407,7 @@ const app = {
         if (user) {
             document.getElementById('user-name-input').value = user.name;
             document.getElementById('user-username-input').value = user.username;
-            document.getElementById('user-role-input').value = user.role;
+            document.getElementById('user-role-select').value = user.role;
         }
         modal.classList.remove('hidden');
 
@@ -828,7 +837,20 @@ const app = {
             window.formDigital.loadExistingSignatures(formData.signatures, formData.signer_names);
         }
 
-        const isReadOnly = !['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(window.Laravel.user.role);
+        const user = window.Laravel.user;
+        const isOwner = report.user_id == user.id || report.spv_name == user.name;
+        const isManagement = ['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(user.role);
+        
+        // Only allow editing if user is management OR is the owner and it's not yet final
+        const isReadOnly = !isManagement && !(isOwner && !report.has_mgr2_sig);
+        
+        const dfNama = document.getElementById('df-nama');
+        if (dfNama) {
+            dfNama.value = report.spv_name || report.user_name || '';
+            // Only Admin/Manager can change the SPV name manually
+            dfNama.readOnly = !['Admin', 'CAR PARK MANAGER'].includes(user.role);
+        }
+
         if (isReadOnly) {
             document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
                 el.readOnly = true;

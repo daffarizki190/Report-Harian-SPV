@@ -303,6 +303,11 @@ class ReportController extends Controller
                                 ->first();
             }
 
+            // PERMANENCE: If report exists, preserve the original SPV name unless Admin
+            if ($report && $user->role !== 'Admin') {
+                $spvName = $report->spv_name;
+            }
+
             // Ambil ringkasan untuk kolom description
             $spesiifikasi = $formDataDecoded['spesifikasi'] ?? [];
             $description  = count($spesiifikasi) > 0

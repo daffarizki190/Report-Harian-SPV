@@ -33,11 +33,11 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
 
     Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
+        Route::get('/reports/logs', [ReportController::class, 'logs'])->name('reports.logs');
         Route::get('/reports/{id}', [ReportController::class, 'show'])->name('reports.show');
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
-        Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
-        Route::get('/reports/logs', [ReportController::class, 'logs'])->name('reports.logs');
         Route::get('/system/info', [ReportController::class, 'systemInfo'])->name('system.info');
         Route::post('/reports/purge', [ReportController::class, 'purge'])->name('reports.purge');
         Route::get('/reports/purge', function () {
