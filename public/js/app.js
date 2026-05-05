@@ -1,4 +1,29 @@
 // SPV Report - Main App Logic (Premium Version)
+const PLOTTING_AREAS = [
+    'Mobile Basement', 'Mobile MSCP', 'Control Room Officer 1',
+    'Control Room Officer 2', 'PK Motor', 'Area Motor B2', 'Area Motor B1',
+    'Area B2', 'Area B2', 'Area B1', 'Area B1', 'Area LG', 'Area LG', 'Area MSCP'
+];
+
+const DEFAULT_PERLENGKAPAN = [
+    ['Handy Talkie', 3],
+    ['Traffic Lamp', 5],
+    ['Jas Hujan', 1],
+    ['Traffic Cone CP', 200],
+    ['Sticke Cone CP', 100],
+    ['Senter', 1],
+];
+
+const DEFAULT_PERALATAN = [
+    ['Parking Entrance', 16],
+    ['Parking Exit', 23],
+    ['Server parking', 2],
+    ['DDS', 7],
+    ['Emergency button', 43],
+    ['Hanging Sign', 355],
+    ['Totem Sign', 35],
+];
+
 const app = {
     currentView: 'dashboard',
     reports: [],
@@ -1617,7 +1642,11 @@ const formDigital = {
                 </tr>`;
         });
 
-        (data.perlengkapan || []).forEach(p => {
+        const perlenData = (data.perlengkapan && data.perlengkapan.length > 0)
+            ? data.perlengkapan
+            : DEFAULT_PERLENGKAPAN.map((item, i) => ({ no: i+1, nama: item[0], jumlah: item[1], baik: item[1], rusak: 0, keterangan: '-' }));
+
+        perlenData.forEach(p => {
             perRows += `
                 <tr>
                     <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>

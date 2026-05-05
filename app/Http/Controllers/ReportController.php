@@ -227,52 +227,65 @@ class ReportController extends Controller
 
         $spvName = auth()->user()->name ?? $request->spv_name ?? 'Guest';
 
-        return DB::transaction(function () use ($request, $spvName) {
-            $existing = Report::where('spv_name', $spvName)
-                              ->whereDate('report_date', $request->report_date)
-                              ->first();
+        try {
+            $report = DB::transaction(function () use ($request, $spvName) {
+                $existing = Report::where('spv_name', $spvName)
+                                  ->whereDate('report_date', $request->report_date)
+                                  ->where('shift', $request->shift)
+                                  ->first();
 
-            $filePath = $existing->file_path ?? null;
+                $filePath = $existing->file_path ?? null;
 
-            if ($request->hasFile('report_file')) {
-                $extension = $request->file('report_file')->getClientOriginalExtension();
-                $storagePath = sprintf(
-                    'REPORTS/%s/%s_%s_%s.%s',
-                    $request->report_date,
-                    str_replace(' ', '_', $spvName),
-                    $request->report_date,
-                    $request->shift,
-                    $extension
+                if ($request->hasFile('report_file')) {
+                    $extension = $request->file('report_file')->getClientOriginalExtension();
+                    $storagePath = sprintf(
+                        'REPORTS/%s/%s_%s_%s.%s',
+                        $request->report_date,
+                        str_replace(' ', '_', $spvName),
+                        $request->report_date,
+                        $request->shift,
+                        $extension
+                    );
+
+                    $filePath = $this->supabase->upload(
+                        $request->file('report_file')->getRealPath(),
+                        $storagePath
+                    );
+                }
+
+                $report = Report::updateOrCreate(
+                    [
+                        'user_id'     => Auth::id(),
+                        'report_date' => $request->report_date,
+                        'shift'       => $request->shift,
+                    ],
+                    [
+                        'spv_name'       => $spvName,
+                        'description'    => $request->description,
+                        'file_path'      => $filePath,
+                        'manual_content' => $request->manual_content,
+                        'updated_at'     => now()
+                    ]
                 );
 
-                $filePath = $this->supabase->upload(
-                    $request->file('report_file')->getRealPath(),
-                    $storagePath
-                );
+                $this->logActivity($spvName, $existing ? 'Update' : 'Upload', "Laporan tgl {$request->report_date}");
+                
+                return $report;
+            });
+
+            // Real-time: Trigger Reverb broadcast AFTER transaction
+            try {
+                ReportSubmitted::dispatch($report);
+            } catch (\Exception $e) {
+                \Log::error("Broadcasting failed: " . $e->getMessage());
             }
 
-            $report = Report::updateOrCreate(
-                [
-                    'user_id'     => Auth::id(),
-                    'report_date' => $request->report_date,
-                    'shift'       => $request->shift,
-                ],
-                [
-                    'spv_name'       => $spvName,
-                    'description'    => $request->description,
-                    'file_path'      => $filePath,
-                    'manual_content' => $request->manual_content,
-                    'updated_at'     => now()
-                ]
-            );
-
-            $this->logActivity($spvName, $existing ? 'Update' : 'Upload', "Laporan tgl {$request->report_date}");
-
-            // Real-time: Trigger Reverb broadcast
-            ReportSubmitted::dispatch($report);
-
             return response()->json(['message' => 'Laporan berhasil disimpan.', 'data' => $report]);
-        });
+
+        } catch (\Exception $e) {
+            \Log::error("Upload report error: " . $e->getMessage());
+            return response()->json(['message' => 'Gagal menyimpan laporan: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -292,7 +305,6 @@ class ReportController extends Controller
             'form_data'   => 'required|string', 
         ]);
 
-        // Decode & re-encode untuk memastikan valid JSON
         $formDataDecoded = json_decode($request->form_data, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json(['message' => 'Data form tidak valid.'], 422);
@@ -301,57 +313,59 @@ class ReportController extends Controller
         // Ambil nama pengawas dari form (bisa diedit management) atau dari auth (SPV)
         $spvName = $formDataDecoded['metadata']['spv_name'] ?? $user->name;
 
-        return DB::transaction(function () use ($request, $spvName, $formDataDecoded, $user) {
-            // Cari existing report
-            $report = null;
-            if ($request->report_id) {
-                $report = Report::find($request->report_id);
-            } else {
-                $report = Report::where('spv_name', $spvName)
-                                ->whereDate('report_date', $request->report_date)
-                                ->where('shift', $request->shift)
-                                ->first();
-            }
+        try {
+            $report = DB::transaction(function () use ($request, $spvName, $formDataDecoded, $user) {
+                // Cari existing report
+                $report = null;
+                if ($request->report_id) {
+                    $report = Report::find($request->report_id);
+                } else {
+                    $report = Report::where('spv_name', $spvName)
+                                    ->whereDate('report_date', $request->report_date)
+                                    ->where('shift', $request->shift)
+                                    ->first();
+                }
 
-            // PERMANENCE: If report exists, preserve the original SPV name unless Admin
-            if ($report && $user->role !== 'Admin') {
-                $spvName = $report->spv_name;
-            }
+                // PERMANENCE: If report exists, preserve the original SPV name unless Admin
+                if ($report && $user->role !== 'Admin') {
+                    $spvName = $report->spv_name;
+                }
 
-            // Ambil ringkasan untuk kolom description
-            $spesiifikasi = $formDataDecoded['spesifikasi'] ?? [];
-            $description  = count($spesiifikasi) > 0
-                ? count($spesiifikasi) . ' temuan/kejadian dicatat'
-                : 'Form Digital — Kondisi Normal';
+                // Ambil ringkasan untuk kolom description
+                $spesiifikasi = $formDataDecoded['spesifikasi'] ?? [];
+                $description  = count($spesiifikasi) > 0
+                    ? count($spesiifikasi) . ' temuan/kejadian dicatat'
+                    : 'Form Digital — Kondisi Normal';
 
-            if ($report) {
-                // Update existing - Use direct assignment to ensure casted attributes are handled correctly
-                $report->shift = $request->shift;
-                $report->description = $description;
-                $report->form_data = $formDataDecoded;
-                $report->updated_at = now();
-                $report->save();
-                
-                $action = 'Update Form';
-                \Log::info("Report updated ID: {$report->id}, Sig count: " . count($formDataDecoded['signatures'] ?? []));
-            } else {
-                // Create new
-                $report = new Report();
-                $report->user_id = $user->id;
-                $report->spv_name = $spvName;
-                $report->report_date = $request->report_date;
-                $report->shift = $request->shift;
-                $report->description = $description;
-                $report->form_data = $formDataDecoded;
-                $report->save();
+                if ($report) {
+                    // Update existing
+                    $report->shift = $request->shift;
+                    $report->description = $description;
+                    $report->form_data = $formDataDecoded;
+                    $report->updated_at = now();
+                    $report->save();
+                    
+                    $action = 'Update Form';
+                } else {
+                    // Create new
+                    $report = new Report();
+                    $report->user_id = $user->id;
+                    $report->spv_name = $spvName;
+                    $report->report_date = $request->report_date;
+                    $report->shift = $request->shift;
+                    $report->description = $description;
+                    $report->form_data = $formDataDecoded;
+                    $report->save();
 
-                $action = 'Form Digital';
-                \Log::info("Report created ID: {$report->id}");
-            }
+                    $action = 'Form Digital';
+                }
 
-            $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");
+                $this->logActivity($user->name, $action, "Laporan tgl {$request->report_date} - SPV: {$spvName}");
 
-            // Real-time: Trigger Reverb broadcast
+                return $report;
+            });
+
+            // Real-time: Trigger Reverb broadcast AFTER transaction
             try {
                 ReportSubmitted::dispatch($report);
             } catch (\Exception $e) {
@@ -362,7 +376,11 @@ class ReportController extends Controller
                 'message' => 'Laporan Digital berhasil disimpan.',
                 'data'    => $report
             ]);
-        });
+
+        } catch (\Exception $e) {
+            \Log::error("Save digital form error: " . $e->getMessage());
+            return response()->json(['message' => 'Gagal menyimpan laporan: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
