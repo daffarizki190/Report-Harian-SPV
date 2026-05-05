@@ -277,6 +277,35 @@ td {
 tr:last-child td { border-bottom: none; }
 tr:hover { background: #fafafa; }
 
+/* Table Input Styling Fixes */
+.table-container td input,
+.table-container td select,
+.table-container td textarea {
+    width: 100%;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    font-size: 0.85rem !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+.table-container td input:focus,
+.table-container td select:focus,
+.table-container td textarea:focus {
+    background: #ffffff !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    outline: none !important;
+}
+
+.table-container td input:hover,
+.table-container td select:hover,
+.table-container td textarea:hover {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: var(--border-dark) !important;
+}
+
 /* Badges */
 .badge {
     display: inline-flex;
@@ -621,9 +650,12 @@ input:focus { border-color: var(--accent); }
 }
 
 /* Spesifikasi status select color coding */
-.spec-status option[value="Open"]   { color: #dc2626; }
-.spec-status option[value="Proses"] { color: #d97706; }
-.spec-status option[value="Closed"] { color: #16a34a; }
+.spec-status {
+    font-weight: 700 !important;
+    text-align: center !important;
+}
+.spec-status option[value="On Progres"] { color: #d97706; }
+.spec-status option[value="Done"] { color: #16a34a; }
 
 /* Signature pads */
 .sig-pad-wrapper {

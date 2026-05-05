@@ -513,16 +513,16 @@
                         {{-- SEKSI 7: SPESIFIKASI LAPORAN --}}
                         <div class="glass-card df-section">
                             <div class="df-section-title"><span>7</span> SPESIFIKASI LAPORAN</div>
-                            <div class="table-container" style="overflow-x:auto;">
-                                <table id="tbl-spesifikasi" style="min-width:700px;">
+                            <div class="table-container" style="overflow-x:auto; -webkit-overflow-scrolling: touch;">
+                                <table id="tbl-spesifikasi" style="min-width: 850px; table-layout: fixed;">
                                     <thead>
                                         <tr>
-                                            <th style="min-width:140px">JENIS LAPORAN</th>
-                                            <th style="width:90px">WAKTU</th>
-                                            <th style="min-width:200px">DETAIL LAPORAN</th>
-                                            <th style="min-width:200px">TINDAKAN YANG DILAKUKAN</th>
-                                            <th style="width:110px; text-align:center">STATUS</th>
-                                            <th style="width:40px"></th>
+                                            <th style="width:130px">JENIS LAPORAN</th>
+                                            <th style="width:80px; text-align:center">WAKTU</th>
+                                            <th>DETAIL LAPORAN</th>
+                                            <th>TINDAKAN</th>
+                                            <th style="width:130px; text-align:center">STATUS</th>
+                                            <th style="width:50px; text-align:center"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="spesifikasi-tbody">

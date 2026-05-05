@@ -832,17 +832,17 @@ const app = {
                 tr.className = 'spec-row';
                 tr.innerHTML = `
                     <td>
-                        <select class="spec-jenis" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                        <select class="spec-jenis">
                             <option value="Temuan" ${s.jenis === 'Temuan' ? 'selected' : ''}>Temuan</option>
                             <option value="Kejadian" ${s.jenis === 'Kejadian' ? 'selected' : ''}>Kejadian</option>
                             <option value="Kegiatan" ${s.jenis === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
                         </select>
                     </td>
-                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="width:100%; border:none; background:transparent; text-align:center; font-size:0.85rem;"></td>
-                    <td><textarea class="spec-detail" style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none;">${s.detail || ''}</textarea></td>
-                    <td><textarea class="spec-tindakan" style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none;">${s.tindakan || ''}</textarea></td>
+                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="text-align:center;"></td>
+                    <td><textarea class="spec-detail" style="resize:none; min-height:40px;">${s.detail || ''}</textarea></td>
+                    <td><textarea class="spec-tindakan" style="resize:none; min-height:40px;">${s.tindakan || ''}</textarea></td>
                     <td>
-                        <select class="spec-status" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                        <select class="spec-status">
                             <option value="Done" ${s.status === 'Done' ? 'selected' : ''}>Done</option>
                             <option value="On Progres" ${s.status === 'On Progres' ? 'selected' : ''}>On Progres</option>
                         </select>
@@ -851,7 +851,7 @@ const app = {
                 `;
                 specTbody.appendChild(tr);
             });
-            if (formData.spesifikasi.length === 0) window.formDigital.addSpecRow();
+            if (formData.spesifikasi.length === 0) window.formDigital.addSpesifikasiRow();
         }
 
         if (window.formDigital) {
@@ -1345,7 +1345,25 @@ const formDigital = {
         const tbody = document.getElementById('spesifikasi-tbody');
         const tr = document.createElement('tr');
         tr.className = 'spesifikasi-row';
-        tr.innerHTML = `<td><input type="text" class="spec-jenis"></td><td><input type="text" class="spec-waktu"></td><td><input type="text" class="spec-detail"></td><td><input type="text" class="spec-tindakan"></td><td><select class="spec-status"><option value="On Progres">On Progres</option><option value="Done">Done</option></select></td><td style="text-align:center;"><button type="button" onclick="this.closest('tr').remove()">×</button></td>`;
+        tr.innerHTML = `
+            <td>
+                <select class="spec-jenis" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                    <option value="Temuan">Temuan</option>
+                    <option value="Kejadian">Kejadian</option>
+                    <option value="Kegiatan">Kegiatan</option>
+                </select>
+            </td>
+            <td><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; border:none; background:transparent; text-align:center; font-size:0.85rem;"></td>
+            <td><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none; min-height:40px;"></textarea></td>
+            <td><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none; min-height:40px;"></textarea></td>
+            <td>
+                <select class="spec-status" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                    <option value="Done">Done</option>
+                    <option value="On Progres">On Progres</option>
+                </select>
+            </td>
+            <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" style="color:var(--error); background:none; border:none;"><i class="fas fa-times"></i></button></td>
+        `;
         tbody.appendChild(tr);
     },
 
