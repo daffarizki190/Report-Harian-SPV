@@ -53,6 +53,17 @@
     </div>
     @endif
 
+    {{-- Global Loading Overlay --}}
+    <div id="global-loader" class="overlay hidden" style="z-index: 9999;">
+        <div class="glass-card" style="padding: 2.5rem; text-align: center; max-width: 320px;">
+            <div class="dots-wave" style="margin: 0 auto 1.5rem;">
+                <span></span><span></span><span></span>
+            </div>
+            <h3 style="color: var(--primary); font-weight: 700; margin-bottom: 0.5rem;">Memuat Data</h3>
+            <p style="color: var(--text-dim); font-size: 0.88rem;">Mohon tunggu sejenak...</p>
+        </div>
+    </div>
+
     <div id="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">

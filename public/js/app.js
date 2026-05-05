@@ -685,23 +685,32 @@ const app = {
 
         // Fetch full data if form_data is not present (lazy loading for performance)
         if (!report.form_data || Object.keys(report.form_data).length === 0) {
-            this.showToast('Memuat detail laporan...', 'info');
+            this.showGlobalLoader();
             try {
                 const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`);
                 const detail = await res.json();
                 report.form_data = detail.data.form_data;
+                this.hideGlobalLoader();
             } catch (e) {
+                this.hideGlobalLoader();
                 return this.showToast('Gagal memuat detail laporan', 'error');
             }
         }
 
         if (report.file_url) window.open(report.file_url, '_blank');
-        else if (report.form_data) this.viewDigitalForm(id);
+        else if (report.form_data) this.renderDigitalPreview(report.form_data, report);
         else if (report.manual_content) {
             document.getElementById('modal-content-body').textContent = report.manual_content;
             document.getElementById('manual-modal').classList.remove('hidden');
         } else {
             this.showToast('Data laporan tidak ditemukan atau kosong', 'error');
+        }
+    },
+
+    // New helper to avoid race conditions with this.reports
+    renderDigitalPreview(formData, report) {
+        if (window.formDigital) {
+            window.formDigital.openPrintPreview(formData, report);
         }
     },
 
@@ -711,18 +720,25 @@ const app = {
 
         // Fetch full data if form_data is not present (lazy loading for performance)
         if (!report.form_data || Object.keys(report.form_data).length === 0) {
-            this.showToast('Memuat detail laporan...', 'info');
+            this.showGlobalLoader();
             try {
                 const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${id}`);
                 const detail = await res.json();
                 report.form_data = detail.data.form_data;
+                this.hideGlobalLoader();
             } catch (e) {
+                this.hideGlobalLoader();
                 return this.showToast('Gagal memuat detail laporan', 'error');
             }
         }
 
         if (!report.form_data) return this.showToast('Laporan digital tidak ditemukan', 'error');
 
+        this.renderDigitalEdit(report.form_data, report);
+    },
+
+    renderDigitalEdit(formData, report) {
+        const id = report.id;
         this.switchView('upload');
         const btnForm = document.querySelector('.method-btn[data-method="form"]');
         if (btnForm) btnForm.click();
@@ -731,21 +747,21 @@ const app = {
         document.getElementById('df-tanggal').value = report.report_date;
         document.getElementById('df-nama').value = report.spv_name || report.user_name || '';
         document.getElementById('df-shift').value = report.shift;
-        document.getElementById('df-briefing').value = report.form_data.briefing || '';
-        document.getElementById('df-training').value = report.form_data.training || '';
+        document.getElementById('df-briefing').value = formData.briefing || '';
+        document.getElementById('df-training').value = formData.training || '';
 
         const mp_jabatan = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         mp_jabatan.forEach(j => {
             const inp = document.querySelector(`.mp-input[data-jabatan="${j}"]`);
             const inpMid = document.querySelector(`.mp-input-middle[data-jabatan="${j}"]`);
-            if (inp) inp.value = report.form_data.manpower?.[j] || '';
-            if (inpMid) inpMid.value = report.form_data.manpower?.[j + '_middle'] || '';
+            if (inp) inp.value = formData.manpower?.[j] || '';
+            if (inpMid) inpMid.value = formData.manpower?.[j + '_middle'] || '';
         });
 
         const plotingTbody = document.getElementById('ploting-tbody');
-        if (plotingTbody && report.form_data.ploting) {
+        if (plotingTbody && formData.ploting) {
             plotingTbody.innerHTML = '';
-            report.form_data.ploting.forEach((p, i) => {
+            formData.ploting.forEach((p, i) => {
                 const tr = document.createElement('tr');
                 tr.className = 'ploting-row';
                 tr.innerHTML = `
@@ -755,83 +771,76 @@ const app = {
                 `;
                 plotingTbody.appendChild(tr);
             });
-            if (report.form_data.ploting.length === 0) {
+            if (formData.ploting.length === 0) {
                 PLOTTING_AREAS.forEach(area => window.formDigital.addPlotingRow(area));
             }
         }
 
         const perlenTbody = document.querySelector('#tbl-perlengkapan tbody');
-        if (perlenTbody && report.form_data.perlengkapan) {
+        if (perlenTbody && formData.perlengkapan) {
             perlenTbody.innerHTML = '';
-            report.form_data.perlengkapan.forEach((p, i) => {
+            formData.perlengkapan.forEach((p, i) => {
                 const tr = document.createElement('tr');
+                tr.className = 'perlen-row';
                 tr.innerHTML = `
                     <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
-                    <td style="font-weight:600;">${p.nama || ''}</td>
-                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-jumlah" min="0" value="${p.jumlah || 0}" style="width:65px; text-align:center; padding:6px 8px;"></td>
-                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-baik" min="0" value="${p.baik || 0}" style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;"></td>
-                    <td style="text-align:center; padding:8px 12px;"><input type="number" class="perlen-rusak" min="0" value="${p.rusak || 0}" style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;"></td>
-                    <td style="padding:8px 16px;"><input type="text" class="perlen-ket" placeholder="Keterangan..." value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.88rem;"></td>
+                    <td><input type="text" class="perlen-nama" value="${p.nama || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
+                    <td><input type="number" class="perlen-total" value="${p.jumlah || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; font-size:0.9rem;"></td>
+                    <td><input type="number" class="perlen-baik" value="${p.baik || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; color:green; font-size:0.9rem;"></td>
+                    <td><input type="number" class="perlen-rusak" value="${p.rusak || 0}" style="width:100%; border:none; background:transparent; padding:4px 0; text-align:center; color:red; font-size:0.9rem;"></td>
+                    <td><input type="text" class="perlen-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent; padding:4px 0; font-size:0.9rem;"></td>
                 `;
                 perlenTbody.appendChild(tr);
             });
         }
 
-        const specTbody = document.getElementById('spesifikasi-tbody');
-        if (specTbody && report.form_data.spesifikasi) {
+        const specTbody = document.querySelector('#tbl-spesifikasi tbody');
+        if (specTbody && formData.spesifikasi) {
             specTbody.innerHTML = '';
-            report.form_data.spesifikasi.forEach(s => {
+            formData.spesifikasi.forEach((s, i) => {
                 const tr = document.createElement('tr');
-                tr.className = 'spesifikasi-row';
+                tr.className = 'spec-row';
                 tr.innerHTML = `
-                    <td><input type="text" class="spec-jenis" value="${s.jenis || ''}" placeholder="Jenis laporan..." style="width:100%; border:none; background:transparent;"></td>
-                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" placeholder="Waktu..." style="width:100%; border:none; background:transparent; padding:4px 0;"></td>
-                    <td><input type="text" class="spec-detail" value="${s.detail || ''}" placeholder="Detail kejadian..." style="width:100%; border:none; background:transparent;"></td>
-                    <td><input type="text" class="spec-tindakan" value="${s.tindakan || ''}" placeholder="Tindakan dilakukan..." style="width:100%; border:none; background:transparent;"></td>
-                    <td style="text-align:center; padding:8px;">
-                        <select class="spec-status" style="width:100%; padding:5px; border-radius:6px; border:1px solid var(--border-dark); font-size:0.82rem;">
-                            <option value="">-</option>
-                            <option value="On Progres" ${s.status === 'On Progres' ? 'selected' : ''}>On Progres</option>
-                            <option value="Done" ${s.status === 'Done' ? 'selected' : ''}>Done</option>
+                    <td>
+                        <select class="spec-jenis" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                            <option value="Temuan" ${s.jenis === 'Temuan' ? 'selected' : ''}>Temuan</option>
+                            <option value="Kejadian" ${s.jenis === 'Kejadian' ? 'selected' : ''}>Kejadian</option>
+                            <option value="Kegiatan" ${s.jenis === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
                         </select>
                     </td>
-                    <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris">×</button></td>
+                    <td><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="width:100%; border:none; background:transparent; text-align:center; font-size:0.85rem;"></td>
+                    <td><textarea class="spec-detail" style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none;">${s.detail || ''}</textarea></td>
+                    <td><textarea class="spec-tindakan" style="width:100%; border:none; background:transparent; font-size:0.85rem; resize:none;">${s.tindakan || ''}</textarea></td>
+                    <td>
+                        <select class="spec-status" style="width:100%; border:none; background:transparent; font-size:0.85rem;">
+                            <option value="Done" ${s.status === 'Done' ? 'selected' : ''}>Done</option>
+                            <option value="On Progres" ${s.status === 'On Progres' ? 'selected' : ''}>On Progres</option>
+                        </select>
+                    </td>
+                    <td style="text-align:center;"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" style="color:var(--error); background:none; border:none;"><i class="fas fa-times"></i></button></td>
                 `;
                 specTbody.appendChild(tr);
             });
-            if (report.form_data.spesifikasi.length === 0) window.formDigital.addSpesifikasiRow();
+            if (formData.spesifikasi.length === 0) window.formDigital.addSpecRow();
         }
 
         if (window.formDigital) {
-            window.formDigital.loadExistingSignatures(report.form_data.signatures || {}, report.form_data.signer_names || {});
-            window.formDigital.calcTotal();
+            window.formDigital.loadExistingSignatures(formData.signatures, formData.signer_names);
         }
 
-        const isReadOnlyRole = ['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(window.Laravel?.user?.role);
-        if (isReadOnlyRole) {
-            document.querySelectorAll('#form-digital input, #form-digital select, #form-digital textarea').forEach(el => {
-                if (el.type !== 'hidden') {
-                    el.readOnly = true;
-                    el.style.pointerEvents = 'none'; // Mencegah interaksi klik/ubah tanpa menghilangkan tampilan
-                    
-                    if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'radio') {
-                        el.disabled = true;
-                    }
-                    el.classList.add('input-readonly');
-                }
+        const isReadOnly = !['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(window.Laravel.user.role);
+        if (isReadOnly) {
+            document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
+                el.readOnly = true;
+                if (el.tagName === 'SELECT') el.disabled = true;
             });
             document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
                 el.style.display = 'none';
             });
         } else {
-            // Restore editable state for Supervisor/Leader if they somehow open multiple reports
-            document.querySelectorAll('#form-digital input, #form-digital select, #form-digital textarea').forEach(el => {
-                if (el.type !== 'hidden' && el.id !== 'df-nama') {
-                    el.readOnly = false;
-                    el.disabled = false;
-                    el.style.pointerEvents = 'auto';
-                    el.classList.remove('input-readonly');
-                }
+            document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
+                el.readOnly = false;
+                if (el.tagName === 'SELECT') el.disabled = false;
             });
             document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
                 el.style.display = 'inline-block';
@@ -853,10 +862,7 @@ const app = {
     },
 
     viewDigitalForm(id) {
-        const report = this.reports.find(r => r.id == id);
-        if (report && window.formDigital) {
-            window.formDigital.openPrintPreview(report.form_data, report);
-        }
+        this.previewReport(id);
     },
 
     async handleUpload(e) {
