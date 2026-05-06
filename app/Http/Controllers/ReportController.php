@@ -80,7 +80,7 @@ class ReportController extends Controller
                 'reports.created_at',
                 'reports.updated_at',
                 DB::raw("COALESCE(users.name, reports.spv_name) as user_name"),
-                'users.role as user_role',
+                DB::raw("COALESCE(users.role, (SELECT role FROM users WHERE name = reports.spv_name LIMIT 1), 'Supervisor') as user_role"),
                 // Using a simpler check that works better across different DB engines
                 DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-1\":%' THEN 1 ELSE 0 END) as has_mgr1_sig"),
                 DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-2\":%' THEN 1 ELSE 0 END) as has_mgr2_sig")
