@@ -965,35 +965,15 @@ const app = {
             window.formDigital.loadExistingSignatures(formData.signatures, formData.signer_names);
         }
 
-        const user = window.Laravel.user;
-        const isOwner = report.user_id == user.id || report.spv_name == user.name;
-        const isManagement = ['CAR PARK MANAGER', 'Admin', 'Inhouse'].includes(user.role);
-        
-        // Only allow editing if user is management OR is the owner and it's not yet final
-        const isReadOnly = !isManagement && !(isOwner && !report.has_mgr2_sig);
-        
-        const dfNama = document.getElementById('df-nama');
-        if (dfNama) {
-            dfNama.value = report.spv_name || report.user_name || '';
-            // Only Admin/Manager can change the SPV name manually
-            dfNama.readOnly = !['Admin', 'CAR PARK MANAGER'].includes(user.role);
-        }
-
-        if (isReadOnly) {
+        // We already have canEdit from above. 
+        // If not canEdit, we make sure all form-digital elements are also readonly
+        if (!canEdit) {
             document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
                 el.readOnly = true;
                 if (el.tagName === 'SELECT') el.disabled = true;
             });
             document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
                 el.style.display = 'none';
-            });
-        } else {
-            document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
-                el.readOnly = false;
-                if (el.tagName === 'SELECT') el.disabled = false;
-            });
-            document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
-                el.style.display = 'inline-block';
             });
         }
 
