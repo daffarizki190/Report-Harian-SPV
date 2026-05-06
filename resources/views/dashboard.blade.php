@@ -581,10 +581,10 @@
                                     <tbody id="spesifikasi-tbody">
                                         <tr class="spesifikasi-row">
                                             <td style="padding:8px;">
-                                                <select class="spec-jenis" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:white;">
                                                     <option value="Temuan">Temuan</option>
                                                     <option value="Kejadian">Kejadian</option>
                                                     <option value="Kegiatan">Kegiatan</option>
+                                                    <option value="Laporan">Laporan</option>
                                                 </select>
                                             </td>
                                             <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
