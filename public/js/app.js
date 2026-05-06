@@ -337,6 +337,16 @@ const app = {
     },
 
     async loadLogs() {
+        const user = window.Laravel?.user;
+        if (!user || user.role !== 'Admin') {
+            const feed = document.getElementById('logs-feed');
+            if (feed) {
+                const card = feed.closest('.glass-card');
+                if (card) card.style.display = 'none';
+            }
+            return;
+        }
+
         const body = document.getElementById('monitoring-logs-body');
         const feed = document.getElementById('logs-feed');
         if (!body && !feed) return;
