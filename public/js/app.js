@@ -535,11 +535,16 @@ const app = {
             const data = json.data || json;
             this.reports = data;
 
-            // Pre-process data: ensure form_data is an object
+            // Pre-process data: ensure form_data is an object and signatures are detected
             data.forEach(r => {
                 if (typeof r.form_data === 'string') {
                     try { r.form_data = JSON.parse(r.form_data); } catch (e) { r.form_data = {}; }
                 }
+                
+                // Robust signature detection: use server flags or check object keys
+                const hasSigs = r.form_data?.signatures || {};
+                r.has_mgr1_sig = r.has_mgr1_sig || (hasSigs['mgr-1'] ? 1 : 0);
+                r.has_mgr2_sig = r.has_mgr2_sig || (hasSigs['mgr-2'] ? 1 : 0);
             });
 
             if (grid) {

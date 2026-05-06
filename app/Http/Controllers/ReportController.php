@@ -76,13 +76,14 @@ class ReportController extends Controller
                 'reports.shift',
                 'reports.description',
                 'reports.file_path',
+                'reports.form_data',
                 'reports.created_at',
                 'reports.updated_at',
                 DB::raw("COALESCE(users.name, reports.spv_name) as user_name"),
                 'users.role as user_role',
-                // Efficiently check for signatures without loading the full JSON blob
-                DB::raw("CASE WHEN reports.form_data LIKE '%\"mgr-1\":%' THEN 1 ELSE 0 END as has_mgr1_sig"),
-                DB::raw("CASE WHEN reports.form_data LIKE '%\"mgr-2\":%' THEN 1 ELSE 0 END as has_mgr2_sig")
+                // Using a simpler check that works better across different DB engines
+                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-1\":%' THEN 1 ELSE 0 END) as has_mgr1_sig"),
+                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-2\":%' THEN 1 ELSE 0 END) as has_mgr2_sig")
             ]);
 
         // Security check
