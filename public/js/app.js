@@ -1694,30 +1694,24 @@ const formDigital = {
         const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         
         mp_j.forEach(j => {
-            const val = parseInt(data.manpower?.[j] || '0');
-            const valMid = parseInt(data.manpower?.[j + '_middle'] || '0');
+            const val = data.manpower?.[j] || '0';
+            const valMid = data.manpower?.[j + '_middle'] || '0';
             
-            // Only show rows with actual personnel to avoid empty space
-            if (val > 0 || valMid > 0) {
-                mpRows += `
-                    <tr>
-                        <td style="border:1px solid #000; padding:4px 10px;">${j}</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">${val}</td>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">${valMid}</td>
-                    </tr>`;
-            }
+            mpRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px 10px;">${j}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${val}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${valMid}</td>
+                </tr>`;
         });
 
         (data.ploting || []).forEach(p => {
-            // Only show filled plotting areas
-            if (p.area && p.area !== '-' || p.petugas && p.petugas !== '-') {
-                plotRows += `
-                    <tr>
-                        <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
-                        <td style="border:1px solid #000; padding:4px 10px;">${p.area || '-'}</td>
-                        <td style="border:1px solid #000; padding:4px 10px;">${p.petugas || '-'}</td>
-                    </tr>`;
-            }
+            plotRows += `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
+                    <td style="border:1px solid #000; padding:4px 10px;">${p.area || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px 10px;">${p.petugas || '-'}</td>
+                </tr>`;
         });
 
         const perlenData = (data.perlengkapan && data.perlengkapan.length > 0)
