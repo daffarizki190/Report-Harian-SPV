@@ -18,6 +18,7 @@ class ReportResource extends JsonResource
             'id'             => $this->id,
             'user_id'        => $this->user_id,
             'user_name'      => $this->user_name,
+            'user_role'      => $this->user_role,
             'spv_name'       => $this->spv_name,
             'report_date'    => $this->report_date,
             'shift'          => $this->shift,
