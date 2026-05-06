@@ -1694,23 +1694,30 @@ const formDigital = {
         const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
         
         mp_j.forEach(j => {
-            const val = data.manpower?.[j] || '0';
-            const valMid = data.manpower?.[j + '_middle'] || '0';
-            mpRows += `
-                <tr>
-                    <td style="border:1px solid #000; padding:6px 10px;">${j}</td>
-                    <td style="border:1px solid #000; padding:6px; text-align:center;">${val}</td>
-                    <td style="border:1px solid #000; padding:6px; text-align:center;">${valMid}</td>
-                </tr>`;
+            const val = parseInt(data.manpower?.[j] || '0');
+            const valMid = parseInt(data.manpower?.[j + '_middle'] || '0');
+            
+            // Only show rows with actual personnel to avoid empty space
+            if (val > 0 || valMid > 0) {
+                mpRows += `
+                    <tr>
+                        <td style="border:1px solid #000; padding:4px 10px;">${j}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">${val}</td>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">${valMid}</td>
+                    </tr>`;
+            }
         });
 
         (data.ploting || []).forEach(p => {
-            plotRows += `
-                <tr>
-                    <td style="border:1px solid #000; padding:6px; text-align:center;">${p.no}</td>
-                    <td style="border:1px solid #000; padding:6px 10px;">${p.area || '-'}</td>
-                    <td style="border:1px solid #000; padding:6px 10px;">${p.petugas || '-'}</td>
-                </tr>`;
+            // Only show filled plotting areas
+            if (p.area && p.area !== '-' || p.petugas && p.petugas !== '-') {
+                plotRows += `
+                    <tr>
+                        <td style="border:1px solid #000; padding:4px; text-align:center;">${p.no}</td>
+                        <td style="border:1px solid #000; padding:4px 10px;">${p.area || '-'}</td>
+                        <td style="border:1px solid #000; padding:4px 10px;">${p.petugas || '-'}</td>
+                    </tr>`;
+            }
         });
 
         const perlenData = (data.perlengkapan && data.perlengkapan.length > 0)
@@ -1757,27 +1764,27 @@ const formDigital = {
         });
 
         const html = `
-            <div style="font-family: Arial, sans-serif; color: #000; line-height: 1.4; padding: 10px;">
-                <div style="text-align:center; margin-bottom:30px;">
-                    <h2 style="margin:0; font-size: 18pt;">DAILY REPORT SUPERVISOR</h2>
-                    <h3 style="margin:5px 0; font-size: 14pt;">GANDARIA CITY MALL</h3>
+            <div style="font-family: Arial, sans-serif; color: #000; line-height: 1.2; padding: 0;">
+                <div style="text-align:center; margin-bottom:15px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                    <h2 style="margin:0; font-size: 16pt;">DAILY REPORT SUPERVISOR</h2>
+                    <h3 style="margin:2px 0; font-size: 12pt;">GANDARIA CITY MALL</h3>
                 </div>
 
-                <table style="width:100%; margin-bottom:20px; font-size:11pt;">
+                <table style="width:100%; margin-bottom:15px; font-size:10pt;">
                     <tr>
-                        <td style="width:120px; padding:4px 0;">Supervisor</td>
-                        <td style="padding:4px 0;">: <strong>${nama}</strong></td>
-                        <td style="width:100px; padding:4px 0;">Shift</td>
-                        <td style="padding:4px 0;">: <strong>${shift}</strong></td>
+                        <td style="width:100px; padding:2px 0;">Supervisor</td>
+                        <td style="padding:2px 0;">: <strong>${nama}</strong></td>
+                        <td style="width:80px; padding:2px 0;">Shift</td>
+                        <td style="padding:2px 0;">: <strong>${shift}</strong></td>
                     </tr>
                     <tr>
-                        <td style="padding:4px 0;">Tanggal</td>
-                        <td colspan="3" style="padding:4px 0;">: <strong>${tgl}</strong></td>
+                        <td style="padding:2px 0;">Tanggal</td>
+                        <td colspan="3" style="padding:2px 0;">: <strong>${tgl}</strong></td>
                     </tr>
                 </table>
 
-                <div style="margin-bottom:25px;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">MAN POWER</h4>
+                <div style="margin-bottom:15px;">
+                    <h4 style="margin:0 0 5px; font-size:10pt; text-decoration: underline; background: #eee; padding: 2px 5px;">I. MAN POWER</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:10pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
@@ -1797,8 +1804,8 @@ const formDigital = {
                     </table>
                 </div>
 
-                <div style="margin-bottom:25px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PLOTING PERSONEL</h4>
+                <div style="margin-bottom:15px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 5px; font-size:10pt; text-decoration: underline; background: #eee; padding: 2px 5px;">II. PLOTING PERSONEL</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:10pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
@@ -1813,8 +1820,8 @@ const formDigital = {
                     </table>
                 </div>
 
-                <div style="margin-bottom:25px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERLENGKAPAN</h4>
+                <div style="margin-bottom:15px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 5px; font-size:10pt; text-decoration: underline; background: #eee; padding: 2px 5px;">III. PERLENGKAPAN</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:9pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
@@ -1835,8 +1842,8 @@ const formDigital = {
                     </table>
                 </div>
 
-                <div style="margin-bottom:25px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">PERALATAN</h4>
+                <div style="margin-bottom:15px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 5px; font-size:10pt; text-decoration: underline; background: #eee; padding: 2px 5px;">IV. PERALATAN</h4>
                     <table style="width:100%; border-collapse:collapse; font-size:9pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
@@ -1857,20 +1864,20 @@ const formDigital = {
                     </table>
                 </div>
 
-                <div style="display:flex; gap:20px; margin-bottom:25px; page-break-inside: avoid;">
-                    <div style="flex:1; border:1px solid #000; padding:10px;">
-                        <h4 style="margin:0 0 10px; border-bottom:1px solid #000; padding-bottom:5px; font-size:10pt;">MATERI BRIEFING</h4>
-                        <div style="white-space:pre-wrap; min-height:60px; font-size:10pt;">${data.briefing || '-'}</div>
+                <div style="display:flex; gap:10px; margin-bottom:15px; page-break-inside: avoid;">
+                    <div style="flex:1; border:1px solid #000; padding:5px;">
+                        <h4 style="margin:0 0 5px; border-bottom:1px solid #000; padding-bottom:2px; font-size:9pt; background:#eee;">V. MATERI BRIEFING</h4>
+                        <div style="white-space:pre-wrap; min-height:40px; font-size:9pt;">${data.briefing || '-'}</div>
                     </div>
-                    <div style="flex:1; border:1px solid #000; padding:10px;">
-                        <h4 style="margin:0 0 10px; border-bottom:1px solid #000; padding-bottom:5px; font-size:10pt;">TRAINING / INSTRUKSI</h4>
-                        <div style="white-space:pre-wrap; min-height:60px; font-size:10pt;">${data.training || '-'}</div>
+                    <div style="flex:1; border:1px solid #000; padding:5px;">
+                        <h4 style="margin:0 0 5px; border-bottom:1px solid #000; padding-bottom:2px; font-size:9pt; background:#eee;">VI. TRAINING / INSTRUKSI</h4>
+                        <div style="white-space:pre-wrap; min-height:40px; font-size:9pt;">${data.training || '-'}</div>
                     </div>
                 </div>
 
-                <div style="margin-bottom:30px; page-break-inside: avoid;">
-                    <h4 style="margin:0 0 10px; font-size:11pt; text-decoration: underline;">TEMUAN & TINDAKAN (SPESIFIKASI)</h4>
-                    <table style="width:100%; border-collapse:collapse; font-size:10pt;">
+                <div style="margin-bottom:20px; page-break-inside: avoid;">
+                    <h4 style="margin:0 0 5px; font-size:10pt; text-decoration: underline; background: #eee; padding: 2px 5px;">VII. TEMUAN & TINDAKAN (SPESIFIKASI)</h4>
+                    <table style="width:100%; border-collapse:collapse; font-size:9pt;">
                         <thead>
                             <tr style="background-color: #f2f2f2;">
                                 <th style="border:1px solid #000; padding:8px; text-align:left;">JENIS LAPORAN</th>
