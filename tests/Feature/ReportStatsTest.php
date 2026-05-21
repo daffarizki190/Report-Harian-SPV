@@ -12,24 +12,46 @@ class ReportStatsTest extends TestCase
     use RefreshDatabase;
 
     // -------------------------------------------------------
-    // 1. Non-Admin mendapat 403
+    // 1. Supervisor mendapat stats yang di-scope untuk dirinya sendiri
     // -------------------------------------------------------
-    public function test_non_admin_mendapat_403_pada_stats(): void
+    public function test_supervisor_mendapat_stats_sendiri_saja(): void
     {
-        $spv = User::factory()->supervisor()->create();
+        $spv1 = User::factory()->supervisor()->create(['name' => 'SPV 1']);
+        $spv2 = User::factory()->supervisor()->create(['name' => 'SPV 2']);
 
-        $this->actingAs($spv)
-             ->getJson(route('reports.stats'))
-             ->assertStatus(403);
+        // 3 laporan SPV 1 (1 hari ini, 2 kemarin)
+        Report::factory()->create(['user_id' => $spv1->id, 'spv_name' => $spv1->name, 'report_date' => now()->toDateString()]);
+        Report::factory()->count(2)->create(['user_id' => $spv1->id, 'spv_name' => $spv1->name, 'report_date' => now()->subDay()->toDateString()]);
+
+        // 2 laporan SPV 2
+        Report::factory()->count(2)->create(['user_id' => $spv2->id, 'spv_name' => $spv2->name]);
+
+        $response = $this->actingAs($spv1)
+                         ->getJson(route('reports.stats'));
+
+        $response->assertStatus(200)
+                 ->assertJsonFragment(['total' => 3])
+                 ->assertJsonFragment(['today' => 1]);
     }
 
-    public function test_management_mendapat_403_pada_stats(): void
+    // -------------------------------------------------------
+    // 2. Management mendapat stats global
+    // -------------------------------------------------------
+    public function test_management_mendapat_stats_global(): void
     {
         $mgmt = User::factory()->management()->create();
+        $spv = User::factory()->supervisor()->create();
 
-        $this->actingAs($mgmt)
-             ->getJson(route('reports.stats'))
-             ->assertStatus(403);
+        // 5 laporan total dari supervisor lain
+        Report::factory()->count(2)->create(['user_id' => $spv->id, 'spv_name' => $spv->name, 'report_date' => now()->toDateString()]);
+        Report::factory()->count(3)->create(['user_id' => $spv->id, 'spv_name' => $spv->name, 'report_date' => now()->subDay()->toDateString()]);
+
+        $response = $this->actingAs($mgmt)
+                         ->getJson(route('reports.stats'));
+
+        $response->assertStatus(200)
+                 ->assertJsonFragment(['total' => 5])
+                 ->assertJsonFragment(['today' => 2]);
     }
 
     // -------------------------------------------------------

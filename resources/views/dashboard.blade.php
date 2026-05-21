@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="Digital Reporting Portal for Gandaria City Supervisors. Streamline daily reports, signatures, and monitoring in one professional platform.">
     <meta name="keywords" content="Supervisor Report, Gandaria City, Digital Reporting, Management Portal, Car Park Management">
@@ -130,6 +130,8 @@
                 </form>
             </div>
         </aside>
+
+
 
         <!-- Main Content -->
         <main class="content">
@@ -581,6 +583,7 @@
                                     <tbody id="spesifikasi-tbody">
                                         <tr class="spesifikasi-row">
                                             <td style="padding:8px;">
+                                                <select class="spec-jenis" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white;">
                                                     <option value="Temuan">Temuan</option>
                                                     <option value="Kejadian">Kejadian</option>
                                                     <option value="Kegiatan">Kegiatan</option>
@@ -597,7 +600,7 @@
                                                 </select>
                                             </td>
                                             <td style="text-align:center; padding:8px;">
-                                                <button type="button" class="btn-remove-row" onclick="formDigital.removeSpesifikasiRow(this)" title="Hapus baris" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:32px; height:32px; border-radius:8px;"><i class="fas fa-times"></i></button>
+                                                <button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()" title="Hapus baris" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:32px; height:32px; border-radius:8px;"><i class="fas fa-times"></i></button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -855,21 +858,38 @@
             @endif
         </main>
 
-        <div class="mobile-nav">
-            <a href="#" class="nav-item active" data-view="dashboard" title="Persetujuan"><i class="fas fa-tasks"></i></a>
-            <a href="#" class="nav-item" data-view="history" title="Laporan"><i class="fas fa-file-invoice"></i></a>
-            
-            @if(auth()->user()->role === 'Admin')
-            <a href="#" class="nav-item" data-view="monitoring" title="Monitoring"><i class="fas fa-server"></i></a>
-            @endif
+        {{-- Mobile Bottom Navigation --}}
+        <nav class="mobile-bottom-nav" style="display:none;">
+            <a href="#" class="nav-item active" data-view="dashboard">
+                <i class="fas fa-tasks"></i>
+                <span>Beranda</span>
+            </a>
+            <a href="#" class="nav-item" data-view="history">
+                <i class="fas fa-file-invoice"></i>
+                <span>Laporan</span>
+            </a>
             @if(in_array(auth()->user()->role, ['Supervisor', 'Leader']))
-            <a href="#" class="nav-item" data-view="upload"><i class="fas fa-plus"></i></a>
+            <a href="#" class="nav-item" data-view="upload">
+                <i class="fas fa-plus-circle"></i>
+                <span>Buat</span>
+            </a>
             @endif
-            <form action="{{ route('logout') }}" method="POST" id="logout-form-mobile">
-                @csrf
-                <a href="#" onclick="document.getElementById('logout-form-mobile').submit();" class="nav-item"><i class="fas fa-sign-out-alt"></i></a>
-            </form>
-        </div>
+            @if(auth()->user()->role === 'Admin')
+            <a href="#" class="nav-item" data-view="monitoring">
+                <i class="fas fa-server"></i>
+                <span>Monitor</span>
+            </a>
+            <a href="#" class="nav-item" data-view="users">
+                <i class="fas fa-users-cog"></i>
+                <span>User</span>
+            </a>
+            @endif
+            <a href="#" class="nav-item" id="mobile-logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Keluar</span>
+            </a>
+        </nav>
+        <form id="mobile-logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
         <div id="toast-container" class="toast-container"></div>
     </div>
 
