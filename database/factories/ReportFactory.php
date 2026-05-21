@@ -29,20 +29,26 @@ class ReportFactory extends Factory
         ];
     }
 
-    /**
-     * State: laporan dengan file PDF.
-     */
     public function withFile(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'file_path' => sprintf(
-                'REPORTS/%s/%s_%s_%s.pdf',
-                $attributes['report_date'],
-                str_replace(' ', '_', $attributes['spv_name']),
-                $attributes['report_date'],
-                $attributes['shift']
-            ),
-        ]);
+        return $this->state(function (array $attributes) {
+            $reportDate = $attributes['report_date'] ?? fake()->dateTimeBetween('-30 days', 'now')->format('Y-m-d');
+            $spvName = $attributes['spv_name'] ?? fake()->name();
+            $shift = $attributes['shift'] ?? fake()->randomElement(['Pagi', 'Siang', 'Malam']);
+
+            return [
+                'spv_name'    => $spvName,
+                'report_date' => $reportDate,
+                'shift'       => $shift,
+                'file_path'   => sprintf(
+                    'REPORTS/%s/%s_%s_%s.pdf',
+                    $reportDate,
+                    str_replace(' ', '_', $spvName),
+                    $reportDate,
+                    $shift
+                ),
+            ];
+        });
     }
 
     /**

@@ -28,13 +28,13 @@ class ReportTest extends TestCase
     // -------------------------------------------------------
     public function test_pengguna_terautentikasi_dapat_melihat_daftar_laporan(): void
     {
-        $user = User::factory()->supervisor()->create();
+        $user = User::factory()->admin()->create();
         Report::factory()->count(3)->create();
 
         $this->actingAs($user)
              ->get(route('reports.index'))
              ->assertStatus(200)
-             ->assertJsonCount(3);
+             ->assertJsonCount(3, 'data');
     }
 
     // -------------------------------------------------------
@@ -42,7 +42,7 @@ class ReportTest extends TestCase
     // -------------------------------------------------------
     public function test_filter_tanggal_mempersempit_hasil(): void
     {
-        $user = User::factory()->supervisor()->create();
+        $user = User::factory()->admin()->create();
 
         Report::factory()->create(['report_date' => '2026-01-10']);
         Report::factory()->create(['report_date' => '2026-03-15']);
@@ -55,7 +55,7 @@ class ReportTest extends TestCase
                          ]));
 
         $response->assertStatus(200)
-                 ->assertJsonCount(2);
+                 ->assertJsonCount(2, 'data');
     }
 
     // -------------------------------------------------------
@@ -63,7 +63,7 @@ class ReportTest extends TestCase
     // -------------------------------------------------------
     public function test_filter_shift_mempersempit_hasil(): void
     {
-        $user = User::factory()->supervisor()->create();
+        $user = User::factory()->admin()->create();
 
         Report::factory()->create(['shift' => 'Pagi']);
         Report::factory()->create(['shift' => 'Siang']);
@@ -73,7 +73,7 @@ class ReportTest extends TestCase
                          ->get(route('reports.index', ['shift' => 'Pagi']));
 
         $response->assertStatus(200)
-                 ->assertJsonCount(1);
+                 ->assertJsonCount(1, 'data');
     }
 
     // -------------------------------------------------------
@@ -161,18 +161,19 @@ class ReportTest extends TestCase
             'manual_content' => 'Isi pertama.',
         ]);
 
-        // Kiriman kedua — shift berubah
+        // Kiriman kedua — memperbarui isi pada shift yang sama
         $this->actingAs($spv)->postJson(route('reports.store'), [
             'report_date'    => '2026-04-28',
-            'shift'          => 'Malam',
+            'shift'          => 'Pagi',
             'manual_content' => 'Isi diperbarui.',
         ]);
 
         // Tetap hanya 1 baris di database
         $this->assertDatabaseCount('reports', 1);
         $this->assertDatabaseHas('reports', [
-            'spv_name' => 'Doni Pratama',
-            'shift'    => 'Malam',
+            'spv_name'       => 'Doni Pratama',
+            'shift'          => 'Pagi',
+            'manual_content' => 'Isi diperbarui.',
         ]);
     }
 

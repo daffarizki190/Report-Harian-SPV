@@ -413,8 +413,8 @@ class ReportController extends Controller
     public function purge(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse'])) {
-            return response()->json(['message' => 'Hanya CAR PARK MANAGER, Admin, atau Inhouse yang dapat menghapus data.'], 403);
+        if (!in_array($user->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse', 'Management'])) {
+            return response()->json(['message' => 'Hanya CAR PARK MANAGER, Admin, Inhouse, atau Management yang dapat menghapus data.'], 403);
         }
 
         $startDate = $request->input('start_date');
@@ -497,39 +497,14 @@ class ReportController extends Controller
                 return response()->json(['message' => 'Tidak ada file laporan (PDF) ditemukan untuk kriteria ini.'], 404);
             }
 
-            $zipName = 'Batch_Laporan_' . now()->format('Y-m-d_His') . '.zip';
-            $zipPath = storage_path('app/' . $zipName);
+            $urls = $reports->map(function($r) {
+                return [
+                    'name' => "{$r->spv_name}_{$r->report_date}_{$r->shift}.pdf",
+                    'url' => $this->supabase->publicUrl($r->file_path)
+                ];
+            });
 
-            if (!file_exists(storage_path('app'))) {
-                mkdir(storage_path('app'), 0775, true);
-            }
-
-            $zip = new \ZipArchive;
-            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== TRUE) {
-                return response()->json(['message' => 'Gagal menginisialisasi file ZIP di server.'], 500);
-            }
-
-            $addedFiles = 0;
-            foreach ($reports as $report) {
-                $url         = $this->supabase->publicUrl($report->file_path);
-                $fileContent = @file_get_contents($url);
-
-                if ($fileContent) {
-                    $safeName = "{$report->spv_name}_{$report->report_date}_{$report->shift}.pdf";
-                    $safeName = preg_replace('/[^A-Za-z0-9_\-\.]/', '_', $safeName);
-                    $zip->addFromString($safeName, $fileContent);
-                    $addedFiles++;
-                }
-            }
-
-            $zip->close();
-
-            if ($addedFiles === 0) {
-                if (file_exists($zipPath)) @unlink($zipPath);
-                return response()->json(['message' => 'Gagal mengunduh konten file dari storage Supabase.'], 500);
-            }
-
-            return response()->download($zipPath)->deleteFileAfterSend(true);
+            return response()->json($urls);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
         }

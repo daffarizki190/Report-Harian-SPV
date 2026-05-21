@@ -235,6 +235,21 @@ const app = {
         // Purge
         document.getElementById('btn-purge-range')?.addEventListener('click', () => this.handlePurge(false));
         document.getElementById('btn-purge-all')?.addEventListener('click', () => this.handlePurge(true));
+
+        // Mobile bottom nav — show on small screens
+        const mobileNav = document.querySelector('.mobile-bottom-nav');
+        if (mobileNav && window.innerWidth <= 768) {
+            mobileNav.style.display = 'flex';
+        }
+        window.addEventListener('resize', () => {
+            if (mobileNav) mobileNav.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+        });
+
+        // Mobile logout
+        document.getElementById('mobile-logout-btn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('mobile-logout-form')?.submit();
+        });
     },
 
     updateDate() {
@@ -644,6 +659,10 @@ const app = {
                 }
 
                 completedReports.forEach(r => {
+                    const hasFormData = r.form_data && Object.keys(r.form_data).length > 0;
+                    const hasFile = !!r.file_url;
+                    const canDownloadPDF = hasFormData || hasFile;
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="font-weight:700;">${r.user_name}</td>
@@ -651,9 +670,14 @@ const app = {
                         <td><span class="badge ${(r.shift || '').toLowerCase()}">${r.shift}</span></td>
                         <td>${r.description || '-'}</td>
                         <td>
-                            <div style="display:flex; gap:8px;">
-                                <button onclick="app.previewReport('${r.id}')" class="btn-secondary" style="padding:6px 12px;"><i class="fas fa-eye"></i></button>
-                                ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${r.id}')" class="btn-secondary" style="padding:6px 12px; color:var(--error);"><i class="fas fa-trash"></i></button>` : ''}
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button onclick="app.previewReport('${r.id}')" class="btn-secondary" style="padding:6px 10px;" title="Preview"><i class="fas fa-eye"></i></button>
+                                ${hasFile
+                                    ? `<a href="${r.file_url}" target="_blank" class="btn-secondary" style="padding:6px 10px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Buka PDF Upload"><i class="fas fa-file-pdf" style="color:#dc2626;"></i></a>`
+                                    : hasFormData
+                                        ? `<button onclick="app.downloadDigitalPDF('${r.id}')" class="btn-secondary" style="padding:6px 10px; color:#dc2626;" title="Download PDF Form Digital"><i class="fas fa-file-pdf"></i></button>`
+                                        : ''}
+                                ${['Admin', 'CAR PARK MANAGER', 'Inhouse', 'Supervisor', 'Leader'].includes(window.Laravel.user.role) ? `<button onclick="app.deleteReport('${r.id}')" class="btn-secondary" style="padding:6px 10px; color:var(--error);" title="Hapus"><i class="fas fa-trash"></i></button>` : ''}
                             </div>
                         </td>
                     `;
@@ -738,6 +762,211 @@ const app = {
         document.getElementById('export-modal').classList.remove('hidden');
     },
 
+    handleBulkDownload() {
+        // Ambil filter yang sedang aktif di dashboard
+        const startDate = document.getElementById('filter-start-date')?.value || '';
+        const endDate   = document.getElementById('filter-end-date')?.value   || '';
+        const shift     = document.getElementById('filter-shift')?.value       || '';
+
+        // Hitung laporan yang punya file PDF (file_url) sesuai filter saat ini
+        const reportsWithFile = this.reports.filter(r => r.file_url);
+
+        if (reportsWithFile.length === 0) {
+            this.showToast('Tidak ada file PDF dalam filter saat ini. Pastikan ada laporan yang diupload (bukan Form Digital).', 'error');
+            return;
+        }
+
+        // Konfirmasi download
+        const msg = `Unduh ZIP berisi ${reportsWithFile.length} file PDF` +
+                    (startDate ? ` dari ${startDate}` : '') +
+                    (endDate   ? ` s/d ${endDate}`    : '') +
+                    (shift     ? ` (${shift})`         : '') +
+                    '?';
+
+        this.showConfirm(msg, () => {
+            this._triggerZipDownload(startDate, endDate, shift);
+        }, '📥 Ya, Unduh ZIP');
+    },
+
+    async _triggerZipDownload(startDate, endDate, shift) {
+        this.showToast('Menyiapkan ZIP... proses ini mungkin memakan beberapa menit.', 'info');
+        this.showGlobalLoader();
+
+        try {
+            // Filter laporan sesuai kriteria
+            let filtered = this.reports;
+            if (startDate) filtered = filtered.filter(r => r.report_date >= startDate);
+            if (endDate)   filtered = filtered.filter(r => r.report_date <= endDate);
+            if (shift)     filtered = filtered.filter(r => r.shift === shift);
+
+            if (filtered.length === 0) {
+                this.showToast('Tidak ada laporan ditemukan untuk filter ini.', 'error');
+                this.hideGlobalLoader();
+                return;
+            }
+
+            const zip = new JSZip();
+            let addedCount = 0;
+            const errors = [];
+
+            for (const report of filtered) {
+                const safeName = `DAILY_REPORT_${report.report_date}_${report.shift}_${report.spv_name || report.user_name}`
+                    .replace(/[^A-Za-z0-9_\-]/g, '_');
+
+                try {
+                    if (report.file_url) {
+                        // --- Laporan upload PDF: fetch dari Supabase ---
+                        // Fetch via server proxy agar tidak kena CORS
+                        const proxyUrl = new URL(`${window.Laravel.baseUrl}/v1/reports/zip`);
+                        proxyUrl.searchParams.append('start_date', report.report_date);
+                        proxyUrl.searchParams.append('end_date', report.report_date);
+                        proxyUrl.searchParams.append('shift', report.shift);
+                        // Catatan: kita pakai direct fetch untuk file individual
+                        const res = await fetch(report.file_url, { mode: 'cors' });
+                        if (res.ok) {
+                            const blob = await res.blob();
+                            zip.file(`${safeName}.pdf`, blob);
+                            addedCount++;
+                        } else {
+                            errors.push(safeName);
+                        }
+                    } else if (report.form_data && Object.keys(report.form_data).length > 0) {
+                        // --- Form Digital: generate PDF client-side ---
+                        // Fetch full form_data jika belum ada
+                        let fd = report.form_data;
+                        if (typeof fd === 'string') {
+                            try { fd = JSON.parse(fd); } catch(e) { fd = {}; }
+                        }
+
+                        if (!fd || Object.keys(fd).length === 0) {
+                            const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${report.id}`);
+                            const detail = await res.json();
+                            fd = detail.data?.form_data || detail.form_data || {};
+                        }
+
+                        if (fd && Object.keys(fd).length > 0) {
+                            const blob = await this._generatePdfBlobFromFormData(fd, report);
+                            zip.file(`${safeName}.pdf`, blob);
+                            addedCount++;
+                        } else {
+                            errors.push(safeName + ' (form kosong)');
+                        }
+                    } else {
+                        // Tidak ada file maupun form data — skip
+                    }
+                } catch (err) {
+                    console.warn('Error processing report:', safeName, err);
+                    errors.push(safeName);
+                }
+            }
+
+            if (addedCount === 0) {
+                this.showToast('Tidak ada PDF yang berhasil diproses.', 'error');
+                this.hideGlobalLoader();
+                return;
+            }
+
+            // Generate dan download ZIP
+            const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(zipBlob);
+            a.download = `DAILY_REPORT_${new Date().toISOString().slice(0,10)}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+
+            let msg = `ZIP berhasil! ${addedCount} file PDF diunduh.`;
+            if (errors.length > 0) msg += ` (${errors.length} gagal: ${errors.slice(0,2).join(', ')}${errors.length > 2 ? '...' : ''})`;
+            this.showToast(msg, addedCount > 0 ? 'success' : 'error');
+
+        } catch (e) {
+            console.error('ZIP generation failed:', e);
+            this.showToast('Gagal membuat ZIP: ' + e.message, 'error');
+        } finally {
+            this.hideGlobalLoader();
+        }
+    },
+
+    /**
+     * Download PDF langsung dari Form Digital (tanpa perlu buka print preview)
+     * Dipanggil dari tombol di tabel history / report card
+     */
+    async downloadDigitalPDF(reportId) {
+        let report = this.reports.find(r => r.id == reportId);
+        if (!report) return this.showToast('Laporan tidak ditemukan', 'error');
+
+        this.showToast('Menyiapkan PDF...', 'info');
+        this.showGlobalLoader();
+
+        try {
+            // Fetch full form_data if not loaded yet
+            if (!report.form_data || Object.keys(report.form_data).length === 0) {
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/reports/${reportId}`);
+                const detail = await res.json();
+                report.form_data = detail.data?.form_data || detail.form_data;
+            }
+
+            if (!report.form_data) throw new Error('Data form tidak tersedia');
+
+            const blob = await this._generatePdfBlobFromFormData(report.form_data, report);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `DAILY_REPORT_${report.report_date}_${report.shift}_${(report.spv_name || report.user_name || 'SPV').replace(/[^A-Za-z0-9_\-]/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            this.showToast('PDF berhasil diunduh!', 'success');
+        } catch (e) {
+            console.error('Download PDF error:', e);
+            this.showToast('Gagal membuat PDF: ' + e.message, 'error');
+        } finally {
+            this.hideGlobalLoader();
+        }
+    },
+
+    /**
+     * Helper: Generate HTML dari form_data lalu konversi ke PDF blob.
+     * Dipakai oleh downloadDigitalPDF() dan _triggerZipDownload().
+     * @returns {Promise<Blob>}
+     */
+    _generatePdfBlobFromFormData(formData, report) {
+        return new Promise((resolve, reject) => {
+            if (!window.formDigital || typeof window.formDigital.openPrintPreview !== 'function') {
+                return reject(new Error('formDigital module tidak tersedia'));
+            }
+
+            // Render HTML ke elemen tersembunyi
+            const container = document.createElement('div');
+            container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;background:white;font-family:Arial,sans-serif;';
+            document.body.appendChild(container);
+
+            // Gunakan openPrintPreview untuk generate HTML, tapi ke container sementara
+            // Kita ambil HTML dari formDigital.buildPrintHtml
+            const html = window.formDigital._buildPrintHTML(formData, report);
+            container.innerHTML = html;
+
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: `DAILY_REPORT.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 1.5, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).output('blob')
+                .then(blob => {
+                    document.body.removeChild(container);
+                    resolve(blob);
+                })
+                .catch(err => {
+                    if (document.body.contains(container)) document.body.removeChild(container);
+                    reject(err);
+                });
+        });
+    },
+
     downloadPDF(openInNewTab = false, targetTab = null) {
         const element = document.getElementById('print-content');
         if (!element || !element.innerHTML) {
@@ -749,7 +978,7 @@ const app = {
 
         const opt = {
             margin: [10, 10, 10, 10],
-            filename: `Laporan_SPV_${new Date().toISOString().split('T')[0]}.pdf`,
+            filename: `DAILY_REPORT_${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, letterRendering: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -944,9 +1173,10 @@ const app = {
             specTbody.innerHTML = '';
             formData.spesifikasi.forEach((s, i) => {
                 const tr = document.createElement('tr');
-                tr.className = 'spec-row';
+                tr.className = 'spesifikasi-row';
                 tr.innerHTML = `
                     <td style="padding:8px;">
+                        <select class="spec-jenis" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white;">
                             <option value="Temuan" ${s.jenis === 'Temuan' ? 'selected' : ''}>Temuan</option>
                             <option value="Kejadian" ${s.jenis === 'Kejadian' ? 'selected' : ''}>Kejadian</option>
                             <option value="Kegiatan" ${s.jenis === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
@@ -1055,7 +1285,7 @@ const app = {
         setTimeout(() => toast.remove(), 3000);
     },
 
-    showConfirm(message, onYes) {
+    showConfirm(message, onYes, yesLabel = 'Ya, Lanjutkan') {
         const modal = document.getElementById('confirm-modal');
         const msgEl = document.getElementById('confirm-message');
         const btnYes = document.getElementById('confirm-yes');
@@ -1067,15 +1297,18 @@ const app = {
         }
 
         msgEl.textContent = message;
+        btnYes.textContent = yesLabel;
         modal.classList.remove('hidden');
 
         const handleYes = () => {
             modal.classList.add('hidden');
+            btnYes.textContent = 'Ya, Hapus'; // reset default
             onYes();
             cleanup();
         };
         const handleNo = () => {
             modal.classList.add('hidden');
+            btnYes.textContent = 'Ya, Hapus'; // reset default
             cleanup();
         };
         const cleanup = () => {
@@ -1095,35 +1328,8 @@ const app = {
     hideGlobalLoader() {
         const el = document.getElementById('global-loader');
         if (el) el.classList.add('hidden');
-    },
-
-    async handleBulkDownload() {
-        const startDate = document.getElementById('filter-start-date')?.value;
-        const endDate = document.getElementById('filter-end-date')?.value;
-        const shift = document.getElementById('filter-shift')?.value;
-
-        if (!startDate || !endDate) {
-            return this.showToast('Pilih periode tanggal di filter terlebih dahulu', 'error');
-        }
-
-        this.showToast('Menyiapkan ZIP laporan...', 'info');
-        this.showGlobalLoader();
-
-        try {
-            const url = new URL(`${window.Laravel.baseUrl}/v1/reports/zip`);
-            url.searchParams.append('start_date', startDate);
-            url.searchParams.append('end_date', endDate);
-            if (shift) url.searchParams.append('shift', shift);
-
-            window.location.href = url.toString();
-            
-            setTimeout(() => this.hideGlobalLoader(), 2000);
-        } catch (e) {
-            console.error('Bulk download failed:', e);
-            this.showToast('Gagal mengunduh ZIP', 'error');
-            this.hideGlobalLoader();
-        }
     }
+
 };
 
 const formDigital = {
@@ -1927,6 +2133,218 @@ const formDigital = {
         `;
         document.getElementById('print-content').innerHTML = html;
         document.getElementById('print-modal').classList.remove('hidden');
+    },
+
+    /**
+     * Public helper: generate HTML string dari form_data + report metadata.
+     * Dipakai oleh openPrintPreview() dan app._generatePdfBlobFromFormData()
+     */
+    _buildPrintHTML(data, report) {
+        const nama  = report.spv_name || report.user_name || '-';
+        const shift = report.shift || '-';
+        const tgl   = report.report_date || '-';
+
+        // Re-use the same html variable that openPrintPreview already built
+        // (just return it so caller can use it)
+        let mpRows = '', plotRows = '', perRows = '', alatRows = '', specRows = '';
+        const mp_j = ['Car Park Manager', 'IT', 'Administrasi', 'Supervisor', 'Leader', 'Staff'];
+
+        mp_j.forEach(j => {
+            const val    = data.manpower?.[j] || '0';
+            const valMid = data.manpower?.[j + '_middle'] || '0';
+            mpRows += `<tr>
+                <td style="border:1px solid #000;padding:4px 10px;">${j}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${val}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${valMid}</td>
+            </tr>`;
+        });
+
+        (data.ploting || []).forEach(p => {
+            plotRows += `<tr>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${p.no}</td>
+                <td style="border:1px solid #000;padding:4px 10px;">${p.area || '-'}</td>
+                <td style="border:1px solid #000;padding:4px 10px;">${p.petugas || '-'}</td>
+            </tr>`;
+        });
+
+        const perlenData = (data.perlengkapan && data.perlengkapan.length > 0)
+            ? data.perlengkapan
+            : DEFAULT_PERLENGKAPAN.map((item, i) => ({ no: i+1, nama: item[0], jumlah: item[1], baik: item[1], rusak: 0, keterangan: '-' }));
+
+        perlenData.forEach(p => {
+            perRows += `<tr>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${p.no}</td>
+                <td style="border:1px solid #000;padding:4px 8px;">${p.nama || '-'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${p.jumlah || '0'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;color:green;">${p.baik || '0'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;color:red;">${p.rusak || '0'}</td>
+                <td style="border:1px solid #000;padding:4px 8px;">${p.keterangan || '-'}</td>
+            </tr>`;
+        });
+
+        const pData = (data.peralatan && data.peralatan.length > 0)
+            ? data.peralatan
+            : DEFAULT_PERALATAN.map((item, i) => ({ no: i+1, nama: item[0], jumlah: item[1], baik: item[1], rusak: 0, keterangan: '-' }));
+
+        pData.forEach(p => {
+            alatRows += `<tr>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${p.no}</td>
+                <td style="border:1px solid #000;padding:4px 8px;">${p.nama || '-'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;">${p.jumlah || '0'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;color:green;">${p.baik || '0'}</td>
+                <td style="border:1px solid #000;padding:4px;text-align:center;color:red;">${p.rusak || '0'}</td>
+                <td style="border:1px solid #000;padding:4px 8px;">${p.keterangan || '-'}</td>
+            </tr>`;
+        });
+
+        (data.spesifikasi || []).forEach(s => {
+            specRows += `<tr>
+                <td style="border:1px solid #000;padding:6px 10px;">${s.jenis || '-'}</td>
+                <td style="border:1px solid #000;padding:6px;text-align:center;">${s.waktu || '-'}</td>
+                <td style="border:1px solid #000;padding:6px 10px;">${s.detail || '-'}</td>
+                <td style="border:1px solid #000;padding:6px 10px;">${s.tindakan || '-'}</td>
+                <td style="border:1px solid #000;padding:6px;text-align:center;">${s.status || '-'}</td>
+            </tr>`;
+        });
+
+        return `
+        <div style="font-family:Arial,sans-serif;color:#000;line-height:1.2;padding:0;">
+            <div style="text-align:center;margin-bottom:15px;border-bottom:2px solid #000;padding-bottom:10px;">
+                <h2 style="margin:0;font-size:16pt;">DAILY REPORT SUPERVISOR</h2>
+                <h3 style="margin:2px 0;font-size:12pt;">GANDARIA CITY MALL</h3>
+            </div>
+            <table style="width:100%;margin-bottom:15px;font-size:10pt;">
+                <tr>
+                    <td style="width:100px;padding:2px 0;">Supervisor</td>
+                    <td style="padding:2px 0;">: <strong>${nama}</strong></td>
+                    <td style="width:80px;padding:2px 0;">Shift</td>
+                    <td style="padding:2px 0;">: <strong>${shift}</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding:2px 0;">Tanggal</td>
+                    <td colspan="3" style="padding:2px 0;">: <strong>${tgl}</strong></td>
+                </tr>
+            </table>
+            <div style="margin-bottom:15px;">
+                <h4 style="margin:0 0 5px;font-size:10pt;text-decoration:underline;background:#eee;padding:2px 5px;">I. MAN POWER</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:10pt;">
+                    <thead><tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">JABATAN</th>
+                        <th style="border:1px solid #000;padding:8px;width:120px;">SHIFT</th>
+                        <th style="border:1px solid #000;padding:8px;width:120px;">MIDDLE</th>
+                    </tr></thead>
+                    <tbody>${mpRows}
+                        <tr style="background:#eee;font-weight:bold;">
+                            <td style="border:1px solid #000;padding:8px 10px;">TOTAL PERSONEL</td>
+                            <td style="border:1px solid #000;padding:8px;text-align:center;">${data.manpower?.TOTAL || 0}</td>
+                            <td style="border:1px solid #000;padding:8px;text-align:center;">${data.manpower?.TOTAL_MIDDLE || 0}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-bottom:15px;page-break-inside:avoid;">
+                <h4 style="margin:0 0 5px;font-size:10pt;text-decoration:underline;background:#eee;padding:2px 5px;">II. PLOTING PERSONEL</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:10pt;">
+                    <thead><tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #000;padding:8px;width:40px;">NO</th>
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">AREA PLOTING</th>
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">NAMA PETUGAS</th>
+                    </tr></thead>
+                    <tbody>${plotRows || '<tr><td colspan="3" style="border:1px solid #000;padding:10px;text-align:center;">Tidak ada data plotting</td></tr>'}</tbody>
+                </table>
+            </div>
+            <div style="margin-bottom:15px;page-break-inside:avoid;">
+                <h4 style="margin:0 0 5px;font-size:10pt;text-decoration:underline;background:#eee;padding:2px 5px;">III. PERLENGKAPAN</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;width:30px;">NO</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;text-align:left;">NAMA PERLENGKAPAN</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;width:60px;">TOTAL</th>
+                            <th colspan="2" style="border:1px solid #000;padding:4px;">KONDISI</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;">KETERANGAN</th>
+                        </tr>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #000;padding:4px;width:50px;color:green;">BAIK</th>
+                            <th style="border:1px solid #000;padding:4px;width:50px;color:red;">RUSAK</th>
+                        </tr>
+                    </thead>
+                    <tbody>${perRows || '<tr><td colspan="6" style="border:1px solid #000;padding:10px;text-align:center;">Tidak ada data</td></tr>'}</tbody>
+                </table>
+            </div>
+            <div style="margin-bottom:15px;page-break-inside:avoid;">
+                <h4 style="margin:0 0 5px;font-size:10pt;text-decoration:underline;background:#eee;padding:2px 5px;">IV. PERALATAN</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;width:30px;">NO</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;text-align:left;">NAMA PERALATAN</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;width:60px;">TOTAL</th>
+                            <th colspan="2" style="border:1px solid #000;padding:4px;">KONDISI</th>
+                            <th rowspan="2" style="border:1px solid #000;padding:4px;">KETERANGAN</th>
+                        </tr>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #000;padding:4px;width:50px;color:green;">BAIK</th>
+                            <th style="border:1px solid #000;padding:4px;width:50px;color:red;">RUSAK</th>
+                        </tr>
+                    </thead>
+                    <tbody>${alatRows || '<tr><td colspan="6" style="border:1px solid #000;padding:10px;text-align:center;">Tidak ada data</td></tr>'}</tbody>
+                </table>
+            </div>
+            <div style="display:flex;gap:10px;margin-bottom:15px;page-break-inside:avoid;">
+                <div style="flex:1;border:1px solid #000;padding:5px;">
+                    <h4 style="margin:0 0 5px;border-bottom:1px solid #000;padding-bottom:2px;font-size:9pt;background:#eee;">V. MATERI BRIEFING</h4>
+                    <div style="white-space:pre-wrap;min-height:40px;font-size:9pt;">${data.briefing || '-'}</div>
+                </div>
+                <div style="flex:1;border:1px solid #000;padding:5px;">
+                    <h4 style="margin:0 0 5px;border-bottom:1px solid #000;padding-bottom:2px;font-size:9pt;background:#eee;">VI. TRAINING / INSTRUKSI</h4>
+                    <div style="white-space:pre-wrap;min-height:40px;font-size:9pt;">${data.training || '-'}</div>
+                </div>
+            </div>
+            <div style="margin-bottom:20px;page-break-inside:avoid;">
+                <h4 style="margin:0 0 5px;font-size:10pt;text-decoration:underline;background:#eee;padding:2px 5px;">VII. TEMUAN &amp; TINDAKAN</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+                    <thead><tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">JENIS</th>
+                        <th style="border:1px solid #000;padding:8px;width:80px;">WAKTU</th>
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">DETAIL KEJADIAN</th>
+                        <th style="border:1px solid #000;padding:8px;text-align:left;">TINDAKAN</th>
+                        <th style="border:1px solid #000;padding:8px;width:100px;">STATUS</th>
+                    </tr></thead>
+                    <tbody>${specRows || '<tr><td colspan="5" style="border:1px solid #000;padding:10px;text-align:center;">Tidak ada temuan hari ini.</td></tr>'}</tbody>
+                </table>
+            </div>
+            <div style="page-break-inside:avoid;margin-top:50px;">
+                <table style="width:100%;border-collapse:collapse;text-align:center;font-size:10pt;">
+                    <tr>
+                        <td style="width:33.3%;vertical-align:top;">
+                            <div style="margin-bottom:10px;">Dibuat Oleh,</div>
+                            <div style="height:80px;display:flex;align-items:center;justify-content:center;">
+                                ${data.signatures?.spv ? `<img src="${data.signatures.spv}" style="max-height:80px;max-width:160px;object-fit:contain;">` : '<div style="height:80px;"></div>'}
+                            </div>
+                            <div style="margin-top:10px;"><strong>( ${data.signer_names?.spv || nama} )</strong><br>
+                            <span style="font-size:8pt;color:#666;">Supervisor / Leader</span></div>
+                        </td>
+                        <td style="width:33.3%;vertical-align:top;">
+                            <div style="margin-bottom:10px;">Mengetahui,</div>
+                            <div style="height:80px;display:flex;align-items:center;justify-content:center;">
+                                ${data.signatures?.['mgr-1'] ? `<img src="${data.signatures['mgr-1']}" style="max-height:80px;max-width:160px;object-fit:contain;">` : '<div style="height:80px;"></div>'}
+                            </div>
+                            <div style="margin-top:10px;"><strong>( ${data.signer_names?.['mgr-1'] || '....................'} )</strong><br>
+                            <span style="font-size:8pt;color:#666;">Car Park Manager</span></div>
+                        </td>
+                        <td style="width:33.3%;vertical-align:top;">
+                            <div style="margin-bottom:10px;">Menyetujui,</div>
+                            <div style="height:80px;display:flex;align-items:center;justify-content:center;">
+                                ${data.signatures?.['mgr-2'] ? `<img src="${data.signatures['mgr-2']}" style="max-height:80px;max-width:160px;object-fit:contain;">` : '<div style="height:80px;"></div>'}
+                            </div>
+                            <div style="margin-top:10px;"><strong>( ${data.signer_names?.['mgr-2'] || '....................'} )</strong><br>
+                            <span style="font-size:8pt;color:#666;">Inhouse Parking</span></div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>`;
     }
 };
 

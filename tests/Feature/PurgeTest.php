@@ -16,9 +16,9 @@ class PurgeTest extends TestCase
     // -------------------------------------------------------
     public function test_non_management_mendapat_403_pada_purge(): void
     {
-        $admin = User::factory()->admin()->create();
+        $leader = User::factory()->create(['role' => 'Leader']);
 
-        $this->actingAs($admin)
+        $this->actingAs($leader)
              ->postJson(route('reports.purge'), [
                  'start_date' => '2026-01-01',
                  'end_date'   => '2026-12-31',

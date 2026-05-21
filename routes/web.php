@@ -36,6 +36,7 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/stats', [ReportController::class, 'stats'])->name('reports.stats');
         Route::get('/reports/logs', [ReportController::class, 'logs'])->name('reports.logs');
+        Route::get('/reports/zip', [ReportController::class, 'downloadZIP'])->name('reports.zip');
         Route::get('/reports/{id}', [ReportController::class, 'show'])->name('reports.show');
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
@@ -44,7 +45,6 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
         Route::get('/reports/purge', function () {
             return redirect()->route('dashboard');
         });
-        Route::get('/reports/zip', [ReportController::class, 'downloadZIP'])->name('reports.zip');
         Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('reports.destroy');
 
         // User Management (Admin Only)
