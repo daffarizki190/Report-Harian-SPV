@@ -157,31 +157,31 @@
                             <p id="stat-total">0</p>
                         </div>
                     </div>
-                    <div class="glass-card stat-card animate-slide-up delay-1" style="border-left: 4px solid var(--success);">
+                    <div class="glass-card stat-card animate-slide-up delay-1" style="border-left: 4px solid var(--error);">
                         <div class="stat-header">
-                            <i class="fas fa-calendar-day" style="color: var(--success); background: rgba(16, 185, 129, 0.1);"></i>
+                            <i class="fas fa-clock" style="color: var(--error); background: rgba(239, 68, 68, 0.1);"></i>
                         </div>
                         <div class="stat-content">
-                            <h3>Hari Ini</h3>
-                            <p id="stat-today">0</p>
+                            <h3>Belum Approve</h3>
+                            <p id="stat-pending">0</p>
                         </div>
                     </div>
-                    <div class="glass-card stat-card animate-slide-up delay-2" style="border-left: 4px solid var(--accent-gold);">
+                    <div class="glass-card stat-card animate-slide-up delay-2" style="border-left: 4px solid var(--success);">
                         <div class="stat-header">
-                            <i class="fas fa-clock" style="color: var(--accent-gold); background: rgba(251, 191, 36, 0.1);"></i>
+                            <i class="fas fa-check-circle" style="color: var(--success); background: rgba(16, 185, 129, 0.1);"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Sudah Approve</h3>
+                            <p id="stat-approved">0</p>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card animate-slide-up delay-3" style="border-left: 4px solid var(--accent-gold);">
+                        <div class="stat-header">
+                            <i class="fas fa-calendar-day" style="color: var(--accent-gold); background: rgba(251, 191, 36, 0.1);"></i>
                         </div>
                         <div class="stat-content">
                             <h3>Shift Aktif</h3>
                             <p style="font-size: 1.4rem; font-weight: 800; margin-top: 5px;">{{ $currentShift }}</p>
-                        </div>
-                    </div>
-                    <div class="glass-card stat-card animate-slide-up delay-3" style="border-left: 4px solid #8b5cf6;">
-                        <div class="stat-header">
-                            <i class="fas fa-fingerprint" style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1);"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3>Akses Role</h3>
-                            <p style="font-size: 1.4rem; font-weight: 800; margin-top: 5px; color: #8b5cf6;">{{ auth()->user()->role }}</p>
                         </div>
                     </div>
                 </div>
@@ -220,6 +220,13 @@
                     <div id="reports-grid" class="reports-grid">
                         <!-- Diisi via JS dalam bentuk Card -->
                         <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-dim);">Memuat laporan terbaru...</div>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="reports-pagination" style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:15px; margin-top:20px; padding:10px;">
+                        <button class="btn-prev-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                        <span class="page-info" style="font-weight:600; color:var(--text-main);">Page 1 of 1</span>
+                        <button class="btn-next-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled>Next <i class="fas fa-chevron-right"></i></button>
                     </div>
 
                     @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
@@ -261,8 +268,8 @@
             <section id="view-history" class="view-section hidden">
                 <div class="glass-card animate-fade-in">
                     <div class="card-header" style="margin-bottom: 24px;">
-                        <h3>Daftar Laporan Selesai</h3>
-                        <p style="color: var(--text-dim); font-size: 0.85rem;">Menampilkan laporan yang telah ditandatangani oleh Inhouse.</p>
+                        <h3>Daftar Laporan</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem;">Menampilkan seluruh laporan yang telah dibuat.</p>
                     </div>
                     
                     <div class="table-container" style="overflow-x: auto;">
@@ -273,15 +280,23 @@
                                     <th style="padding: 12px 16px;">Tanggal</th>
                                     <th style="padding: 12px 16px;">Shift</th>
                                     <th style="padding: 12px 16px;">Keterangan</th>
+                                    <th style="padding: 12px 16px;">Status</th>
                                     <th style="padding: 12px 16px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="5" style="text-align:center; padding: 40px; color: var(--text-dim);">Memuat riwayat laporan...</td>
+                                    <td colspan="6" style="text-align:center; padding: 40px; color: var(--text-dim);">Memuat riwayat laporan...</td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="reports-pagination" style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:15px; margin-top:20px; padding:10px;">
+                        <button class="btn-prev-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                        <span class="page-info" style="font-weight:600; color:var(--text-main);">Page 1 of 1</span>
+                        <button class="btn-next-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled>Next <i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
             </section>
@@ -292,9 +307,8 @@
                 <div class="glass-card animate-fade-in" style="max-width: 860px; margin: 0 auto;">
                     <h3 style="margin-bottom: 24px;">Buat Laporan Baru</h3>
 
-                    <div class="method-toggle" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="method-toggle" style="grid-template-columns: 1fr 1fr;">
                         <button type="button" class="method-btn active" data-method="file">Upload PDF/Img</button>
-                        <button type="button" class="method-btn" data-method="manual">Input Manual</button>
                         <button type="button" class="method-btn" data-method="form">Form Digital</button>
                     </div>
 
@@ -305,13 +319,6 @@
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p>Klik atau tarik file PDF/Gambar ke sini</p>
                                 <input type="file" id="file-input" name="report_file" accept=".pdf,image/*" hidden>
-                            </div>
-                        </div>
-
-                        <div id="method-manual-container" class="method-content hidden">
-                            <div class="form-group">
-                                <label>Isi Laporan</label>
-                                <textarea name="manual_content" placeholder="Tuliskan detail laporan di sini..." style="min-height: 200px;"></textarea>
                             </div>
                         </div>
 
@@ -378,9 +385,9 @@
                                 <table id="tbl-manpower">
                                     <thead>
                                         <tr>
-                                            <th style="width:50%">JABATAN</th>
-                                            <th style="text-align:center; width:120px">SHIFT</th>
-                                            <th style="text-align:center; width:140px">
+                                            <th style="width:40%; padding-left:10px;">JABATAN</th>
+                                            <th style="text-align:center; width:30%;">SHIFT</th>
+                                            <th style="text-align:center; width:30%;">
                                                 MIDDLE
                                                 <span style="display:block; font-size:0.65rem; font-weight:500; color:var(--text-dim); text-transform:none; letter-spacing:0;">(opsional)</span>
                                             </th>
@@ -389,28 +396,28 @@
                                     <tbody>
                                         @foreach(['Car Park Manager','IT','Administrasi','Supervisor','Leader','Staff'] as $jabatan)
                                         <tr>
-                                            <td>{{ $jabatan }}</td>
-                                            <td style="text-align:center; padding: 8px 16px;">
+                                            <td style="font-size:0.85rem; padding-left:10px;">{{ $jabatan }}</td>
+                                            <td style="text-align:center; padding: 6px;">
                                                 <input type="number" class="mp-input" data-jabatan="{{ $jabatan }}" data-col="shift"
                                                     min="0" value=""
-                                                    style="width:70px; text-align:center; padding:6px 8px;">
+                                                    style="width:100%; max-width:80px; margin:0 auto; text-align:center; padding:6px 4px;">
                                             </td>
-                                            <td style="text-align:center; padding: 8px 16px;">
+                                            <td style="text-align:center; padding: 6px;">
                                                 <input type="number" class="mp-input-middle" data-jabatan="{{ $jabatan }}" data-col="middle"
                                                     min="0" value=""
                                                     placeholder="-"
-                                                    style="width:70px; text-align:center; padding:6px 8px; border-color: #e2e8f0;">
+                                                    style="width:100%; max-width:80px; margin:0 auto; text-align:center; padding:6px 4px; border-color: #e2e8f0;">
                                             </td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr class="mp-total-row">
-                                            <td style="font-weight:800; padding:12px 24px;">TOTAL</td>
-                                            <td style="text-align:center; font-size:1.3rem; font-weight:800; color:var(--accent); padding:12px 24px;">
+                                            <td style="font-weight:800; padding:12px 10px;">TOTAL</td>
+                                            <td style="text-align:center; font-size:1.3rem; font-weight:800; color:var(--accent); padding:12px 8px;">
                                                 <span id="mp-total-val">0</span>
                                             </td>
-                                            <td style="text-align:center; font-size:1.3rem; font-weight:800; color:#8b5cf6; padding:12px 24px;">
+                                            <td style="text-align:center; font-size:1.3rem; font-weight:800; color:#8b5cf6; padding:12px 8px;">
                                                 <span id="mp-total-middle">0</span>
                                             </td>
                                         </tr>
