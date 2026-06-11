@@ -135,16 +135,22 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         $query = Report::query();
-        $todayQuery = Report::whereDate('report_date', now()->toDateString());
+        $approvedQuery = Report::query();
 
         if (in_array($user->role, ['Supervisor', 'Leader'])) {
             $query->where('user_id', $user->id);
-            $todayQuery->where('user_id', $user->id);
+            $approvedQuery->where('user_id', $user->id);
         }
 
+        $approvedQuery->where('form_data', 'like', '%"mgr-2":%');
+
+        $total = $query->count();
+        $approved = $approvedQuery->count();
+
         return response()->json([
-            'total' => $query->count(),
-            'today' => $todayQuery->count(),
+            'total' => $total,
+            'approved' => $approved,
+            'pending' => $total - $approved,
         ]);
     }
 

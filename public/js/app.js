@@ -27,6 +27,7 @@ const DEFAULT_PERALATAN = [
 const app = {
     currentView: 'dashboard',
     reports: [],
+    currentPage: 1,
 
     async init() {
         this.bindEvents();
@@ -136,6 +137,24 @@ const app = {
     },
 
     bindEvents() {
+        // Pagination
+        document.querySelectorAll('.btn-prev-page').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.refreshData();
+                }
+            });
+        });
+        document.querySelectorAll('.btn-next-page').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (this.currentPage < this.lastPage) {
+                    this.currentPage++;
+                    this.refreshData();
+                }
+            });
+        });
+
         // Navigation
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
@@ -523,8 +542,13 @@ const app = {
         try {
             const response = await fetch(`${window.Laravel.baseUrl}/v1/reports/stats`);
             const data = await response.json();
-            document.getElementById('stat-total').textContent = data.total || 0;
-            document.getElementById('stat-today').textContent = data.today || 0;
+            const totalEl = document.getElementById('stat-total');
+            const pendingEl = document.getElementById('stat-pending');
+            const approvedEl = document.getElementById('stat-approved');
+
+            if (totalEl) totalEl.textContent = data.total || 0;
+            if (pendingEl) pendingEl.textContent = data.pending || 0;
+            if (approvedEl) approvedEl.textContent = data.approved || 0;
         } catch (e) { console.error('Load stats failed:', e); }
     },
 
@@ -545,6 +569,9 @@ const app = {
             if (endDate) url.searchParams.append('end_date', endDate);
             if (shiftFilter) url.searchParams.append('shift', shiftFilter);
             if (searchFilter) url.searchParams.append('search', searchFilter);
+            
+            // Pagination
+            url.searchParams.append('page', this.currentPage);
 
             // Add cache-busting timestamp
             url.searchParams.append('_', new Date().getTime());
@@ -559,6 +586,22 @@ const app = {
             // Handle Laravel API Resource wrapper
             const data = json.data || json;
             this.reports = data;
+            
+            // Update pagination UI
+            if (json.meta) {
+                this.currentPage = json.meta.current_page;
+                this.lastPage = json.meta.last_page;
+                
+                document.querySelectorAll('.page-info').forEach(el => {
+                    el.textContent = `Page ${this.currentPage} of ${this.lastPage || 1}`;
+                });
+                document.querySelectorAll('.btn-prev-page').forEach(btn => {
+                    btn.disabled = this.currentPage <= 1;
+                });
+                document.querySelectorAll('.btn-next-page').forEach(btn => {
+                    btn.disabled = this.currentPage >= (this.lastPage || 1);
+                });
+            }
 
             // Pre-process data: ensure form_data is an object and signatures are detected
             data.forEach(r => {
@@ -575,13 +618,13 @@ const app = {
             if (grid) {
                 grid.innerHTML = '';
                 
-                const pendingReports = data.filter(r => !r.has_mgr2_sig);
+                const displayReports = data;
 
-                if (pendingReports.length === 0) {
-                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-dim);">Semua laporan sudah lengkap.</div>';
+                if (displayReports.length === 0) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-dim);">Belum ada laporan.</div>';
                 }
 
-                pendingReports.forEach(report => {
+                displayReports.forEach(report => {
                     try {
                         const d = new Date(report.report_date);
                         const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -649,13 +692,11 @@ const app = {
             if (historyBody) {
                 historyBody.innerHTML = '';
 
-                // History ONLY shows reports that ARE signed by Inhouse (mgr-2)
-                const completedReports = data.filter(r => {
-                    return r.has_mgr2_sig;
-                });
+                // Tampilkan semua laporan tanpa menunggu approval
+                const completedReports = data;
 
                 if (completedReports.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-dim);">Belum ada laporan final.</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-dim);">Belum ada laporan.</td></tr>';
                 }
 
                 completedReports.forEach(r => {
@@ -663,12 +704,26 @@ const app = {
                     const hasFile = !!r.file_url;
                     const canDownloadPDF = hasFormData || hasFile;
 
+                    let statusHtml = '';
+                    const hasOnProgres = Array.isArray(r.form_data?.spesifikasi) && r.form_data.spesifikasi.some(s => s.status === 'On Progres' || s.status === 'On Progress');
+
+                    if (hasOnProgres) {
+                        statusHtml = '<span class="sig-badge pending" style="color:#b45309; background:#fef3c7; border:1px solid #fcd34d;"><i class="fas fa-spinner fa-spin"></i> ON PROGRES</span>';
+                    } else if (r.has_mgr2_sig) {
+                        statusHtml = '<span class="sig-badge signed"><i class="fas fa-check-double"></i> DONE</span>';
+                    } else if (r.has_mgr1_sig) {
+                        statusHtml = '<span class="sig-badge pending" style="color:var(--accent-gold); background:rgba(251, 191, 36, 0.1); border:1px solid var(--accent-gold);"><i class="fas fa-clock"></i> Menunggu Inhouse</span>';
+                    } else {
+                        statusHtml = '<span class="sig-badge pending"><i class="fas fa-clock"></i> Menunggu CPM</span>';
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="font-weight:700;">${r.user_name}</td>
                         <td>${r.report_date}</td>
                         <td><span class="badge ${(r.shift || '').toLowerCase()}">${r.shift}</span></td>
                         <td>${r.description || '-'}</td>
+                        <td>${statusHtml}</td>
                         <td>
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                 <button onclick="app.previewReport('${r.id}')" class="btn-secondary" style="padding:6px 10px;" title="Preview"><i class="fas fa-eye"></i></button>
@@ -1624,7 +1679,7 @@ const formDigital = {
         });
     },
 
-    resetForm() {
+    async resetForm() {
         const form = document.getElementById('form-digital');
         if (!form) return;
         form.reset();
@@ -1632,7 +1687,71 @@ const formDigital = {
         document.getElementById('ploting-tbody').innerHTML = '';
         document.getElementById('spesifikasi-tbody').innerHTML = '';
         PLOTTING_AREAS.forEach(area => this.addPlotingRow(area));
-        this.addSpesifikasiRow();
+
+        let carriedForward = false;
+        const user = window.Laravel?.user;
+        
+        if (user) {
+            try {
+                // Fetch up to 50 recent reports to ensure we don't miss anything due to pagination
+                const url = new URL(`${window.Laravel.baseUrl}/v1/reports`);
+                url.searchParams.append('per_page', 50);
+                url.searchParams.append('full_data', 1);
+                url.searchParams.append('_', new Date().getTime()); // cache busting
+                
+                const response = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                
+                if (response.ok) {
+                    const json = await response.json();
+                    const data = json.data || json;
+                    
+                    const seenDetails = new Set();
+                    const itemsToCarry = [];
+
+                    for (const r of data) {
+                        // Batasi hanya laporan dari tanggal 10 Juni 2026 ke atas
+                        const reportDateStr = r.report_date || '';
+                        if (reportDateStr && reportDateStr < '2026-06-10') {
+                            continue;
+                        }
+
+                        let formData = r.form_data;
+                        if (typeof formData === 'string') {
+                            try { formData = JSON.parse(formData); } catch(e) { formData = {}; }
+                        }
+                        
+                        if (formData && formData.spesifikasi) {
+                            formData.spesifikasi.forEach(s => {
+                                const detailKey = (s.detail || '').trim().toLowerCase();
+                                if (!detailKey) return;
+
+                                if (!seenDetails.has(detailKey)) {
+                                    seenDetails.add(detailKey);
+                                    // Allow flexible status matching
+                                    if (s.status === 'On Progres' || s.status === 'On Progress') {
+                                        itemsToCarry.push(s);
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    itemsToCarry.reverse().forEach(s => {
+                        this.addSpesifikasiRow(s);
+                        carriedForward = true;
+                    });
+                }
+            } catch (err) {
+                console.error("Gagal menarik data On Progres otomatis:", err);
+            }
+        }
+
+        if (!carriedForward) {
+            this.addSpesifikasiRow();
+        }
+
         this.calcTotal();
         Object.keys(this.sigPads || {}).forEach(k => this.clearSig(k));
 
@@ -1668,26 +1787,33 @@ const formDigital = {
         tbody.appendChild(tr);
     },
 
-    addSpesifikasiRow() {
+    addSpesifikasiRow(data = null) {
         const tbody = document.getElementById('spesifikasi-tbody');
         const tr = document.createElement('tr');
         tr.className = 'spesifikasi-row';
+        
+        const jenis = data?.jenis || 'Temuan';
+        const waktu = data?.waktu || '';
+        const detail = data?.detail || '';
+        const tindakan = data?.tindakan || '';
+        const status = data?.status || 'On Progres';
+
         tr.innerHTML = `
             <td style="padding:8px;">
                 <select class="spec-jenis" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:white;">
-                    <option value="Temuan">Temuan</option>
-                    <option value="Kejadian">Kejadian</option>
-                    <option value="Kegiatan">Kegiatan</option>
-                    <option value="Laporan">Laporan</option>
+                    <option value="Temuan" ${jenis === 'Temuan' ? 'selected' : ''}>Temuan</option>
+                    <option value="Kejadian" ${jenis === 'Kejadian' ? 'selected' : ''}>Kejadian</option>
+                    <option value="Kegiatan" ${jenis === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
+                    <option value="Laporan" ${jenis === 'Laporan' ? 'selected' : ''}>Laporan</option>
                 </select>
             </td>
-            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
-            <td style="padding:8px;"><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
-            <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
+            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" value="${waktu}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+            <td style="padding:8px;"><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${detail}</textarea></td>
+            <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${tindakan}</textarea></td>
             <td style="text-align:center; padding:8px;">
                 <select class="spec-status" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:white; font-weight:700;">
-                    <option value="Done">Done</option>
-                    <option value="On Progres">On Progres</option>
+                    <option value="Done" ${status === 'Done' ? 'selected' : ''}>Done</option>
+                    <option value="On Progres" ${status === 'On Progres' ? 'selected' : ''}>On Progres</option>
                 </select>
             </td>
             <td style="text-align:center; padding:8px;">
