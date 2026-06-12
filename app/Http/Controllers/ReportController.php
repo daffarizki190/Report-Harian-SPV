@@ -93,7 +93,9 @@ class ReportController extends Controller
                   ->orWhere(function($sq) use ($user) {
                       $sq->whereNull('reports.user_id')
                          ->where('reports.spv_name', $user->name);
-                  });
+                  })
+                  ->orWhere('reports.form_data', 'like', '%"status":"On Progres"%')
+                  ->orWhere('reports.form_data', 'like', '%"status":"On Progress"%');
             });
         }
 
@@ -120,11 +122,15 @@ class ReportController extends Controller
     {
         $report = Report::findOrFail($id);
         
-        // Security check: Only owners or management can view full details
+        // Security check: Only owners, management, or if report is On Progres can view full details
         $user = Auth::user();
         if (in_array($user->role, ['Supervisor', 'Leader']) && $report->user_id !== $user->id) {
             if ($report->spv_name !== $user->name) {
-                return response()->json(['message' => 'Unauthorized'], 403);
+                $formData = is_string($report->form_data) ? $report->form_data : json_encode($report->form_data);
+                $hasOnProgres = str_contains($formData, '"status":"On Progres"') || str_contains($formData, '"status":"On Progress"');
+                if (!$hasOnProgres) {
+                    return response()->json(['message' => 'Unauthorized'], 403);
+                }
             }
         }
 
@@ -338,6 +344,14 @@ class ReportController extends Controller
                     $isOwner = $report->user_id === $user->id || ($report->spv_name === $user->name && !$report->user_id);
                     $canUpdate = $isOwner || in_array($user->role, ['Admin', 'CAR PARK MANAGER', 'Inhouse']);
                     
+                    if (!$canUpdate) {
+                        $formDataStr = is_string($report->form_data) ? $report->form_data : json_encode($report->form_data);
+                        $hasOnProgres = str_contains($formDataStr, '"status":"On Progres"') || str_contains($formDataStr, '"status":"On Progress"');
+                        if ($hasOnProgres) {
+                            $canUpdate = true;
+                        }
+                    }
+
                     if (!$canUpdate) {
                         throw new \Exception("Anda tidak memiliki izin untuk mengedit laporan ini.");
                     }
