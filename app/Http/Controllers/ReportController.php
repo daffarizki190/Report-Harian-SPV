@@ -94,8 +94,8 @@ class ReportController extends Controller
                       $sq->whereNull('reports.user_id')
                          ->where('reports.spv_name', $user->name);
                   })
-                  ->orWhere('reports.form_data', 'like', '%"status":"On Progres"%')
-                  ->orWhere('reports.form_data', 'like', '%"status":"On Progress"%');
+                  ->orWhere('reports.form_data', 'like', '%"On Progres"%')
+                  ->orWhere('reports.form_data', 'like', '%"On Progress"%');
             });
         }
 
@@ -127,7 +127,7 @@ class ReportController extends Controller
         if (in_array($user->role, ['Supervisor', 'Leader']) && $report->user_id !== $user->id) {
             if ($report->spv_name !== $user->name) {
                 $formData = is_string($report->form_data) ? $report->form_data : json_encode($report->form_data);
-                $hasOnProgres = str_contains($formData, '"status":"On Progres"') || str_contains($formData, '"status":"On Progress"');
+                $hasOnProgres = str_contains($formData, '"On Progres"') || str_contains($formData, '"On Progress"');
                 if (!$hasOnProgres) {
                     return response()->json(['message' => 'Unauthorized'], 403);
                 }
@@ -346,7 +346,7 @@ class ReportController extends Controller
                     
                     if (!$canUpdate) {
                         $formDataStr = is_string($report->form_data) ? $report->form_data : json_encode($report->form_data);
-                        $hasOnProgres = str_contains($formDataStr, '"status":"On Progres"') || str_contains($formDataStr, '"status":"On Progress"');
+                        $hasOnProgres = str_contains($formDataStr, '"On Progres"') || str_contains($formDataStr, '"On Progress"');
                         if ($hasOnProgres) {
                             $canUpdate = true;
                         }
