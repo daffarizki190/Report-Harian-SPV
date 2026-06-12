@@ -638,9 +638,14 @@ const app = {
                         let actionLabel = 'TTD';
                         let actionIcon = 'fa-signature';
 
-                        if (isOwner || isAdmin) {
+                        let hasOnProgres = false;
+                        if (report.form_data && report.form_data.spesifikasi) {
+                            hasOnProgres = report.form_data.spesifikasi.some(s => s.status === 'On Progres' || s.status === 'On Progress');
+                        }
+
+                        if (isOwner || isAdmin || hasOnProgres) {
                             showActionBtn = true;
-                            actionLabel = isOwner ? 'Edit / TTD' : 'Admin Edit';
+                            actionLabel = (isOwner || hasOnProgres) ? 'Edit / TTD' : 'Admin Edit';
                             actionIcon = 'fa-edit';
                         } else if (isManager) {
                             const needsMgr1 = user.role === 'CAR PARK MANAGER' && !report.has_mgr1_sig;
@@ -1137,7 +1142,13 @@ const app = {
         // Ownership & Permissions Check
         const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
         const isAdmin = window.Laravel.user.role === 'Admin';
-        const canEdit = isOwner || isAdmin;
+        
+        let hasOnProgres = false;
+        if (formData && formData.spesifikasi) {
+            hasOnProgres = formData.spesifikasi.some(s => s.status === 'On Progres' || s.status === 'On Progress');
+        }
+        
+        const canEdit = isOwner || isAdmin || hasOnProgres;
 
         // Toggle Readonly state for inputs
         const inputs = document.querySelectorAll('#view-upload input, #view-upload textarea, #view-upload select');
