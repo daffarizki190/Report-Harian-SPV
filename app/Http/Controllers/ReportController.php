@@ -149,7 +149,10 @@ class ReportController extends Controller
             $approvedQuery->where('user_id', $user->id);
         }
 
-        $approvedQuery->where('form_data', 'like', '%"mgr-2":%');
+        $approvedQuery->where(function($q) {
+            $q->where('form_data', 'like', '%"mgr-1":%')
+              ->orWhere('form_data', 'like', '%"mgr-2":%');
+        });
 
         $total = $query->count();
         $approved = $approvedQuery->count();
