@@ -96,6 +96,9 @@
                 <a href="#" class="nav-item active" data-view="dashboard">
                     <i class="fas fa-tasks"></i> Daftar Persetujuan
                 </a>
+                <a href="#" class="nav-item" data-view="approved">
+                    <i class="fas fa-check-double"></i> Riwayat Approve
+                </a>
                 @endif
 
                 <a href="#" class="nav-item {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}" data-view="history">
@@ -273,6 +276,26 @@
                     </div>
                 </div>
                 @endif
+            </section>
+            
+            <!-- Approved View -->
+            <section id="view-approved" class="view-section hidden">
+                <div class="glass-card animate-fade-in" style="margin-top: 24px;">
+                    <div class="card-header" style="margin-bottom: 24px;">
+                        <h3>Daftar Laporan yang Sudah Diapprove</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem;">Menampilkan seluruh laporan yang telah Bapak/Ibu setujui.</p>
+                    </div>
+                    <div id="approved-grid" class="reports-grid">
+                        <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-dim);">Memuat laporan...</div>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="reports-pagination" style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:15px; margin-top:20px; padding:10px;">
+                        <button class="btn-prev-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled><i class="fas fa-chevron-left"></i> Prev</button>
+                        <span class="page-info" style="font-weight:600; color:var(--text-main);">Page 1 of 1</span>
+                        <button class="btn-next-page btn-secondary" style="padding:8px 16px; border-radius:8px;" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </section>
             @endif
             
@@ -855,6 +878,10 @@
             <a href="#" class="nav-item active" data-view="dashboard">
                 <i class="fas fa-tasks"></i>
                 <span>Beranda</span>
+            </a>
+            <a href="#" class="nav-item" data-view="approved">
+                <i class="fas fa-check-double"></i>
+                <span>Riwayat App.</span>
             </a>
             @endif
             <a href="#" class="nav-item {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}" data-view="history">

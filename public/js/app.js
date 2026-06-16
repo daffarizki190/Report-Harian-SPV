@@ -300,6 +300,7 @@ const app = {
         if (titleEl) {
             const titles = {
                 dashboard: 'Daftar Persetujuan',
+                approved: 'Riwayat Approve',
                 upload: 'Buat Laporan',
                 history: 'Daftar Laporan',
                 users: 'Manajemen Pengguna',
@@ -309,7 +310,7 @@ const app = {
         }
 
         // Load data based on view
-        if (viewId === 'dashboard' || viewId === 'history') this.loadReports();
+        if (['dashboard', 'history', 'approved'].includes(viewId)) this.loadReports();
         if (viewId === 'users') this.loadUsers();
         if (viewId === 'monitoring') this.loadMonitoringData();
     },
@@ -577,6 +578,17 @@ const app = {
             // Add cache-busting timestamp
             url.searchParams.append('_', new Date().getTime());
             
+            // Apply status filter based on active view
+            const activeNav = document.querySelector('.nav-item.active');
+            let activeView = 'dashboard';
+            if (activeNav) activeView = activeNav.dataset.view;
+
+            if (activeView === 'dashboard') {
+                url.searchParams.append('status', 'pending');
+            } else if (activeView === 'approved') {
+                url.searchParams.append('status', 'approved');
+            }
+            
             const response = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
@@ -615,6 +627,9 @@ const app = {
                 r.has_mgr1_sig = r.has_mgr1_sig || (hasSigs['mgr-1'] ? 1 : 0);
                 r.has_mgr2_sig = r.has_mgr2_sig || (hasSigs['mgr-2'] ? 1 : 0);
             });
+
+            // Find the active grid
+            const grid = document.querySelector('.view-section.active .reports-grid') || document.getElementById('reports-grid');
 
             if (grid) {
                 grid.innerHTML = '';
