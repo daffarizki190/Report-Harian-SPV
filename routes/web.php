@@ -8,7 +8,7 @@ use App\Http\Controllers\UserController;
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/login', function() { return redirect()->route('login'); }); // Fallback for standard Laravel redirects
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Passwordless Magic Link Login
 Route::post('/magic-link', [AuthController::class, 'sendMagicLink'])->name('magic.link.send');
