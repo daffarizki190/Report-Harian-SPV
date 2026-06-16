@@ -149,10 +149,16 @@ class ReportController extends Controller
             $approvedQuery->where('user_id', $user->id);
         }
 
-        $approvedQuery->where(function($q) {
-            $q->where('form_data', 'like', '%"mgr-1":%')
-              ->orWhere('form_data', 'like', '%"mgr-2":%');
-        });
+        if ($user->role === 'CAR PARK MANAGER') {
+            $approvedQuery->where('form_data', 'like', '%"mgr-1":%');
+        } elseif ($user->role === 'Inhouse') {
+            $approvedQuery->where('form_data', 'like', '%"mgr-2":%');
+        } else {
+            $approvedQuery->where(function($q) {
+                $q->where('form_data', 'like', '%"mgr-1":%')
+                  ->orWhere('form_data', 'like', '%"mgr-2":%');
+            });
+        }
 
         $total = $query->count();
         $approved = $approvedQuery->count();
