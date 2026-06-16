@@ -1,0 +1,1142 @@
+{
+    "1": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "2": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "3": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "4": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "5": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "6": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "7": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "8": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "9": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "10": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "11": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "12": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "13": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "14": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "15": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "16": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "17": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "18": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "19": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "20": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "21": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "22": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "23": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "24": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "25": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "26": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "27": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "28": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "29": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 0,
+            "Siang": 1,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    },
+    "30": {
+        "Car Park Manager": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "IT": {
+            "Pagi": 0,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Administrasi": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 0,
+            "Middle": 1
+        },
+        "Supervisor": {
+            "Pagi": 1,
+            "Siang": 0,
+            "Malam": 1,
+            "Middle": 0
+        },
+        "Leader": {
+            "Pagi": 2,
+            "Siang": 1,
+            "Malam": 0,
+            "Middle": 0
+        },
+        "Staff": {
+            "Pagi": 6,
+            "Siang": 7,
+            "Malam": 4,
+            "Middle": 4
+        }
+    }
+}

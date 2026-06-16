@@ -41,6 +41,8 @@ Route::middleware(['auth', 'prevent-back'])->group(function () {
         Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
         Route::post('/reports/form', [ReportController::class, 'storeForm'])->name('reports.storeForm');
         Route::get('/system/info', [ReportController::class, 'systemInfo'])->name('system.info');
+        Route::post('/schedule/upload', [ReportController::class, 'uploadSchedule'])->name('schedule.upload');
+        Route::get('/schedule', [ReportController::class, 'getSchedule'])->name('schedule.get');
         Route::post('/reports/purge', [ReportController::class, 'purge'])->name('reports.purge');
         Route::get('/reports/purge', function () {
             return redirect()->route('dashboard');

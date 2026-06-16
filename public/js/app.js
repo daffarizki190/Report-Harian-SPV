@@ -224,9 +224,10 @@ const app = {
             this.showToast('Data diperbarui', 'info');
         });
 
-        // Export
+        // Export & Schedule
         document.getElementById('btn-export-excel')?.addEventListener('click', () => this.exportToExcel());
         document.getElementById('btn-bulk-zip')?.addEventListener('click', () => this.handleBulkDownload());
+        document.getElementById('btn-process-schedule')?.addEventListener('click', () => window.scheduleManager.processExcel());
 
         // Upload Form
         const uploadForm = document.getElementById('upload-form');
@@ -1199,9 +1200,9 @@ const app = {
                 tr.innerHTML = `
                     <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
                     <td style="font-weight:600;">${p.nama || ''}</td>
-                    <td style="text-align:center;"><input type="number" class="perlen-jumlah" value="${p.jumlah || 0}" style="width:65px; text-align:center;"></td>
-                    <td style="text-align:center;"><input type="number" class="perlen-baik" value="${p.baik || 0}" style="width:65px; text-align:center; color:green;"></td>
-                    <td style="text-align:center;"><input type="number" class="perlen-rusak" value="${p.rusak || 0}" style="width:65px; text-align:center; color:red;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="perlen-jumlah" value="${p.jumlah || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="perlen-baik" value="${p.baik || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center; color:green;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="perlen-rusak" value="${p.rusak || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center; color:red;"></td>
                     <td><input type="text" class="perlen-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent;"></td>
                 `;
                 perlenTbody.appendChild(tr);
@@ -1220,9 +1221,9 @@ const app = {
                 tr.innerHTML = `
                     <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">${i+1}</td>
                     <td style="font-weight:600;">${p.nama || ''}</td>
-                    <td style="text-align:center;"><input type="number" class="alat-jumlah" value="${p.jumlah || 0}" style="width:65px; text-align:center;"></td>
-                    <td style="text-align:center;"><input type="number" class="alat-baik" value="${p.baik || 0}" style="width:65px; text-align:center; color:green;"></td>
-                    <td style="text-align:center;"><input type="number" class="alat-rusak" value="${p.rusak || 0}" style="width:65px; text-align:center; color:red;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="alat-jumlah" value="${p.jumlah || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="alat-baik" value="${p.baik || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center; color:green;"></td>
+                    <td style="text-align:center; padding:8px 6px;"><input type="number" class="alat-rusak" value="${p.rusak || 0}" style="width:100%; min-width:80px; padding:6px 2px; text-align:center; color:red;"></td>
                     <td><input type="text" class="alat-ket" value="${p.keterangan || ''}" style="width:100%; border:none; background:transparent;"></td>
                 `;
                 alatTbody.appendChild(tr);
@@ -1244,7 +1245,7 @@ const app = {
                             <option value="Laporan" ${s.jenis === 'Laporan' ? 'selected' : ''}>Laporan</option>
                         </select>
                     </td>
-                    <td style="padding:8px;"><input type="text" class="spec-waktu" value="${s.waktu || ''}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+                    <td style="padding:8px;"><input type="text" class="spec-waktu" maxlength="5" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\\d{2})(\\d{1,2})/, '$1:$2')" value="${s.waktu || ''}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
                     <td style="padding:8px;"><textarea class="spec-detail" style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${s.detail || ''}</textarea></td>
                     <td style="padding:8px;"><textarea class="spec-tindakan" style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${s.tindakan || ''}</textarea></td>
                     <td style="text-align:center; padding:8px;">
@@ -1814,7 +1815,7 @@ const formDigital = {
                     <option value="Laporan" ${jenis === 'Laporan' ? 'selected' : ''}>Laporan</option>
                 </select>
             </td>
-            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" value="${waktu}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+            <td style="padding:8px;"><input type="text" class="spec-waktu" maxlength="5" placeholder="00:00" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\\d{2})(\\d{1,2})/, '$1:$2')" value="${waktu}" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
             <td style="padding:8px;"><textarea class="spec-detail" placeholder="Isi detail..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${detail}</textarea></td>
             <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Isi tindakan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;">${tindakan}</textarea></td>
             <td style="text-align:center; padding:8px;">
@@ -2481,9 +2482,159 @@ const formDigital = {
     }
 };
 
+const scheduleManager = {
+    async processExcel() {
+        const monthInput = document.getElementById('schedule-month').value;
+        const fileInput = document.getElementById('schedule-file').files[0];
+        
+        if (!monthInput || !fileInput) {
+            app.showToast('Bulan dan file Excel wajib diisi!', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = window.XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = window.XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+
+                const scheduleData = this.parseSchedule(rows);
+                if (!scheduleData || Object.keys(scheduleData).length === 0) {
+                    app.showToast('Gagal memproses data. Pastikan format ada kolom "JAB" dan tanggal 1-31.', 'error');
+                    return;
+                }
+
+                app.showLoader('Menyimpan jadwal...');
+                const res = await fetch(`${window.Laravel.baseUrl}/v1/schedule/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': window.Laravel.csrfToken
+                    },
+                    body: JSON.stringify({ month: monthInput, data: scheduleData })
+                });
+
+                if (res.ok) {
+                    app.showToast('Jadwal bulan ' + monthInput + ' berhasil disimpan!', 'success');
+                    document.getElementById('modal-upload-schedule').classList.add('hidden');
+                } else {
+                    const err = await res.json();
+                    app.showToast(err.message || 'Gagal menyimpan jadwal', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                app.showToast('Terjadi kesalahan saat memproses file Excel.', 'error');
+            } finally {
+                app.hideLoader();
+            }
+        };
+        reader.readAsArrayBuffer(fileInput);
+    },
+
+    parseSchedule(rows) {
+        let headerRowIdx = -1;
+        let jabColIdx = -1;
+        
+        for (let i = 0; i < Math.min(10, rows.length); i++) {
+            if (!rows[i]) continue;
+            for (let j = 0; j < rows[i].length; j++) {
+                if (String(rows[i][j]).trim().toUpperCase() === 'JAB') {
+                    headerRowIdx = i;
+                    jabColIdx = j;
+                    break;
+                }
+            }
+            if (headerRowIdx !== -1) break;
+        }
+
+        if (headerRowIdx === -1) return null;
+
+        const schedule = {}; 
+        for (let d = 1; d <= 31; d++) {
+            schedule[d] = {
+                'Pagi': { 'Car Park Manager':0, 'IT':0, 'Administrasi':0, 'Supervisor':0, 'Leader':0, 'Staff':0 },
+                'Siang': { 'Car Park Manager':0, 'IT':0, 'Administrasi':0, 'Supervisor':0, 'Leader':0, 'Staff':0 },
+                'Malam': { 'Car Park Manager':0, 'IT':0, 'Administrasi':0, 'Supervisor':0, 'Leader':0, 'Staff':0 },
+            };
+        }
+
+        const dateCols = {};
+        for (let j = jabColIdx + 1; j < rows[headerRowIdx].length; j++) {
+            const val = parseInt(rows[headerRowIdx][j]);
+            if (!isNaN(val) && val >= 1 && val <= 31) {
+                dateCols[val] = j;
+            }
+        }
+
+        for (let i = headerRowIdx + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || !row[jabColIdx]) continue;
+            
+            let jab = String(row[jabColIdx]).trim().toUpperCase();
+            let field = '';
+            if (jab === 'CPM') field = 'Car Park Manager';
+            else if (jab === 'IT') field = 'IT';
+            else if (jab === 'ADM') field = 'Administrasi';
+            else if (jab === 'SPV') field = 'Supervisor';
+            else if (jab === 'LDR') field = 'Leader';
+            else if (jab === 'CRO' || jab === 'ATD') field = 'Staff';
+
+            if (!field) continue;
+
+            for (let d = 1; d <= 31; d++) {
+                if (!dateCols[d]) continue;
+                let shiftCode = String(row[dateCols[d]] || '').trim().toUpperCase();
+                if (shiftCode === 'P') schedule[d]['Pagi'][field]++;
+                else if (shiftCode === 'S') schedule[d]['Siang'][field]++;
+                else if (shiftCode === 'M') schedule[d]['Malam'][field]++;
+            }
+        }
+
+        return schedule;
+    },
+
+    async fetchAndFillManpower(dateStr, shiftName) {
+        if (!dateStr || !shiftName) return;
+        try {
+            const res = await fetch(`${window.Laravel.baseUrl}/v1/schedule?date=${dateStr}`);
+            if (!res.ok) return; 
+            const data = await res.json();
+            
+            if (data && data.data && data.data[shiftName]) {
+                const mpData = data.data[shiftName];
+                document.querySelectorAll('.mp-input').forEach(input => {
+                    const jabatan = input.dataset.jabatan;
+                    if (mpData[jabatan] !== undefined) {
+                        input.value = mpData[jabatan];
+                    }
+                });
+                if (window.formDigital && typeof window.formDigital.calcTotal === 'function') {
+                    window.formDigital.calcTotal('mp-input', 'mp-total-val');
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch schedule for manpower auto-fill', e);
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     window.app = app;
     window.formDigital = formDigital;
+    window.scheduleManager = scheduleManager;
     app.init();
     formDigital.init();
+
+    // Hook schedule auto-fill
+    document.getElementById('df-tanggal')?.addEventListener('change', (e) => {
+        const shift = document.getElementById('df-shift')?.value;
+        if(shift) window.scheduleManager.fetchAndFillManpower(e.target.value, shift);
+    });
+    document.getElementById('df-shift')?.addEventListener('change', (e) => {
+        const dateStr = document.getElementById('df-tanggal')?.value;
+        if(dateStr) window.scheduleManager.fetchAndFillManpower(dateStr, e.target.value);
+    });
+
 });

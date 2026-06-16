@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
     <script>
@@ -113,6 +114,12 @@
                     <i class="fas fa-users-cog"></i> Pengguna
                 </a>
                 @endif
+                
+                @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
+                <a href="#" class="nav-item" onclick="document.getElementById('modal-upload-schedule').classList.remove('hidden')" style="color: var(--accent);">
+                    <i class="fas fa-calendar-plus"></i> Upload Jadwal
+                </a>
+                @endif
             </nav>
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -191,6 +198,7 @@
                     <div class="card-header" style="margin-bottom: 24px;">
                         <h3>Daftar Laporan</h3>
                         <div class="actions" style="gap: 8px;">
+                            <button id="btn-upload-schedule" class="btn-secondary" onclick="document.getElementById('modal-upload-schedule').classList.remove('hidden')"><i class="fas fa-calendar-plus"></i> Upload Jadwal</button>
                             <button id="btn-export-excel" class="btn-secondary"><i class="fas fa-file-excel"></i> Excel</button>
                             <button id="btn-bulk-zip" class="btn-secondary"><i class="fas fa-file-archive"></i> ZIP</button>
                         </div>
@@ -476,9 +484,9 @@
                                         <tr>
                                             <th style="width:40px">NO</th>
                                             <th>NAMA PERLENGKAPAN</th>
-                                            <th style="width:80px; text-align:center">JUMLAH</th>
-                                            <th style="width:80px; text-align:center; color:var(--success)">BAIK</th>
-                                            <th style="width:80px; text-align:center; color:var(--error)">RUSAK</th>
+                                            <th style="width:100px; text-align:center">JUMLAH</th>
+                                            <th style="width:100px; text-align:center; color:var(--success)">BAIK</th>
+                                            <th style="width:100px; text-align:center; color:var(--error)">RUSAK</th>
                                             <th>KETERANGAN</th>
                                         </tr>
                                     </thead>
@@ -487,18 +495,18 @@
                                         <tr>
                                             <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">{{ $idx+1 }}</td>
                                             <td style="font-weight:600;">{{ $item[0] }}</td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="perlen-jumlah" min="0"
                                                     value="{{ $item[1] }}"
-                                                    style="width:65px; text-align:center; padding:6px 8px;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px;">
                                             </td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="perlen-baik" min="0" value="{{ $item[1] }}"
-                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px; border-color: #bbf7d0; color: #15803d;">
                                             </td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="perlen-rusak" min="0" value="0"
-                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px; border-color: #fecaca; color: #b91c1c;">
                                             </td>
                                             <td style="padding:8px 16px;">
                                                 <input type="text" class="perlen-ket"
@@ -521,9 +529,9 @@
                                         <tr>
                                             <th style="width:40px">NO</th>
                                             <th>NAMA PERALATAN</th>
-                                            <th style="width:80px; text-align:center">JUMLAH</th>
-                                            <th style="width:80px; text-align:center; color:var(--success)">BAIK</th>
-                                            <th style="width:80px; text-align:center; color:var(--error)">RUSAK</th>
+                                            <th style="width:100px; text-align:center">JUMLAH</th>
+                                            <th style="width:100px; text-align:center; color:var(--success)">BAIK</th>
+                                            <th style="width:100px; text-align:center; color:var(--error)">RUSAK</th>
                                             <th>KETERANGAN</th>
                                         </tr>
                                     </thead>
@@ -532,18 +540,18 @@
                                         <tr>
                                             <td style="text-align:center; color:var(--text-dim); font-size:0.8rem;">{{ $idx+1 }}</td>
                                             <td style="font-weight:600;">{{ $item[0] }}</td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="alat-jumlah" min="0"
                                                     value="{{ $item[1] }}"
-                                                    style="width:65px; text-align:center; padding:6px 8px;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px;">
                                             </td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="alat-baik" min="0" value="{{ $item[1] }}"
-                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #bbf7d0; color: #15803d;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px; border-color: #bbf7d0; color: #15803d;">
                                             </td>
-                                            <td style="text-align:center; padding:8px 12px;">
+                                            <td style="text-align:center; padding:8px 6px;">
                                                 <input type="number" class="alat-rusak" min="0" value="0"
-                                                    style="width:65px; text-align:center; padding:6px 8px; border-color: #fecaca; color: #b91c1c;">
+                                                    style="width:100%; min-width:80px; text-align:center; padding:6px 2px; border-color: #fecaca; color: #b91c1c;">
                                             </td>
                                             <td style="padding:8px 16px;">
                                                 <input type="text" class="alat-ket"
@@ -597,7 +605,7 @@
                                                     <option value="Laporan">Laporan</option>
                                                 </select>
                                             </td>
-                                            <td style="padding:8px;"><input type="text" class="spec-waktu" placeholder="00:00" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
+                                            <td style="padding:8px;"><input type="text" class="spec-waktu" maxlength="5" placeholder="00:00" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^(\d{2})(\d{1,2})/, '$1:$2')" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; text-align:center; background:white;"></td>
                                             <td style="padding:8px;"><textarea class="spec-detail" placeholder="Detail kejadian..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
                                             <td style="padding:8px;"><textarea class="spec-tindakan" placeholder="Tindakan dilakukan..." style="width:100%; min-height:60px; padding:10px; border:1px solid var(--border); border-radius:8px; background:white; resize:vertical; font-family:inherit; font-size:0.9rem;"></textarea></td>
                                             <td style="text-align:center; padding:8px;">
@@ -1015,6 +1023,26 @@
         <div class="glass-card" style="text-align:center; padding:30px;">
             <div class="loader-spinner" style="margin: 0 auto 15px;"></div>
             <p style="font-weight:700; color:var(--primary);">Memuat Data...</p>
+        </div>
+    </div>
+
+    <!-- Upload Schedule Modal -->
+    <div id="modal-upload-schedule" class="overlay hidden">
+        <div class="glass-card animate-slide-up" style="max-width: 500px; width: 90%; position: relative;">
+            <button onclick="document.getElementById('modal-upload-schedule').classList.add('hidden')" style="position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 1.5rem; color: var(--text-dim); cursor: pointer;">&times;</button>
+            <h3 style="margin-bottom: 20px; color: var(--primary);"><i class="fas fa-calendar-plus" style="color: var(--accent); margin-right: 10px;"></i> Upload Jadwal Bulanan</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 20px;">
+                Unggah file Excel jadwal bulanan. Sistem akan otomatis merekap Man Power untuk setiap shift berdasarkan tanggal.
+            </p>
+            <div class="form-group">
+                <label>Bulan (YYYY-MM)</label>
+                <input type="month" id="schedule-month" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>File Excel (.xlsx)</label>
+                <input type="file" id="schedule-file" accept=".xlsx, .xls" style="padding: 10px; background: #f8fafc;">
+            </div>
+            <button id="btn-process-schedule" class="btn-primary" style="width: 100%;"><i class="fas fa-upload"></i> Proses & Simpan Jadwal</button>
         </div>
     </div>
 

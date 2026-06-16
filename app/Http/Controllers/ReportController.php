@@ -212,6 +212,50 @@ class ReportController extends Controller
         return response()->json($info);
     }
 
+    public function uploadSchedule(Request $request)
+    {
+        if (!in_array(Auth::user()->role, ['Admin', 'CAR PARK MANAGER'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'month' => 'required|string',
+            'data' => 'required|array'
+        ]);
+
+        $month = $request->month;
+        $data = $request->data;
+
+        $fileName = 'schedule_' . str_replace('-', '_', $month) . '.json';
+        \Illuminate\Support\Facades\Storage::disk('local')->put('schedules/' . $fileName, json_encode($data, JSON_PRETTY_PRINT));
+
+        return response()->json(['message' => 'Jadwal berhasil disimpan!']);
+    }
+
+    public function getSchedule(Request $request)
+    {
+        $date = $request->query('date');
+        if (!$date) {
+            return response()->json(['message' => 'Date is required'], 400);
+        }
+
+        $month = date('Y_m', strtotime($date));
+        $day = (int)date('d', strtotime($date));
+        $fileName = 'schedule_' . $month . '.json';
+
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists('schedules/' . $fileName)) {
+            return response()->json(['data' => null, 'message' => 'Jadwal tidak ditemukan untuk bulan ini.']);
+        }
+
+        $data = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get('schedules/' . $fileName), true);
+
+        if (!isset($data[$day])) {
+            return response()->json(['data' => null, 'message' => 'Jadwal tidak ditemukan untuk hari ini.']);
+        }
+
+        return response()->json(['data' => $data[$day]]);
+    }
+
     public function logs()
     {
         if (Auth::user()->role !== 'Admin') {
