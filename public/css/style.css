@@ -569,9 +569,12 @@ input:focus { border-color: var(--accent); }
 
 /* Read-only input style */
 .input-readonly {
-    background: var(--bg-app) !important;
-    color: var(--text-dim);
-    cursor: not-allowed;
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--text-main) !important;
+    cursor: default !important;
+    resize: none !important;
+    box-shadow: none !important;
 }
 
 /* Manpower total row */
