@@ -1147,7 +1147,7 @@ const app = {
         // Toggle Readonly state for inputs
         const inputs = document.querySelectorAll('#view-upload input, #view-upload textarea, #view-upload select');
         inputs.forEach(input => {
-            if (input.id === 'df-report-id' || input.id === 'sig-photo-input') return;
+            if (input.id === 'df-report-id' || input.id === 'sig-photo-input' || input.id === 'df-nama') return;
 
             if (!canEdit) {
                 input.setAttribute('readonly', true);
@@ -1171,6 +1171,7 @@ const app = {
             if (inp) inp.value = formData.manpower?.[j] || '';
             if (inpMid) inpMid.value = formData.manpower?.[j + '_middle'] || '';
         });
+        this.calcTotal();
 
         const plotingTbody = document.getElementById('ploting-tbody');
         if (plotingTbody && formData.ploting) {
@@ -1764,7 +1765,7 @@ const formDigital = {
         // Reset name inputs
         ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
             const inp = document.getElementById(`df-sig-name-${k}`);
-            if (inp) inp.value = (k === 'spv') ? (window.Laravel?.user?.name || '') : '';
+            if (inp) inp.textContent = (k === 'spv') ? (window.Laravel?.user?.name || '') : '....................';
         });
     },
 
