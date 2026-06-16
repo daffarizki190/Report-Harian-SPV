@@ -56,7 +56,10 @@ class ReportController extends Controller
             ['Totem Sign', 35],
         ];
 
-        return view('dashboard', compact('currentShift', 'plotingAreas', 'perlengkapan', 'peralatan'));
+        return response(view('dashboard', compact('currentShift', 'plotingAreas', 'perlengkapan', 'peralatan')))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -107,6 +110,7 @@ class ReportController extends Controller
                 \App\Filters\EndDate::class,
                 \App\Filters\Shift::class,
                 \App\Filters\Search::class,
+                \App\Filters\Status::class,
             ])
             ->thenReturn()
             ->orderBy('reports.report_date', 'desc')
