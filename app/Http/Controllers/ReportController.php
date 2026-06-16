@@ -69,6 +69,10 @@ class ReportController extends Controller
     {
         $user = Auth::user();
 
+        $isPgsql = config('database.default') === 'pgsql';
+        $mgr1Check = $isPgsql ? "reports.form_data::text LIKE '%\"mgr-1\":%'" : "reports.form_data LIKE '%\"mgr-1\":%'";
+        $mgr2Check = $isPgsql ? "reports.form_data::text LIKE '%\"mgr-2\":%'" : "reports.form_data LIKE '%\"mgr-2\":%'";
+
         $query = Report::query()
             ->leftJoin('users', 'reports.user_id', '=', 'users.id')
             ->select([
@@ -84,21 +88,26 @@ class ReportController extends Controller
                 'reports.updated_at',
                 DB::raw("COALESCE(users.name, reports.spv_name) as user_name"),
                 DB::raw("COALESCE(users.role, (SELECT role FROM users WHERE name = reports.spv_name LIMIT 1), 'Supervisor') as user_role"),
-                // Using a simpler check that works better across different DB engines
-                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-1\":%' THEN 1 ELSE 0 END) as has_mgr1_sig"),
-                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND reports.form_data LIKE '%\"mgr-2\":%' THEN 1 ELSE 0 END) as has_mgr2_sig")
+                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND $mgr1Check THEN 1 ELSE 0 END) as has_mgr1_sig"),
+                DB::raw("(CASE WHEN reports.form_data IS NOT NULL AND $mgr2Check THEN 1 ELSE 0 END) as has_mgr2_sig")
             ]);
 
         // Security check
         if (in_array($user->role, ['Supervisor', 'Leader'])) {
-            $query->where(function($q) use ($user) {
+            $query->where(function($q) use ($user, $isPgsql) {
                 $q->where('reports.user_id', $user->id)
                   ->orWhere(function($sq) use ($user) {
                       $sq->whereNull('reports.user_id')
                          ->where('reports.spv_name', $user->name);
-                  })
-                  ->orWhere('reports.form_data', 'like', '%"On Progres"%')
-                  ->orWhere('reports.form_data', 'like', '%"On Progress"%');
+                  });
+                  
+                if ($isPgsql) {
+                    $q->orWhereRaw("reports.form_data::text LIKE '%\"On Progres\"%'")
+                      ->orWhereRaw("reports.form_data::text LIKE '%\"On Progress\"%'");
+                } else {
+                    $q->orWhere('reports.form_data', 'like', '%"On Progres"%')
+                      ->orWhere('reports.form_data', 'like', '%"On Progress"%');
+                }
             });
         }
 
@@ -153,14 +162,29 @@ class ReportController extends Controller
             $approvedQuery->where('user_id', $user->id);
         }
 
+        $isPgsql = config('database.default') === 'pgsql';
+
         if ($user->role === 'CAR PARK MANAGER') {
-            $approvedQuery->where('form_data', 'like', '%"mgr-1":%');
+            if ($isPgsql) {
+                $approvedQuery->whereRaw('form_data::text LIKE ?', ['%"mgr-1":%']);
+            } else {
+                $approvedQuery->where('form_data', 'like', '%"mgr-1":%');
+            }
         } elseif ($user->role === 'Inhouse') {
-            $approvedQuery->where('form_data', 'like', '%"mgr-2":%');
+            if ($isPgsql) {
+                $approvedQuery->whereRaw('form_data::text LIKE ?', ['%"mgr-2":%']);
+            } else {
+                $approvedQuery->where('form_data', 'like', '%"mgr-2":%');
+            }
         } else {
-            $approvedQuery->where(function($q) {
-                $q->where('form_data', 'like', '%"mgr-1":%')
-                  ->orWhere('form_data', 'like', '%"mgr-2":%');
+            $approvedQuery->where(function($q) use ($isPgsql) {
+                if ($isPgsql) {
+                    $q->whereRaw('form_data::text LIKE ?', ['%"mgr-1":%'])
+                      ->orWhereRaw('form_data::text LIKE ?', ['%"mgr-2":%']);
+                } else {
+                    $q->where('form_data', 'like', '%"mgr-1":%')
+                      ->orWhere('form_data', 'like', '%"mgr-2":%');
+                }
             });
         }
 
@@ -187,8 +211,12 @@ class ReportController extends Controller
             $totalUsers = \App\Models\User::count();
             
             // Stats for signatures - OPTIMIZED for text/json column compatibility
-            // Since form_data is longText in migration, we use a robust string check
-            $completed = \App\Models\Report::where('form_data', 'like', '%"mgr-2":%')->count();
+            $isPgsql = config('database.default') === 'pgsql';
+            if ($isPgsql) {
+                $completed = \App\Models\Report::whereRaw('form_data::text LIKE ?', ['%"mgr-2":%'])->count();
+            } else {
+                $completed = \App\Models\Report::where('form_data', 'like', '%"mgr-2":%')->count();
+            }
             $pending = $totalReports - $completed;
 
             return [

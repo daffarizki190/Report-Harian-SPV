@@ -92,16 +92,16 @@
                 <span>Gandaria City</span>
             </div>
             <nav>
-                @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
                 <a href="#" class="nav-item active" data-view="dashboard">
-                    <i class="fas fa-tasks"></i> Daftar Persetujuan
+                    <i class="fas fa-tasks"></i> Dashboard
                 </a>
+                @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
                 <a href="#" class="nav-item" data-view="approved">
                     <i class="fas fa-check-double"></i> Riwayat Approve
                 </a>
                 @endif
 
-                <a href="#" class="nav-item {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}" data-view="history">
+                <a href="#" class="nav-item" data-view="history">
                     <i class="fas fa-file-invoice"></i> Daftar Laporan
                 </a>
 
@@ -157,7 +157,6 @@
                 </div>
             </header>
 
-            @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
                 <div class="stats-grid">
@@ -297,10 +296,9 @@
                     </div>
                 </div>
             </section>
-            @endif
             
             <!-- History View -->
-            <section id="view-history" class="view-section {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}">
+            <section id="view-history" class="view-section">
                 <div class="glass-card animate-fade-in">
                     <div class="card-header" style="margin-bottom: 24px;">
                         <h3>Daftar Laporan</h3>
