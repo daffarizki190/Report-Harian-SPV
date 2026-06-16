@@ -579,9 +579,7 @@ const app = {
             url.searchParams.append('_', new Date().getTime());
             
             // Apply status filter based on active view
-            const activeNav = document.querySelector('.nav-item.active');
-            let activeView = 'dashboard';
-            if (activeNav) activeView = activeNav.dataset.view;
+            const activeView = this.currentView || 'dashboard';
 
             if (activeView === 'dashboard') {
                 url.searchParams.append('status', 'pending');
