@@ -110,7 +110,8 @@ class ReportController extends Controller
             ])
             ->thenReturn()
             ->orderBy('reports.report_date', 'desc')
-            ->paginate(10);
+            ->orderBy('reports.created_at', 'desc')
+            ->paginate($request->get('per_page', 10));
 
         return ReportResource::collection($reports);
     }

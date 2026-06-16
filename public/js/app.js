@@ -1141,19 +1141,13 @@ const app = {
 
         // Ownership & Permissions Check
         const isOwner = report.user_id === window.Laravel.user.id || (report.user_name === window.Laravel.user.name && !report.user_id);
-        const isAdmin = window.Laravel.user.role === 'Admin';
         
-        let hasOnProgres = false;
-        if (formData && formData.spesifikasi) {
-            hasOnProgres = formData.spesifikasi.some(s => s.status === 'On Progres' || s.status === 'On Progress');
-        }
-        
-        const canEdit = isOwner || isAdmin || hasOnProgres;
+        const canEdit = isOwner;
 
         // Toggle Readonly state for inputs
         const inputs = document.querySelectorAll('#view-upload input, #view-upload textarea, #view-upload select');
         inputs.forEach(input => {
-            if (input.id === 'df-report-id' || input.id === 'sig-photo-input') return;
+            if (input.id === 'df-report-id' || input.id === 'sig-photo-input' || input.id === 'df-nama') return;
 
             if (!canEdit) {
                 input.setAttribute('readonly', true);
@@ -1177,6 +1171,7 @@ const app = {
             if (inp) inp.value = formData.manpower?.[j] || '';
             if (inpMid) inpMid.value = formData.manpower?.[j + '_middle'] || '';
         });
+        this.calcTotal();
 
         const plotingTbody = document.getElementById('ploting-tbody');
         if (plotingTbody && formData.ploting) {
@@ -1276,6 +1271,7 @@ const app = {
         if (!canEdit) {
             document.querySelectorAll('#form-digital input, #form-digital textarea, #form-digital select').forEach(el => {
                 el.readOnly = true;
+                el.classList.add('input-readonly');
                 if (el.tagName === 'SELECT') el.disabled = true;
             });
             document.querySelectorAll('#form-digital .btn-remove-row, #form-digital .btn-add-row').forEach(el => {
@@ -1769,7 +1765,7 @@ const formDigital = {
         // Reset name inputs
         ['spv', 'mgr-1', 'mgr-2'].forEach(k => {
             const inp = document.getElementById(`df-sig-name-${k}`);
-            if (inp) inp.value = (k === 'spv') ? (window.Laravel?.user?.name || '') : '';
+            if (inp) inp.textContent = (k === 'spv') ? (window.Laravel?.user?.name || '') : '....................';
         });
     },
 
