@@ -92,11 +92,13 @@
                 <span>Gandaria City</span>
             </div>
             <nav>
+                @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
                 <a href="#" class="nav-item active" data-view="dashboard">
                     <i class="fas fa-tasks"></i> Daftar Persetujuan
                 </a>
+                @endif
 
-                <a href="#" class="nav-item" data-view="history">
+                <a href="#" class="nav-item {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}" data-view="history">
                     <i class="fas fa-file-invoice"></i> Daftar Laporan
                 </a>
 
@@ -152,6 +154,7 @@
                 </div>
             </header>
 
+            @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
             <!-- Dashboard View -->
             <section id="view-dashboard" class="view-section active">
                 <div class="stats-grid">
@@ -271,9 +274,10 @@
                 </div>
                 @endif
             </section>
+            @endif
             
             <!-- History View -->
-            <section id="view-history" class="view-section hidden">
+            <section id="view-history" class="view-section {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}">
                 <div class="glass-card animate-fade-in">
                     <div class="card-header" style="margin-bottom: 24px;">
                         <h3>Daftar Laporan</h3>
@@ -698,34 +702,6 @@
                 </div>
             </section>
 
-            <!-- Riwayat View -->
-            <section id="view-history" class="view-section hidden">
-                <div class="glass-card animate-fade-in">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h3>Daftar Laporan (Final)</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="document.getElementById('export-modal').classList.remove('hidden')" class="btn-primary" style="width: auto; background: #059669; border: none;"><i class="fas fa-file-excel"></i> Export Excel</button>
-                            <button onclick="app.loadReports()" class="btn-refresh"><i class="fas fa-sync-alt"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="table-container">
-                        <table id="reports-history-table">
-                            <thead>
-                                <tr>
-                                    <th>Supervisor</th>
-                                    <th>Tanggal</th>
-                                    <th>Shift</th>
-                                    <th>Keterangan</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
             <!-- User Management -->
             @if(auth()->user()->role === 'Admin')
             <section id="view-monitoring" class="view-section hidden">
@@ -875,11 +851,13 @@
 
         {{-- Mobile Bottom Navigation --}}
         <nav class="mobile-bottom-nav" style="display:none;">
+            @if(in_array(auth()->user()->role, ['CAR PARK MANAGER', 'Admin', 'Inhouse']))
             <a href="#" class="nav-item active" data-view="dashboard">
                 <i class="fas fa-tasks"></i>
                 <span>Beranda</span>
             </a>
-            <a href="#" class="nav-item" data-view="history">
+            @endif
+            <a href="#" class="nav-item {{ in_array(auth()->user()->role, ['Supervisor', 'Leader']) ? 'active' : '' }}" data-view="history">
                 <i class="fas fa-file-invoice"></i>
                 <span>Laporan</span>
             </a>
